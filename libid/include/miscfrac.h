@@ -23,3 +23,7 @@ int lyapunov();
 int plasma();
 int popcorn();
 int test();
+
+// PHD 240702
+bool InitPerturbation();
+int DoPerturbation();

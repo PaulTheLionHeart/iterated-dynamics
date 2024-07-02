@@ -403,10 +403,12 @@ fractalspecificstuff g_fractal_specific[] =
             "(testpt param #4)"
         },
         {0, 0, 0, 0},
-        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
+//        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOZOOM|fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::NORESUME, // PHD 240702
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
-        nullptr, nullptr, StandaloneSetup, test,
+//        nullptr, nullptr, StandaloneSetup, test,
+        nullptr, nullptr, InitPerturbation, DoPerturbation,                 // PHD 240702
         STDBAILOUT
     },
 

@@ -9,6 +9,10 @@ add_library(libid
     line3d.cpp include/line3d.h
     plot3d.cpp include/plot3d.h
     Complex.cpp include/Complex.h
+    PertEngine.cpp include/PertEngine.h
+    PertFn.cpp
+    Perturbation.cpp
+    include/Point.h
 
     boundary_trace.cpp include/boundary_trace.h
     calc_frac_init.cpp include/calc_frac_init.h
