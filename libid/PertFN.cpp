@@ -41,11 +41,21 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 	{
 	case 0:								// Mandelbrot
 #endif //MANDELBROT_ONLY
-	
-		Dnr = (2 * r + a) * a - (2 * i + b) * b + a0;
-		Dni = 2 * ((r + a) * b + i * a) + b0;
-		DeltaSubN->y = Dni;
-		DeltaSubN->x = Dnr;
+        if (power == 3)                                             // Cubic
+            {
+            Dnr = 3 * r * r * a - 6 * r * i * b - 3 * i * i * a + 3 * r * a * a - 3 * r * b * b - 3 * i * 2 * a * b + a * a * a - 3 * a * b * b + a0;
+            Dni = 3 * r * r * b + 6 * r * i * a - 3 * i * i * b + 3 * r * 2 * a * b + 3 * i * a * a - 3 * i * b * b + 3 * a * a * b - b * b * b + b0;
+            DeltaSubN->y = Dni;
+            DeltaSubN->x = Dnr;
+            }
+        else
+            {
+            Dnr = (2 * r + a) * a - (2 * i + b) * b + a0;
+            Dni = 2 * ((r + a) * b + i * a) + b0;
+            DeltaSubN->y = Dni;
+            DeltaSubN->x = Dnr;
+            }
+
 #ifndef MANDELBROT_ONLY
 	    
 	    //	    else if (power == 3)
@@ -657,27 +667,51 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 
 void CPertEngine::RefFunctions(bf_t *xCentre, bf_t *yCentre, bf_t *xZ, bf_t *yZ, bf_t *xZTimes2, bf_t *yZTimes2)
     {
-    bf_t	TempReal, TempImag, SqrReal, SqrImag, RealImag;
+    bf_t	TempReal, TempImag, SqrReal, SqrImag, RealImag, t1, t2;
     int saved;
     saved = save_stack();
 
     TempReal = alloc_stack(bflength+2);
     TempImag = alloc_stack(bflength+2);
     SqrReal = alloc_stack(bflength+2);
-    SqrImag = alloc_stack(bflength+2);
-    RealImag = alloc_stack(bflength+2);
+    SqrImag = alloc_stack(bflength + 2);
+    RealImag = alloc_stack(bflength + 2);
 
-    // optimise for Mandelbrot by taking out as many steps as possible
-    //	    Z = Z.CSqr() + centre;
-    square_bf(SqrReal, *xZ);
-    square_bf(SqrImag, *yZ);
-    sub_bf(TempReal, SqrReal, SqrImag);
-    add_bf(*xZ, TempReal, *xCentre);
-    mult_bf(RealImag, *xZTimes2, *yZ);
-    add_bf(*yZ, RealImag, *yCentre);
+	if (power == 3)
+        {
+        t1 = alloc_stack(bflength + 2);
+        t2 = alloc_stack(bflength + 2);
+/*
+        *Z = Z->CCube() + *centre; // optimise for Cubic by taking out as many multiplies as possible
+
+        sqr_real = x * x;
+        sqr_imag = y * y;
+        temp.x = x * (sqr_real - (sqr_imag + sqr_imag + sqr_imag));
+        temp.y = y * ((sqr_real + sqr_real + sqr_real) - sqr_imag);
+        return temp;
+*/
+        square_bf(SqrReal, *xZ);                    // x*x
+        square_bf(SqrImag, *yZ);                    // y*y
+        mult_bf_int(TempReal, SqrReal, 3);          // 3*x*x
+        mult_bf_int(TempImag, SqrImag, 3);          // 3*y*y
+        sub_bf(t1, SqrReal, TempImag);              // x*x - 3*y*y
+        sub_bf(t2, TempReal, SqrImag);              // 3*x*x - y*y
+        mult_bf(*xZ, t1, *xZ);
+        mult_bf(*yZ, t2, *yZ);
+        }
+    else
+        {
+        // optimise for Mandelbrot by taking out as many steps as possible
+        //	    Z = Z.CSqr() + centre;
+        square_bf(SqrReal, *xZ);
+        square_bf(SqrImag, *yZ);
+        sub_bf(TempReal, SqrReal, SqrImag);
+        add_bf(*xZ, TempReal, *xCentre);
+        mult_bf(RealImag, *xZTimes2, *yZ);
+        add_bf(*yZ, RealImag, *yCentre);
+        }
     restore_stack(saved);
     }
-
 
 #ifndef MANDELBROT_ONLY
 

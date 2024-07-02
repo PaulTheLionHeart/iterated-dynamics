@@ -128,17 +128,17 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    if (PerturbationToleranceCheck) { delete[] PerturbationToleranceCheck; PerturbationToleranceCheck = NULL; }
 	    return -2;
 	    }
+    biomorph = biomorphin;
     power = powerin;
-/*                  keep this one for 'ron
     if (power < 2)
 	    power = 2;
     if (power > MAXPOWER)
 	    power = MAXPOWER;
+/*                  keep this one for 'ron
     method = methodIn;
     subtype = subtypein;
-    biomorph = biomorphin;
 
-    // calculate the pascal's triangle coefficients
+    // calculate the pascal's triangle coefficients for powers > 3
     LoadPascal(PascalArray, power);
 */
     //Fill the list of points with all points in the image.
@@ -158,11 +158,11 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
     while (RemainingPointCount > (width * height) * (percentGlitchTolerance / 100))
 	    {
 	    referencePoints++;
-	    if (user_data() == ID_KEY_ESC)
-	        {
-	        CloseTheDamnPointers();
-	        return -1;
-	        }
+//	    if (user_data() == ID_KEY_ESC)
+//	        {
+//	        CloseTheDamnPointers();
+//	        return -1;
+//	        }
 
 	    //Determine the reference point to calculate
 	    //Check whether this is the first time running the loop. 
@@ -223,11 +223,11 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        {
             if (calculatePoint(pointsRemaining[i].getX(), pointsRemaining[i].getY(), magnifiedRadius, window_radius, bailout, glitchPoints, user_data, plot /*, potential, TZfilter, TrueCol*/) < 0)
 		        return -1;
-            if (user_data() == ID_KEY_ESC)
-		        {
-		        CloseTheDamnPointers();
-		        return -1;
-		        }
+//            if (user_data() == ID_KEY_ESC)
+//		        {
+//		        CloseTheDamnPointers();
+//		        return -1;
+//		        }
 	        //Everything else in this loop is just for updating the progress counter. 
 	        double progress = (double)i / RemainingPointCount;
 	        if (int(progress * 100) != lastChecked) 
@@ -287,8 +287,8 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     //Iteration loop
     do
 	    {
-	    if (user_data() == ID_KEY_ESC)
-	        return -1;
+//	    if (user_data() == ID_KEY_ESC)
+//	        return -1;
         PertFunctions((XSubN + iteration), &DeltaSubN, &DeltaSub0);
 	    iteration++;
         Complex CoordMag = *(XSubN + iteration) + DeltaSubN;
@@ -318,107 +318,107 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 	    } while (ZCoordinateMagnitudeSquared < bailout && iteration < MaxIteration);
 
         if (glitched == false) 
-	    {
-	    int	index;
-	    double	rqlim2 = sqrt(bailout);
-	    Complex	w = XSubN[iteration] + DeltaSubN;
+	        {
+	        int	index;
+	        double	rqlim2 = sqrt(bailout);
+	        Complex	w = XSubN[iteration] + DeltaSubN;
 
-	    if (biomorph >= 0)						// biomorph
-	        {
-	        if (iteration == MaxIteration)
-		    index = MaxIteration;
+	        if (biomorph >= 0)						// biomorph
+	            {
+	            if (iteration == MaxIteration)
+		            index = MaxIteration;
+	            else
+		            {
+		            if (fabs(w.x) < rqlim2 || fabs(w.y) < rqlim2)
+		                index = biomorph;
+		            else
+		                index = iteration % 256;
+		            }
+	            }
 	        else
-		    {
-		    if (fabs(w.x) < rqlim2 || fabs(w.y) < rqlim2)
-		        index = biomorph;
-		    else
-		        index = iteration % 256;
-		    }
-	        }
-	    else
-	        {
-/*
-	        switch (method)
-		        {
-		        case NONE:						// no filter
+	            {
+    /*
+	            switch (method)
+		            {
+		            case NONE:						// no filter
 */
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = iteration % 256;
+		                if (iteration == MaxIteration)
+			            index = MaxIteration;
+		                else
+			            index = iteration % 256;
 /*
-		        break;
-		    case PERT1:						// something Shirom Makkad added
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = (int)((iteration - log2(log2(ZCoordinateMagnitudeSquared))) * 5) % 256; //Get the index of the color array that we are going to read from. 
-		        break;
-		    case PERT2:						// something Shirom Makkad added
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = (int)(iteration - (log(0.5*(ZCoordinateMagnitudeSquared)) - log(0.5*log(256))) / log(2)) % 256;
-		        break;
-		    case ZMAG:
-		        if (iteration == MaxIteration)			// Zmag
-			    index = (int)((CSumSqr(w)) * (MaxIteration >> 1) + 1);
-		        else
-			    index = iteration % 256;
-		        break;
-		    case REAL:						// "real"
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = iteration + (long)w.x + 7;
-		        break;
-		    case IMAG:	    					// "imag"
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = iteration + (long)w.y + 7;
-		        break;
-		    case MULT:						// "mult"
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else if (w.y)
-			    index = (long)((double)iteration * (w.x / w.y));
-		        break;
-		    case SUM:						// "sum"
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = iteration + (long)(w.x + w.y);
-		        break;
-		    case ATAN:						// "atan"
-		        if (iteration == MaxIteration)
-			    index = MaxIteration;
-		        else
-			    index = (long)fabs(atan2(w.y, w.x)*180.0 / PI);
-		        break;
-		    case POTENTIAL:
-		        magnitude = sqr(w.x) + sqr(w.y);
-		        index = potential(magnitude, iteration);
-		        break;
-		    default:
-		        if (method >= TIERAZONFILTERS)			// suite of Tierazon filters and colouring schemes
-			    {
-			    TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
-			    index = iteration;
-			    }
-		        else						// no filter
-			    {
-			    if (iteration == MaxIteration)
+		            break;
+		        case PERT1:						// something Shirom Makkad added
+		            if (iteration == MaxIteration)
 			        index = MaxIteration;
-			    else
+		            else
+			        index = (int)((iteration - log2(log2(ZCoordinateMagnitudeSquared))) * 5) % 256; //Get the index of the color array that we are going to read from. 
+		            break;
+		        case PERT2:						// something Shirom Makkad added
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else
+			        index = (int)(iteration - (log(0.5*(ZCoordinateMagnitudeSquared)) - log(0.5*log(256))) / log(2)) % 256;
+		            break;
+		        case ZMAG:
+		            if (iteration == MaxIteration)			// Zmag
+			        index = (int)((CSumSqr(w)) * (MaxIteration >> 1) + 1);
+		            else
 			        index = iteration % 256;
-			    }
-		        break;
-		    }
+		            break;
+		        case REAL:						// "real"
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else
+			        index = iteration + (long)w.x + 7;
+		            break;
+		        case IMAG:	    					// "imag"
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else
+			        index = iteration + (long)w.y + 7;
+		            break;
+		        case MULT:						// "mult"
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else if (w.y)
+			        index = (long)((double)iteration * (w.x / w.y));
+		            break;
+		        case SUM:						// "sum"
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else
+			        index = iteration + (long)(w.x + w.y);
+		            break;
+		        case ATAN:						// "atan"
+		            if (iteration == MaxIteration)
+			        index = MaxIteration;
+		            else
+			        index = (long)fabs(atan2(w.y, w.x)*180.0 / PI);
+		            break;
+		        case POTENTIAL:
+		            magnitude = sqr(w.x) + sqr(w.y);
+		            index = potential(magnitude, iteration);
+		            break;
+		        default:
+		            if (method >= TIERAZONFILTERS)			// suite of Tierazon filters and colouring schemes
+			        {
+			        TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
+			        index = iteration;
+			        }
+		            else						// no filter
+			        {
+			        if (iteration == MaxIteration)
+			            index = MaxIteration;
+			        else
+			            index = iteration % 256;
+			        }
+		            break;
+		        }
 */
+	        }
+	    plot(x, height - 1 - y, index);
 	    }
-	plot(x, height - 1 - y, index);
-	}
     return 0;
     }
 
@@ -465,11 +465,11 @@ int CPertEngine::ReferenceZoomPoint(bf_t *xCentre, bf_t *yCentre, int maxIterati
 	    // The reason we are storing this into an array is that we need to check the magnitude against this value to see if the value is glitched. 
 	    // We are leaving it squared because otherwise we'd need to do a square root operation, which is expensive, so we'll just compare this to the squared magnitude.
 	
-	    if (user_data() == ID_KEY_ESC)
-	        {
-            restore_stack(saved);
-	        return -1;
-	        }
+//	    if (user_data() == ID_KEY_ESC)
+//	        {
+//            restore_stack(saved);
+//	        return -1;
+//	        }
 	    //Everything else in this loop is just for updating the progress counter. 
 	    int lastChecked = -1;
 	    double progress = (double)i / maxIteration;

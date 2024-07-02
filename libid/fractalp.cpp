@@ -408,7 +408,7 @@ fractalspecificstuff g_fractal_specific[] =
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
 //        nullptr, nullptr, StandaloneSetup, test,
-        nullptr, nullptr, InitPerturbation, DoPerturbation,                 // PHD 240702
+        nullptr, nullptr, InitPerturbation, nullptr, // PHD 240702
         STDBAILOUT
     },
 
