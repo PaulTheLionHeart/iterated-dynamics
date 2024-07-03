@@ -14,7 +14,8 @@
 //#include "mpfr.h"
 #include "PertEngine.h"
 #include "Complex.h"
-//#include "../../../../Program Files (x86)/Windows Kits/10/Include/10.0.19041.0/ucrt/stdio.h"
+#include "Drivers.h"
+// #include "../../../../Program Files (x86)/Windows Kits/10/Include/10.0.19041.0/ucrt/stdio.h"
 
 
 
@@ -39,7 +40,7 @@ extern	Complex	z, q;
 // Initialisation
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, const char *xZoomPointin, const char *yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xZoomPointin, bf_t yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
     {
     Complex q;
     saved = save_stack();
@@ -76,16 +77,16 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
     sscanf(yZoomPointin, "%lf", &t);
     floattobf(xZoomPt, s);
     floattobf(yZoomPt, t);
-*/
     LDBL    s, t;
-    s = -2.25;
+    s = -0.25;
     t = 0.01;
     floattobf(xZoomPt, s);
     floattobf(yZoomPt, t);
-/*
     floattobf(xZoomPt, 0.25);
     floattobf(yZoomPt, 0.01);
 */
+    copy_bf(xZoomPt, xZoomPointin);
+    copy_bf(yZoomPt, yZoomPointin);
     return 0;
     }
 
@@ -295,6 +296,7 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     DeltaSubN = DeltaSub0;
     iteration = 0;
     bool glitched = false;
+//    int kbdchar;
 
     //if (method >= TIERAZONFILTERS)
 	//TZfilter->LoadFilterQ(DeltaSub0);		// initialise the constants used by Tierazon filters
@@ -302,6 +304,9 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     //Iteration loop
     do
 	    {
+//        driver_wait_key_pressed(0);
+//        kbdchar = driver_get_key();
+
 //	    if (user_data() == ID_KEY_ESC)
 //	        return -1;
         PertFunctions((XSubN + iteration), &DeltaSubN, &DeltaSub0);
