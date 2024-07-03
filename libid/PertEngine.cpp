@@ -39,7 +39,7 @@ extern	Complex	z, q;
 // Initialisation
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, char *xZoomPointin, char *yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, const char *xZoomPointin, const char *yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
     {
     Complex q;
     saved = save_stack();
@@ -68,9 +68,24 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
 	    q = { mpfr_get_d(xZoomPt, MPFR_RNDN), mpfr_get_d(yZoomPt, MPFR_RNDN) };
 	    TZfilter->LoadFilterQ(q);		// initialise the constants used by Tierazon fractals
 	    }
-*/
     strtobf(xZoomPt, xZoomPointin);
     strtobf(yZoomPt, yZoomPointin);
+
+    double s, t;
+    sscanf(xZoomPointin, "%lf", &s);
+    sscanf(yZoomPointin, "%lf", &t);
+    floattobf(xZoomPt, s);
+    floattobf(yZoomPt, t);
+*/
+    LDBL    s, t;
+    s = -2.25;
+    t = 0.01;
+    floattobf(xZoomPt, s);
+    floattobf(yZoomPt, t);
+/*
+    floattobf(xZoomPt, 0.25);
+    floattobf(yZoomPt, 0.01);
+*/
     return 0;
     }
 

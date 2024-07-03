@@ -29,7 +29,7 @@ extern bn_t alloc_stack(size_t size);      // Allocates a bn_t variable on stack
 class CPertEngine 
     {
     public:
-        int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, char *xZoomPointin, char *yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter */);
+        int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, const char *xZoomPointin, const char *yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter */);
 	int	calculateOneFrame(double bailout, char* StatusBarInfo, int powerin, int FilterTypeIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int) /*, int potential(double, int), CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
