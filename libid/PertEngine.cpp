@@ -40,53 +40,27 @@ extern	Complex	z, q;
 // Initialisation
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xZoomPointin, bf_t yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
     {
     Complex q;
-    saved = save_stack();
-
-    xZoomPt = alloc_stack(bflength + 2);
-    yZoomPt = alloc_stack(bflength + 2);
 
     width = WidthIn;
     height = HeightIn;
     MaxIteration = threshold;
     ZoomRadius = ZoomRadiusIn;
-    /*
-    method = TZfilter->method;
-    int bitcount = decimals * 5;
-    if (bitcount < 30)
-	bitcount = 30;
-    if (bitcount > SIZEOF_BF_VARS - 10)
-	bitcount = SIZEOF_BF_VARS - 10;
-    mpfr_set_default_prec(bitcount);
-    mpfr_init(xZoomPt);
-    mpfr_init(yZoomPt);
-    mpfr_set_str(xZoomPt, xZoomPointin, 10, MPFR_RNDN);
-    mpfr_set_str(yZoomPt, yZoomPointin, 10, MPFR_RNDN);
+    
+//    method = TZfilter->method;
+
+    xZoomPt = xZoomPointin;
+    yZoomPt = yZoomPointin;
+
+/*
     if (method >= TIERAZONFILTERS)
 	    {
 	    q = { mpfr_get_d(xZoomPt, MPFR_RNDN), mpfr_get_d(yZoomPt, MPFR_RNDN) };
 	    TZfilter->LoadFilterQ(q);		// initialise the constants used by Tierazon fractals
 	    }
-    strtobf(xZoomPt, xZoomPointin);
-    strtobf(yZoomPt, yZoomPointin);
-
-    double s, t;
-    sscanf(xZoomPointin, "%lf", &s);
-    sscanf(yZoomPointin, "%lf", &t);
-    floattobf(xZoomPt, s);
-    floattobf(yZoomPt, t);
-    LDBL    s, t;
-    s = -0.25;
-    t = 0.01;
-    floattobf(xZoomPt, s);
-    floattobf(yZoomPt, t);
-    floattobf(xZoomPt, 0.25);
-    floattobf(yZoomPt, 0.01);
 */
-    copy_bf(xZoomPt, xZoomPointin);
-    copy_bf(yZoomPt, yZoomPointin);
     return 0;
     }
 
@@ -99,16 +73,7 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
     {
     int i;
-    bf_t xC, yC, xReferenceCoordinate, yReferenceCoordinate, xTemp, yTemp;
-    int saved;
-    saved = save_stack();
-
-    xC = alloc_stack(bflength + 2);
-    yC = alloc_stack(bflength + 2);
-    xReferenceCoordinate = alloc_stack(bflength + 2);
-    yReferenceCoordinate = alloc_stack(bflength + 2);
-    xTemp = alloc_stack(bflength + 2);
-    yTemp = alloc_stack(bflength + 2);
+    BigComplex	C, ReferenceCoordinate;
 
     referencePoints = 0;
     GlitchPointCount = 0L;
@@ -152,11 +117,11 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    power = MAXPOWER;
 /*                  keep this one for 'ron
     method = methodIn;
+*/
     subtype = subtypein;
 
     // calculate the pascal's triangle coefficients for powers > 3
     LoadPascal(PascalArray, power);
-*/
     //Fill the list of points with all points in the image.
     for (long y = 0; y < height; y++) 
 	    {
@@ -184,15 +149,14 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    //Check whether this is the first time running the loop. 
 	    if (referencePoints == 1) 
 	        {
-            copy_bf(xC, xZoomPt);
-            copy_bf(yC, yZoomPt);
-            copy_bf(xReferenceCoordinate, xC);
-            copy_bf(xReferenceCoordinate, yC);
-
+            C.x = xZoomPt;
+            C.y = yZoomPt;
+            ReferenceCoordinate = C;
+ 
 	        calculatedRealDelta = 0;
 	        calculatedImaginaryDelta = 0;
 
-	        if (ReferenceZoomPoint(&xReferenceCoordinate, &yReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
+	        if (ReferenceZoomPoint(ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
 		        {
 		        CloseTheDamnPointers();
 		        return -1;
@@ -219,14 +183,10 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
 	        calculatedRealDelta = deltaReal;
 	        calculatedImaginaryDelta = deltaImaginary;
+	        ReferenceCoordinate.x = C.x + deltaReal;
+	        ReferenceCoordinate.y = C.y + deltaImaginary;
 
-            floattobf(xTemp, deltaReal);
-            floattobf(yTemp, deltaImaginary);
-
-            add_bf(xReferenceCoordinate, xC, xTemp);
-            add_bf(yReferenceCoordinate, yC, yTemp);
-
-	        if (ReferenceZoomPoint(&xReferenceCoordinate, &yReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
+	        if (ReferenceZoomPoint(ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
 		        {
 		        CloseTheDamnPointers();
 		        return -1;
@@ -269,7 +229,6 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
 void CPertEngine::CloseTheDamnPointers(void)
     {
-    restore_stack(saved);
     if (pointsRemaining) {delete[] pointsRemaining; pointsRemaining = NULL;}
     if (glitchPoints) {delete[] glitchPoints; glitchPoints = NULL;}
     if (XSubN) { delete[] XSubN; XSubN = NULL; }
@@ -306,6 +265,7 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 	    {
 //        driver_wait_key_pressed(0);
 //        kbdchar = driver_get_key();
+//        if (kbdchar == ID_KEY_ESC)
 
 //	    if (user_data() == ID_KEY_ESC)
 //	        return -1;
@@ -446,36 +406,25 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 // Reference Zoom Point
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::ReferenceZoomPoint(bf_t *xCentre, bf_t *yCentre, int maxIteration, int user_data(), char *StatusBarInfo)
+int CPertEngine::ReferenceZoomPoint(BigComplex& centre, int maxIteration, int user_data(), char* StatusBarInfo)
     {
     // Raising this number makes more calculations, but less variation between each calculation (less chance of mis-identifying a glitched point).
+    BigComplex	ZTimes2, Z;
     double	glitchTolerancy = 1e-6;
-    bf_t temp, TempReal, TempImag, xZ, yZ, xZTimes2, yZTimes2;
-    //BigDouble	zisqr, zrsqr, realimag;
+    mpfr_t	TempReal, TempImag;
+    BigDouble	zisqr, zrsqr, realimag;
 
-    int saved;
-    saved = save_stack();
-
-    temp = alloc_stack(bflength + 2);
-    TempReal = alloc_stack(bflength + 2);
-    TempImag = alloc_stack(bflength + 2);
-    xZ = alloc_stack(bflength + 2);
-    yZ = alloc_stack(bflength + 2);
-    xZTimes2 = alloc_stack(bflength + 2);
-    yZTimes2 = alloc_stack(bflength + 2);
-
-    copy_bf(xZ, *xCentre);
-    copy_bf(yZ, *yCentre);
+    mpfr_init(TempReal);
+    mpfr_init(TempImag);
+    Z = centre;
 
     for (int i = 0; i <= maxIteration; i++)
 	    {
-        Complex c;
-        Complex tolerancy;
 	    // pre multiply by two
-        double_bf(xZTimes2, xZ);
-        double_bf(yZTimes2, yZ);
-        c.x = bftofloat(xZ);
-        c.y = bftofloat(yZ);
+	    mpfr_mul_ui(ZTimes2.x.x, Z.x.x, 2, MPFR_RNDN);
+	    mpfr_mul_ui(ZTimes2.y.x, Z.y.x, 2, MPFR_RNDN);
+	    Complex c {Z.x.BigDoubleToDouble(), Z.y.BigDoubleToDouble()};
+	    Complex TwoC {ZTimes2.x.BigDoubleToDouble(), ZTimes2.y.BigDoubleToDouble()};
 	    // The reason we are storing the same value times two is that we can precalculate this value here because multiplying this value by two is needed many times in the program.
 	    // Also, for some reason, we can't multiply complex numbers by anything greater than 1 using std::complex, so we have to multiply the individual terms each time.
 	    // This is expensive to do above, so we are just doing it here.
@@ -485,11 +434,12 @@ int CPertEngine::ReferenceZoomPoint(bf_t *xCentre, bf_t *yCentre, int maxIterati
 	    // The reason we are storing this into an array is that we need to check the magnitude against this value to see if the value is glitched. 
 	    // We are leaving it squared because otherwise we'd need to do a square root operation, which is expensive, so we'll just compare this to the squared magnitude.
 	
-//	    if (user_data() == ID_KEY_ESC)
-//	        {
-//            restore_stack(saved);
-//	        return -1;
-//	        }
+	    if (user_data() < 0)
+	        {
+	        mpfr_clear(TempReal);
+	        mpfr_clear(TempImag);
+	        return -1;
+	        }
 	    //Everything else in this loop is just for updating the progress counter. 
 	    int lastChecked = -1;
 	    double progress = (double)i / maxIteration;
@@ -499,20 +449,17 @@ int CPertEngine::ReferenceZoomPoint(bf_t *xCentre, bf_t *yCentre, int maxIterati
 	        sprintf(StatusBarInfo, "Pass: %d, Ref (%d%%)", referencePoints, int(progress * 100));
 	        }
 
-        floattobf(temp, glitchTolerancy);
-        mult_bf(TempReal, xZ, temp);
-        mult_bf(TempImag, yZ, temp);
-        tolerancy.x = bftofloat(TempReal);
-        tolerancy.y = bftofloat(TempImag);
-        PerturbationToleranceCheck[i] = (sqr(tolerancy.x) + sqr(tolerancy.y));
-/*
+	    mpfr_mul_d(TempReal, Z.x.x, glitchTolerancy, MPFR_RNDN);
+	    mpfr_mul_d(TempImag, Z.y.x, glitchTolerancy, MPFR_RNDN);
 	    Complex tolerancy { mpfr_get_d(TempReal, MPFR_RNDN), mpfr_get_d(TempImag, MPFR_RNDN) };
-	    PerturbationToleranceCheck[i] = (CSumSqr(tolerancy));
-*/
+//	    PerturbationToleranceCheck[i] = (CSumSqr(tolerancy));
+        PerturbationToleranceCheck[i] = sqr(tolerancy.x) + sqr(tolerancy.y);
+
 	    // Calculate the set
-        RefFunctions(xCentre, yCentre, &xZ, &yZ, &xZTimes2, &yZTimes2);
+	    RefFunctions(&centre, &Z, &ZTimes2);
 	    }
-    restore_stack(saved);
+    mpfr_clear(TempReal);
+    mpfr_clear(TempImag);
     return 0;
     }
     

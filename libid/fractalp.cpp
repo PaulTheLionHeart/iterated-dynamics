@@ -397,8 +397,10 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "test",
         {
-            "(testpt Param #1)",
-            "(testpt param #2)",
+//            "(testpt Param #1)", // PHD 240704
+//            "(testpt Param #2)",
+            "subtype",
+            "Power (for subtype 1 and 11)",
             "(testpt param #3)",
             "(testpt param #4)"
         },

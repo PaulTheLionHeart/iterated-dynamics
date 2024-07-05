@@ -9,10 +9,13 @@ add_library(libid
     line3d.cpp include/line3d.h
     plot3d.cpp include/plot3d.h
     Complex.cpp include/Complex.h
+    BigComplex.cpp include/BigComplex.h
+    BigDouble.cpp include/BigDouble.h
     PertEngine.cpp include/PertEngine.h
     PertFn.cpp
     Perturbation.cpp
     include/Point.h
+    include/gmp.h
 
     boundary_trace.cpp include/boundary_trace.h
     calc_frac_init.cpp include/calc_frac_init.h
@@ -629,4 +632,5 @@ target_compile_options(libid PUBLIC ${ID_TARGET_OPTIONS})
 target_include_directories(libid PUBLIC include)
 target_link_libraries(libid PRIVATE helpcom os)
 target_link_libraries(libid PUBLIC help-defs config Boost::boost GIF::GIF cpuid::cpuid)
+target_link_libraries(libid PUBLIC C:\Github\id\mpfr\build.vc15\lib\x64\Debug\mpfr.lib)
 add_dependencies(libid native-help)
