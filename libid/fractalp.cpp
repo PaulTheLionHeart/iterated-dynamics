@@ -150,8 +150,9 @@ MOREPARAMS g_more_fractal_params[] =
     {fractal_type::MANDPHOENIXFPCPLX, { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::FORMULA  , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::FFORMULA , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::ANT              , { "+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
-    {fractal_type::MANDELBROTMIX4   , { p3real, p3imag,        "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::ANT, {"+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
+    {fractal_type::TEST, {"Positive? 1=yes,0=no (for subtype 53)", "", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},                   // PHD 240706
+    {fractal_type::MANDELBROTMIX4, {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::NOFRACTAL        , { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr    }, {0, 0, 0, 0, 0, 0}}
 };
 
@@ -399,14 +400,16 @@ fractalspecificstuff g_fractal_specific[] =
         {
 //            "(testpt Param #1)", // PHD 240704
 //            "(testpt Param #2)",
+//            "(testpt param #3)",
+  //          "(testpt param #4)"
             "subtype",
-            "Power (for subtype 1 and 11)",
-            "(testpt param #3)",
-            "(testpt param #4)"
+            "Power (for subtype 1, 11 and 53)",
+            "a real for subtype 53",
+            "a imag for subtype 53"
         },
-        {0, 0, 0, 0},
+        {0, 2, 1, 0},
 //        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
-        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::NORESUME, // PHD 240702
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::NORESUME|fractal_flags::MORE, // PHD 240702
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
 //        nullptr, nullptr, StandaloneSetup, test,
