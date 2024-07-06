@@ -9,6 +9,7 @@
 #define		SAFETYMARGIN	5			// Multiply number of digits by a safety margin 
 #define     PRECISION_FACTOR 16         // increase decimals
 #define     SIZEOF_BF_VARS 20000
+#define     ALLOW_MPFR
 
 //#define	errorcode -1.e60
 

@@ -40,8 +40,13 @@ extern	Complex	z, q;
 // Initialisation
 //////////////////////////////////////////////////////////////////////
 
+
+#ifdef ALLOW_MPFR
 int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
-    {
+#else
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+#endif // ALLOW_MPFR
+{
     Complex q;
 
     width = WidthIn;
@@ -73,7 +78,11 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
     {
     int i;
-    BigComplex	C, ReferenceCoordinate;
+#ifdef ALLOW_MPFR
+    BigComplex C, ReferenceCoordinate;
+#else
+    Complex C, ReferenceCoordinate;
+#endif // ALLOW_MPFR
 
     referencePoints = 0;
     GlitchPointCount = 0L;
@@ -156,7 +165,7 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        calculatedRealDelta = 0;
 	        calculatedImaginaryDelta = 0;
 
-	        if (ReferenceZoomPoint(ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
+	        if (ReferenceZoomPoint(&ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
 		        {
 		        CloseTheDamnPointers();
 		        return -1;
@@ -186,7 +195,7 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        ReferenceCoordinate.x = C.x + deltaReal;
 	        ReferenceCoordinate.y = C.y + deltaImaginary;
 
-	        if (ReferenceZoomPoint(ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
+	        if (ReferenceZoomPoint(&ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo) < 0)
 		        {
 		        CloseTheDamnPointers();
 		        return -1;
@@ -406,26 +415,40 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 // Reference Zoom Point
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::ReferenceZoomPoint(BigComplex& centre, int maxIteration, int user_data(), char* StatusBarInfo)
+#ifdef ALLOW_MPFR
+int CPertEngine::ReferenceZoomPoint(BigComplex *centre, int maxIteration, int user_data(), char* StatusBarInfo)
+#else
+int CPertEngine::ReferenceZoomPoint(Complex *centre, int maxIteration, int user_data(), char* StatusBarInfo)
+#endif // ALLOW_MPFR
     {
     // Raising this number makes more calculations, but less variation between each calculation (less chance of mis-identifying a glitched point).
-    BigComplex	ZTimes2, Z;
-    double	glitchTolerancy = 1e-6;
-    mpfr_t	TempReal, TempImag;
+#ifdef ALLOW_MPFR
+    BigComplex ZTimes2, Z;
+    BigDouble   TempReal, TempImag;
     BigDouble	zisqr, zrsqr, realimag;
+#else
+    Complex ZTimes2, Z;
+    double TempReal, TempImag;
+    double zisqr, zrsqr, realimag;
+#endif // ALLOW_MPFR
+    double glitchTolerancy = 1e-6;
 
-    mpfr_init(TempReal);
-    mpfr_init(TempImag);
-    Z = centre;
+    Z = *centre;
 
     for (int i = 0; i <= maxIteration; i++)
 	    {
 	    // pre multiply by two
-	    mpfr_mul_ui(ZTimes2.x.x, Z.x.x, 2, MPFR_RNDN);
-	    mpfr_mul_ui(ZTimes2.y.x, Z.y.x, 2, MPFR_RNDN);
+#ifdef ALLOW_MPFR
+	    ZTimes2 = Z.CDouble();
 	    Complex c {Z.x.BigDoubleToDouble(), Z.y.BigDoubleToDouble()};
 	    Complex TwoC {ZTimes2.x.BigDoubleToDouble(), ZTimes2.y.BigDoubleToDouble()};
-	    // The reason we are storing the same value times two is that we can precalculate this value here because multiplying this value by two is needed many times in the program.
+#else
+	    ZTimes2 = Z * 2;
+	    Complex c = Z;
+	    Complex TwoC = ZTimes2;
+#endif // ALLOW_MPFR
+       // The reason we are storing the same value times two is that we can precalculate this value here
+       // because multiplying this value by two is needed many times in the program.
 	    // Also, for some reason, we can't multiply complex numbers by anything greater than 1 using std::complex, so we have to multiply the individual terms each time.
 	    // This is expensive to do above, so we are just doing it here.
 
@@ -434,12 +457,9 @@ int CPertEngine::ReferenceZoomPoint(BigComplex& centre, int maxIteration, int us
 	    // The reason we are storing this into an array is that we need to check the magnitude against this value to see if the value is glitched. 
 	    // We are leaving it squared because otherwise we'd need to do a square root operation, which is expensive, so we'll just compare this to the squared magnitude.
 	
-	    if (user_data() < 0)
-	        {
-	        mpfr_clear(TempReal);
-	        mpfr_clear(TempImag);
-	        return -1;
-	        }
+//	    if (user_data() < 0)
+//	        return -1;
+
 	    //Everything else in this loop is just for updating the progress counter. 
 	    int lastChecked = -1;
 	    double progress = (double)i / maxIteration;
@@ -449,17 +469,19 @@ int CPertEngine::ReferenceZoomPoint(BigComplex& centre, int maxIteration, int us
 	        sprintf(StatusBarInfo, "Pass: %d, Ref (%d%%)", referencePoints, int(progress * 100));
 	        }
 
-	    mpfr_mul_d(TempReal, Z.x.x, glitchTolerancy, MPFR_RNDN);
-	    mpfr_mul_d(TempImag, Z.y.x, glitchTolerancy, MPFR_RNDN);
-	    Complex tolerancy { mpfr_get_d(TempReal, MPFR_RNDN), mpfr_get_d(TempImag, MPFR_RNDN) };
+#ifdef ALLOW_MPFR
+	    TempReal = Z.x * glitchTolerancy;
+	    TempImag = Z.y * glitchTolerancy;
+	    Complex tolerancy{ TempReal.BigDoubleToDouble(), TempImag.BigDoubleToDouble() };
+#else
+        Complex tolerancy = Z * glitchTolerancy;
+#endif // ALLOW_MPFR
 //	    PerturbationToleranceCheck[i] = (CSumSqr(tolerancy));
         PerturbationToleranceCheck[i] = sqr(tolerancy.x) + sqr(tolerancy.y);
 
 	    // Calculate the set
-	    RefFunctions(&centre, &Z, &ZTimes2);
+	    RefFunctions(centre, &Z, &ZTimes2);
 	    }
-    mpfr_clear(TempReal);
-    mpfr_clear(TempImag);
     return 0;
     }
     

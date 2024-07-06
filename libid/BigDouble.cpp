@@ -1,6 +1,9 @@
+
 #include "BigDouble.h"
 //#include "mpir.h"
 #include "mpfr.h"
+
+#ifdef ALLOW_MPFR
 
 BigDouble::BigDouble(void)
     {
@@ -484,4 +487,4 @@ BigDouble   BigInvert(BigDouble  & Num)		// invert
     return a;
     }
 */
-
+#endif // ALLOW_MPFR
