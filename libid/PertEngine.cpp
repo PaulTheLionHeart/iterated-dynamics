@@ -10,12 +10,12 @@
 //#include "Dib.h"
 #include "filter.h"
 #include "Big.h"
-//#include "Manpwin.h"
+#include "id.h"
 //#include "mpfr.h"
 #include "PertEngine.h"
 #include "Complex.h"
 #include "Drivers.h"
-// #include "../../../../Program Files (x86)/Windows Kits/10/Include/10.0.19041.0/ucrt/stdio.h"
+#include "calcfrac.h"
 
 
 
@@ -42,9 +42,9 @@ extern	Complex	z, q;
 
 
 #ifdef ALLOW_MPFR
-int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/)
 #else
-int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/)
+int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/)
 #endif // ALLOW_MPFR
 {
     Complex q;
@@ -53,6 +53,7 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
     height = HeightIn;
     MaxIteration = threshold;
     ZoomRadius = ZoomRadiusIn;
+    IsPotential = IsPotentialIn;
     
 //    method = TZfilter->method;
 
@@ -74,7 +75,7 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
 //////////////////////////////////////////////////////////////////////
 
 int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int methodIn, int biomorphin, int subtypein, Complex rsrAin, bool rsrSignIn, int user_data(),
-        void (*plot)(int, int, int) /*, int potential(double, int), CTZfilter *TZfilter, CTrueCol *TrueCol*/)
+        void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/)
 
     {
     int i;
@@ -124,9 +125,7 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    power = 2;
     if (power > MAXPOWER)
 	    power = MAXPOWER;
-/*                  keep this one for 'ron
     method = methodIn;
-*/
     subtype = subtypein;
 
     // calculate the pascal's triangle coefficients for powers > 3
@@ -137,7 +136,7 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    for (long x = 0; x < width; x++) 
 	        {
 	        Point pt(x, height - 1 - y);
-	        pointsRemaining[y * width + x] = pt;
+	        *(pointsRemaining + y * width + x) = pt;
 	        RemainingPointCount++;
 	        }
 	    }
@@ -182,10 +181,10 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        srand((unsigned)time(NULL));		// Seed the random-number generator with current time 
 	        Randomise = rand();
 	        referencePointIndex = (int)((double)Randomise / (RAND_MAX + 1) * RemainingPointCount);
-
+            Point   pt = *(pointsRemaining + referencePointIndex);
 	        //Get the complex point at the chosen reference point
-	        double deltaReal = ((magnifiedRadius * (2 * pointsRemaining[referencePointIndex].getX() - width)) / window_radius);
-	        double deltaImaginary = ((-magnifiedRadius * (2 * pointsRemaining[referencePointIndex].getY() - height)) / window_radius);
+	        double deltaReal = ((magnifiedRadius * (2 * pt.getX() - width)) / window_radius);
+	        double deltaImaginary = ((-magnifiedRadius * (2 * pt.getY() - height)) / window_radius);
 
 	        // We need to store this offset because the formula we use to convert pixels into a complex point does so relative to the center of the image.
 	        // We need to offset that calculation when our reference point isn't in the center. The actual offsetting is done in calculate point.
@@ -206,13 +205,12 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    GlitchPointCount = 0;
 	    for (i = 0; i < RemainingPointCount; i++)
 	        {
-            if (calculatePoint(pointsRemaining[i].getX(), pointsRemaining[i].getY(), magnifiedRadius, window_radius, bailout, glitchPoints, user_data, plot /*, potential, TZfilter, TrueCol*/) < 0)
+            if (i % 1000 == 0)
+                if (driver_key_pressed())
+                    return -1;
+            Point   pt = *(pointsRemaining + i);
+            if (calculatePoint(pt.getX(), pt.getY(), magnifiedRadius, window_radius, bailout, glitchPoints, user_data, plot, potential/*, TZfilter, TrueCol*/) < 0)
 		        return -1;
-//            if (user_data() == ID_KEY_ESC)
-//		        {
-//		        CloseTheDamnPointers();
-//		        return -1;
-//		        }
 	        //Everything else in this loop is just for updating the progress counter. 
 	        double progress = (double)i / RemainingPointCount;
 	        if (int(progress * 100) != lastChecked) 
@@ -223,7 +221,6 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        }
 
 	    //These points are glitched, so we need to mark them for recalculation. We need to recalculate them using Pauldelbrot's glitch fixing method (see calculate point).
-    //	memcpy(pointsRemaining, glitchPoints, sizeof(Point)*height*width);
 	    memcpy(pointsRemaining, glitchPoints, sizeof(Point) * GlitchPointCount);
 	    RemainingPointCount = GlitchPointCount;
 	    }
@@ -248,8 +245,8 @@ void CPertEngine::CloseTheDamnPointers(void)
 // Individual point calculation
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window_radius, double bailout, Point *glitchPoints, int user_data(), void (*plot)(int, int, int))
-    //        int potential(double, int), CTZfilter *TZfilter, CTrueCol *TrueCol)
+int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window_radius, double bailout, Point *glitchPoints, int user_data(), void (*plot)(int, int, int),
+            int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/)
     {
 // Get the complex number at this pixel.
 // This calculates the number relative to the reference point, so we need to translate that to the center when the reference point isn't in the center.
@@ -264,6 +261,7 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     DeltaSubN = DeltaSub0;
     iteration = 0;
     bool glitched = false;
+
 //    int kbdchar;
 
     //if (method >= TIERAZONFILTERS)
@@ -272,7 +270,6 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     //Iteration loop
     do
 	    {
-//        driver_wait_key_pressed(0);
 //        kbdchar = driver_get_key();
 //        if (kbdchar == ID_KEY_ESC)
 
@@ -306,107 +303,107 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 	    //use bailout radius of 256 for smooth coloring.
 	    } while (ZCoordinateMagnitudeSquared < bailout && iteration < MaxIteration);
 
-        if (glitched == false) 
-	        {
-	        int	index;
-	        double	rqlim2 = sqrt(bailout);
-	        Complex	w = XSubN[iteration] + DeltaSubN;
+    if (glitched == false) 
+        {
+	    int	index;
+	    double	rqlim2 = sqrt(bailout);
+	    Complex	w = XSubN[iteration] + DeltaSubN;
 
-	        if (biomorph >= 0)						// biomorph
-	            {
-	            if (iteration == MaxIteration)
-		            index = MaxIteration;
-	            else
-		            {
-		            if (fabs(w.x) < rqlim2 || fabs(w.y) < rqlim2)
-		                index = biomorph;
-		            else
-		                index = iteration % 256;
-		            }
-	            }
+	    if (biomorph >= 0)						// biomorph
+	        {
+	        if (iteration == MaxIteration)
+	            index = MaxIteration;
 	        else
-	            {
-    /*
-	            switch (method)
-		            {
-		            case NONE:						// no filter
-*/
-		                if (iteration == MaxIteration)
-			            index = MaxIteration;
-		                else
+		        {
+		        if (fabs(w.x) < rqlim2 || fabs(w.y) < rqlim2)
+		            index = biomorph;
+		        else
+		            index = iteration % 256;
+		        }
+	        }
+	    else
+	        {
+	        switch (method)
+		        {
+		        case 0:						// no filter
+		            if (iteration == MaxIteration)
+		                index = MaxIteration;
+		            else
 			            index = iteration % 256;
-/*
 		            break;
-		        case PERT1:						// something Shirom Makkad added
-		            if (iteration == MaxIteration)
-			        index = MaxIteration;
-		            else
-			        index = (int)((iteration - log2(log2(ZCoordinateMagnitudeSquared))) * 5) % 256; //Get the index of the color array that we are going to read from. 
-		            break;
-		        case PERT2:						// something Shirom Makkad added
-		            if (iteration == MaxIteration)
-			        index = MaxIteration;
-		            else
-			        index = (int)(iteration - (log(0.5*(ZCoordinateMagnitudeSquared)) - log(0.5*log(256))) / log(2)) % 256;
-		            break;
+//		        case PERT1:						// something Shirom Makkad added
+//		            if (iteration == MaxIteration)
+//			            index = MaxIteration;
+//		            else
+//			            index = (int)((iteration - log2(log2(ZCoordinateMagnitudeSquared))) * 5) % 256; //Get the index of the color array that we are going to read from. 
+//		            break;
+//		        case PERT2:						// something Shirom Makkad added
+//		            if (iteration == MaxIteration)
+//			            index = MaxIteration;
+//		            else
+//			            index = (int)(iteration - (log(0.5*(ZCoordinateMagnitudeSquared)) - log(0.5*log(256))) / log(2)) % 256;
+//		            break;
 		        case ZMAG:
 		            if (iteration == MaxIteration)			// Zmag
-			        index = (int)((CSumSqr(w)) * (MaxIteration >> 1) + 1);
+			            index = (int)((w.x * w.x + w.y + w.y) * (MaxIteration >> 1) + 1);
 		            else
-			        index = iteration % 256;
+			            index = iteration % 256;
 		            break;
 		        case REAL:						// "real"
 		            if (iteration == MaxIteration)
-			        index = MaxIteration;
+			            index = MaxIteration;
 		            else
-			        index = iteration + (long)w.x + 7;
+			            index = iteration + (long)w.x + 7;
 		            break;
 		        case IMAG:	    					// "imag"
 		            if (iteration == MaxIteration)
-			        index = MaxIteration;
+			            index = MaxIteration;
 		            else
-			        index = iteration + (long)w.y + 7;
+			            index = iteration + (long)w.y + 7;
 		            break;
 		        case MULT:						// "mult"
 		            if (iteration == MaxIteration)
-			        index = MaxIteration;
+			            index = MaxIteration;
 		            else if (w.y)
-			        index = (long)((double)iteration * (w.x / w.y));
+			            index = (long)((double)iteration * (w.x / w.y));
+                    else
+                        index = iteration;
 		            break;
 		        case SUM:						// "sum"
 		            if (iteration == MaxIteration)
-			        index = MaxIteration;
+			            index = MaxIteration;
 		            else
-			        index = iteration + (long)(w.x + w.y);
+			            index = iteration + (long)(w.x + w.y);
 		            break;
 		        case ATAN:						// "atan"
 		            if (iteration == MaxIteration)
-			        index = MaxIteration;
+			            index = MaxIteration;
 		            else
-			        index = (long)fabs(atan2(w.y, w.x)*180.0 / PI);
-		            break;
-		        case POTENTIAL:
-		            magnitude = sqr(w.x) + sqr(w.y);
-		            index = potential(magnitude, iteration);
+			            index = (long)fabs(atan2(w.y, w.x)*180.0 / PI);
 		            break;
 		        default:
-		            if (method >= TIERAZONFILTERS)			// suite of Tierazon filters and colouring schemes
-			        {
-			        TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
-			        index = iteration;
-			        }
+                    if (IsPotential)
+                        {
+                        magnitude = sqr(w.x) + sqr(w.y);
+                        index = potential(magnitude, iteration);
+                        }
+//		            else if (method >= TIERAZONFILTERS)			// suite of Tierazon filters and colouring schemes
+//			            {
+//			            TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
+//			            index = iteration;
+//			            }
 		            else						// no filter
-			        {
-			        if (iteration == MaxIteration)
-			            index = MaxIteration;
-			        else
-			            index = iteration % 256;
-			        }
+			            {
+			            if (iteration == MaxIteration)
+			                index = MaxIteration;
+			            else
+			                index = iteration % 256;
+			            }
 		            break;
 		        }
-*/
 	        }
 	    plot(x, height - 1 - y, index);
+//        DoPlot.redraw();              // how do I update the screen?
 	    }
     return 0;
     }

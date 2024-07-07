@@ -26,19 +26,20 @@ const char* yZoomPointString = "0.01";
 //const char* xZoomPointString = "-1.6129965373041952026071917970859685";
 //const char* yZoomPointString = "1.70637685183811519151570457965e-6";
 
-extern int getakeynohelp();
-extern void (*g_plot)(int, int, int); // function pointer
-//extern	int	potential(double, int);
-extern  int g_screen_x_dots, g_screen_y_dots; // # of dots on the physical screen
+extern  int     driver_key_pressed();
+extern  void    (*g_plot)(int, int, int); // function pointer
+extern	int	    potential(double, long);
+extern  int     g_screen_x_dots, g_screen_y_dots; // # of dots on the physical screen
 
 extern	long	g_max_iterations;
 extern  double  g_x_max, g_x_min, g_y_max, g_y_min;
+extern  bool    g_potential_flag;
 
-extern double g_magnitude_limit;    // bailout level
-int decimals = /*bflength * 4*/ 24;        // we can sort this out later
+extern  double  g_magnitude_limit;          // bailout level
+int decimals = /*bflength * 4*/ 24;         // we can sort this out later
 extern	double	g_params[];
-//extern	int	method;				// inside and outside filters
-extern	int	    g_biomorph;			// biomorph colour
+extern	int	    g_outside_color;			// inside and outside filters
+extern	int	    g_biomorph;			        // biomorph colour
 //extern	RGBTRIPLE FilterRGB;			// for Tierazon filters
 //extern	double	dStrands;
 //extern	BOOL	UseCurrentPalette;		// do we use the ManpWIN palette? If false, generate internal filter palette
@@ -105,7 +106,7 @@ bool	InitPerturbation(void)
 	mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
 */
 #ifdef ALLOW_MPFR
-    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, bflength/*, &TZfilter*/);
+    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
 #else
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xCentre, -yCentre, mandel_width / 2, bflength/*, &TZfilter*/);
 #endif // ALLOW_MPFR
@@ -123,7 +124,7 @@ bool	InitPerturbation(void)
 
 int	DoPerturbation(void)
     {
-    int (*UserData)() = getakeynohelp;
+    int (*UserData)() = driver_key_pressed;
     Complex a = {0, 0};
     bool    IsPositive = false;
     int     degree;  // power
@@ -139,7 +140,7 @@ int	DoPerturbation(void)
 	    IsPositive = (g_params[4] == 1.0);
 	    }
 
-    if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, /*method*/ 0, g_biomorph, subtype, a, IsPositive, UserData, g_plot/*, potential, &TZfilter, &TrueCol*/) < 0)
+    if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, g_outside_color, g_biomorph, subtype, a, IsPositive, UserData, g_plot, potential/*, &TZfilter, &TrueCol*/) < 0)
         //    if (frameCalculator.calculateOneFrame(rqlim, PertStatus, degree, method, biomorph, subtype, a, IsPositive, UserData, plot, potential) < 0)
 	    return -1;
     return 0;

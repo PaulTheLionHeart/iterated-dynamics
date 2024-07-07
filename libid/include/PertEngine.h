@@ -21,15 +21,15 @@ class CPertEngine
     {
     public:
 #ifdef ALLOW_MPFR
-    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/);
+    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
 #else
-    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, int decimals /*, CTZfilter *TZfilter*/);
+    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
 #endif // ALLOW_MPFR
-    int calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int FilterTypeIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
-                            void (*plot)(int, int, int) /*, int potential(double, int), CTZfilter *TZfilter, CTrueCol *TrueCol*/);
+    int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int FilterTypeIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
+                            void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
-    int calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
-            Point *glitchPoints, int user_data(), void (*plot)(int, int, int) /*, int potential(double, int), CTZfilter *TZfilter, CTrueCol *TrueCol*/);
+    int     calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
+            Point *glitchPoints, int user_data(), void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
 #ifdef ALLOW_MPFR
     int     ReferenceZoomPoint(BigComplex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
 #else
@@ -58,6 +58,7 @@ class CPertEngine
 //	Complex	q;			// location of current pixel
 	Complex	rsrA;			// TheRedshiftRider value of a
 	bool	rsrSign;		// TheRedshiftRider sign true if positive
+    bool    IsPotential = false;
 
 	int	    width, height;
 	int	    MaxIteration;
@@ -76,7 +77,7 @@ class CPertEngine
 	//What percentage of the image is okay to be glitched. 
 	double	percentGlitchTolerance = 0.1;
 	int	referencePoints = 0;
-    int saved;              // saved value of bignum stack
+    int     kbdchar;            // keyboard character
 
     };
 
