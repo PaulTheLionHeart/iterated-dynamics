@@ -25,7 +25,7 @@ class CPertEngine
 #else
     int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
 #endif // ALLOW_MPFR
-    int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int FilterTypeIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
+    int calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
     int     calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
@@ -62,7 +62,9 @@ class CPertEngine
 
 	int	    width, height;
 	int	    MaxIteration;
-	int	    power, subtype, method, biomorph; 
+	int	    power, subtype, biomorph; 
+	int	    InsideMethod;			// the number of the inside filter
+	int	    OutsideMethod;			// the number of the outside filter
 	long	GlitchPointCount;
 	long	RemainingPointCount;
 #ifdef ALLOW_MPFR
@@ -76,7 +78,7 @@ class CPertEngine
 	unsigned int numCoefficients = 5;
 	//What percentage of the image is okay to be glitched. 
 	double	percentGlitchTolerance = 0.1;
-	int	referencePoints = 0;
+	int	    referencePoints = 0;
     int     kbdchar;            // keyboard character
 
     };

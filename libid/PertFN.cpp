@@ -61,11 +61,11 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 	        Complex Zp(1.0, 0.0);
 	        Complex sum(0.0, 0.0);
 	        for (int i = 0; i < power; i++)
-		    {
-		    sum += Zp * (double)PascalArray[i];
-		    sum *= *DeltaSubN;
-		    Zp *= *XRef;
-		    }
+		        {
+		        sum += Zp * (double)PascalArray[i];
+		        sum *= *DeltaSubN;
+		        Zp *= *XRef;
+		        }
 	        *DeltaSubN = sum;
 	        *DeltaSubN += *DeltaSub0;
 	        }
@@ -163,11 +163,11 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 	        Complex Zp(1.0, 0.0);
 	        Complex sum(0.0, 0.0);
 	        for (int i = 0; i < power; i++)
-		    {
-		    sum += Zp * (double)PascalArray[i];
-		    sum *= *DeltaSubN;
-		    Zp *= *XRef;
-		    }
+		        {
+		        sum += Zp * (double)PascalArray[i];
+		        sum *= *DeltaSubN;
+		        Zp *= *XRef;
+		        }
 	        DeltaSubN->x = sum.x;
 	        DeltaSubN->y = -sum.y;
 	        *DeltaSubN += *DeltaSub0;

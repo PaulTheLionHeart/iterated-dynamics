@@ -74,7 +74,7 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
 // Full frame calculation
 //////////////////////////////////////////////////////////////////////
 
-int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int methodIn, int biomorphin, int subtypein, Complex rsrAin, bool rsrSignIn, int user_data(),
+int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorphin, int subtypein, Complex rsrAin, bool rsrSignIn, int user_data(),
         void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/)
 
     {
@@ -125,7 +125,8 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    power = 2;
     if (power > MAXPOWER)
 	    power = MAXPOWER;
-    method = methodIn;
+    InsideMethod = InsideFilterIn;
+    OutsideMethod = OutsideFilterIn;
     subtype = subtypein;
 
     // calculate the pascal's triangle coefficients for powers > 3
@@ -262,10 +263,15 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
     iteration = 0;
     bool glitched = false;
 
-//    int kbdchar;
+    double  BOFmagnitude;
+    double  min_orbit;      // orbit value closest to origin
+    long    min_index;      // iteration of min_orbit
+    if (InsideMethod == BOF60 || InsideMethod == BOF61)
+        {
+        BOFmagnitude = 0.0;
+        min_orbit = 100000.0;
+        }
 
-    //if (method >= TIERAZONFILTERS)
-	//TZfilter->LoadFilterQ(DeltaSub0);		// initialise the constants used by Tierazon filters
 
     //Iteration loop
     do
@@ -279,6 +285,18 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 	    iteration++;
         Complex CoordMag = *(XSubN + iteration) + DeltaSubN;
         ZCoordinateMagnitudeSquared = sqr(CoordMag.x) + sqr(CoordMag.y);
+
+        if (InsideMethod == BOF60 || InsideMethod == BOF61)
+	        {
+	        Complex z = *(XSubN + iteration) + DeltaSubN;
+	        BOFmagnitude = z.CSumSqr();
+	        if (BOFmagnitude < min_orbit)
+		        {
+		        min_orbit = BOFmagnitude;
+		        min_index = iteration + 1L;
+		        }
+	        }
+
 
 	    // This is Pauldelbrot's glitch detection method. You can see it here: http://www.fractalforums.com/announcements-and-news/pertubation-theory-glitches-improvement/.
 	    // As for why it looks so weird, it's because I've squared both sides of his equation and moved the |ZsubN| to the other side to be precalculated.
@@ -323,7 +341,7 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 	        }
 	    else
 	        {
-	        switch (method)
+	        switch (OutsideMethod)
 		        {
 		        case 0:						// no filter
 		            if (iteration == MaxIteration)
@@ -400,6 +418,41 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 			                index = iteration % 256;
 			            }
 		            break;
+		        }
+	        switch (InsideMethod)
+		        {
+		        case ZMAG:
+		            if (iteration == MaxIteration)			// Zmag
+			            index = (int)((w.CSumSqr()) * (MaxIteration >> 1) + 1);
+//		            else
+//			            index = iteration;
+//			        index = iteration % 256;
+		            break;
+		        case BOF60:
+		            if (iteration == MaxIteration)
+			            index = (int)(sqrt(min_orbit) * 75.0);
+//		            else
+//			            index = iteration;
+		            break;
+		        case BOF61:
+		            if (iteration == MaxIteration)
+			            index = min_index;
+//		            else
+//			            index = iteration;
+		            break;
+/*
+		        case POTENTIAL:
+		            magnitude = sqr(w.x) + sqr(w.y);
+		            index = Pot.potential(magnitude, iteration, MaxIteration, TrueCol, 256, potparam);
+		            break;
+		        default:
+		            if (InsideMethod >= TIERAZONFILTERS)		// suite of Tierazon filters and colouring schemes
+			            {
+			            TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
+			            index = iteration;
+			            }
+		            break;
+*/
 		        }
 	        }
 	    plot(x, height - 1 - y, index);

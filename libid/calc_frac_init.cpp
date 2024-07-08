@@ -271,7 +271,7 @@ init_restart:
         && g_colors >= 64
         && (g_cur_fractal_specific->calctype == standard_fractal
             || g_cur_fractal_specific->calctype == calcmand
-            || g_cur_fractal_specific->calctype == calcmandfp))
+            || g_cur_fractal_specific->calctype == calcmandfp || g_fractal_type == fractal_type::TEST))    // PHD 240708
     {
         g_potential_flag = true;
         g_user_distance_estimator_value = 0;

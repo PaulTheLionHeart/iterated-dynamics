@@ -38,7 +38,8 @@ extern  bool    g_potential_flag;
 extern  double  g_magnitude_limit;          // bailout level
 int decimals = /*bflength * 4*/ 24;         // we can sort this out later
 extern	double	g_params[];
-extern	int	    g_outside_color;			// inside and outside filters
+extern	int	    g_outside_color;			// outside filters
+extern	int	    g_inside_color;			    // inside  filters
 extern	int	    g_biomorph;			        // biomorph colour
 //extern	RGBTRIPLE FilterRGB;			// for Tierazon filters
 //extern	double	dStrands;
@@ -140,7 +141,7 @@ int	DoPerturbation(void)
 	    IsPositive = (g_params[4] == 1.0);
 	    }
 
-    if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, g_outside_color, g_biomorph, subtype, a, IsPositive, UserData, g_plot, potential/*, &TZfilter, &TrueCol*/) < 0)
+    if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, g_inside_color, g_outside_color, g_biomorph, subtype, a, IsPositive, UserData, g_plot, potential/*, &TZfilter, &TrueCol*/) < 0)
         //    if (frameCalculator.calculateOneFrame(rqlim, PertStatus, degree, method, biomorph, subtype, a, IsPositive, UserData, plot, potential) < 0)
 	    return -1;
     return 0;
@@ -166,7 +167,7 @@ void	ConvertBignum2String(char *s, mpfr_t num)
 
 void bf2BigNum(BigDouble *BigNum, bf_t bfNum)
     {
-    // let's just do a qucik and dirty for now going via text.
+    // let's just do a quick and dirty for now going via text.
     int     bfLengthNeeded = strlen_needed_bf();
     char    *bigstr = NULL;
     int     dec = g_decimals;
