@@ -27,3 +27,6 @@ int test();
 // PHD 240702
 bool InitPerturbation();
 int DoPerturbation();
+// PHD 240709
+int init_mand_derivatives();
+int run_mand_derivatives();

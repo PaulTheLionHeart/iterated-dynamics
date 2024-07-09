@@ -148,11 +148,12 @@ MOREPARAMS g_more_fractal_params[] =
     {fractal_type::PHOENIXFPCPLX    , { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::MANDPHOENIXCPLX  , { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::MANDPHOENIXFPCPLX, { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::FORMULA  , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::FFORMULA , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::ANT, {"+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
-    {fractal_type::TEST, {"Positive? 1=yes,0=no (for subtype 53)", "", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},                   // PHD 240706
-    {fractal_type::MANDELBROTMIX4, {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::FORMULA          , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::FFORMULA         , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::ANT              , {"+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
+    {fractal_type::PERTURBATION     , {"Positive? 1=yes,0=no (for subtype 53)", "", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},                   // PHD 240706
+    {fractal_type::MANDELDERIVATIVES, {"Bailout Test (mod, real, imag, or, and, manh, manr)", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240709
+    {fractal_type::MANDELBROTMIX4   , {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::NOFRACTAL        , { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr    }, {0, 0, 0, 0, 0, 0}}
 };
 
@@ -2311,7 +2312,20 @@ fractalspecificstuff g_fractal_specific[] =
         help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::BF_MATH|fractal_flags::MORE, // PHD 240702
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
-        nullptr, nullptr, InitPerturbation, nullptr, // PHD 240702
+        nullptr, nullptr, InitPerturbation, nullptr,
+        STDBAILOUT
+    },
+
+    {
+        "ManDerivatives",              // PHD 240709
+        {
+            "subtype", "Power", realz0, realz0
+        },
+        {0, 3, 0, 0},
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::MORE/*BF_MATH*/, // PHD 240702
+        -2.0F, 2.0F, -1.5F, 1.5F,
+        0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
+        run_mand_derivatives, init_mand_derivatives, StandardSetup, standard_fractal, 
         STDBAILOUT
     },
 
