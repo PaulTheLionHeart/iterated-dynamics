@@ -178,6 +178,7 @@ AlternateMath g_alternate_math[] =
     {fractal_type::FPJULIAZPOWER, bf_math_type::BIGFLT, JuliaZpowerbfFractal, juliabf_per_pixel, MandelbfSetup  },
     {fractal_type::FPMANDELZPOWER, bf_math_type::BIGFLT, JuliaZpowerbfFractal, mandelbf_per_pixel, MandelbfSetup},
     {fractal_type::DIVIDE_BROT5, bf_math_type::BIGFLT, DivideBrot5bfFractal, dividebrot5bf_per_pixel, MandelbfSetup},
+    {fractal_type::PERTURBATION, bf_math_type::BIGFLT, nullptr, nullptr, InitPerturbation},
     {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}
 };
 
@@ -398,22 +399,16 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "test",
         {
-//            "(testpt Param #1)", // PHD 240704
-//            "(testpt Param #2)",
-//            "(testpt param #3)",
-  //          "(testpt param #4)"
-            "subtype",
-            "Power (for subtype 1, 11 and 53)",
-            "a real for subtype 53",
-            "a imag for subtype 53"
-        },
-        {0, 2, 1, 0},
-//        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
-        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::NORESUME|fractal_flags::MORE, // PHD 240702
+        "(testpt Param #1)",
+        "(testpt Param #2)",
+        "(testpt param #3)",
+        "(testpt param #4)"
+       },
+        {0, 0, 0, 0},
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
-//        nullptr, nullptr, StandaloneSetup, test,
-        nullptr, nullptr, InitPerturbation, nullptr, // PHD 240702
+        nullptr, nullptr, StandaloneSetup, test,
         STDBAILOUT
     },
 
@@ -2301,6 +2296,22 @@ fractalspecificstuff g_fractal_specific[] =
         -2.5F, 1.5F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
         MandelbrotMix4fpFractal, MandelbrotMix4fp_per_pixel, MandelbrotMix4Setup, standard_fractal,
+        STDBAILOUT
+    },
+
+    {
+        "perturbation",              // PHD 240709
+        {
+            "subtype",
+            "Power (for subtype 1, 11 and 53)",
+            "a real for subtype 53",
+            "a imag for subtype 53"
+        },
+        {0, 2, 1, 0},
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NOGUESS|fractal_flags::NOTRACE|fractal_flags::BF_MATH|fractal_flags::MORE, // PHD 240702
+        -2.0F, 2.0F, -1.5F, 1.5F,
+        0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
+        nullptr, nullptr, InitPerturbation, nullptr, // PHD 240702
         STDBAILOUT
     },
 

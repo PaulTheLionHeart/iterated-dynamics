@@ -57,8 +57,23 @@ char		PertStatus[200];
 
 int         DoPerturbation();
 void        BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
+void        bf2BigNum(BigDouble *BigNum, bf_t bfNum);
+extern void cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
 
-extern  void    cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
+
+/*************************************************************************
+    Format string derived from a Bignum
+    mpf_get_str() generates strings without decimal points and gives the exponent
+    so we need to format it as a normal number
+*************************************************************************/
+
+//void ConvertBignum2String(char *s, mpfr_t num)                                // needed only for debugging
+//    {
+//    char FormatString[24];
+//
+//    sprintf(FormatString, "%%.%dRf", decimals + PRECISION_FACTOR);
+//    mpfr_sprintf(s, FormatString, num);
+//    }
 
 /**************************************************************************
 	Initialise Perturbation engine
@@ -68,6 +83,7 @@ bool	InitPerturbation(void)
     {
     double  mandel_width;    // width of display
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
+    char s[1200];
 
 #ifdef ALLOW_MPFR
     int bitcount = decimals * 5;
@@ -75,7 +91,7 @@ bool	InitPerturbation(void)
         bitcount = 30;
     if (bitcount > SIZEOF_BF_VARS - 10)
         bitcount = SIZEOF_BF_VARS - 10;
-    mpfr_set_default_prec(bitcount);
+//    mpfr_set_default_prec(bitcount);
 
     BigDouble xBigCentre, yBigCentre;
     double  Magnification;
@@ -98,9 +114,19 @@ bool	InitPerturbation(void)
     cvtcentermag(&xCentre, &yCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);
 #endif // ALLOW_MPFR
 
-    mandel_width = g_y_max - g_y_min;
-//    mandel_width = 1.0 / Magnification;
-/*
+
+    if (bf_math == bf_math_type::NONE) 
+        mandel_width = g_y_max - g_y_min;
+    else
+        {
+        BigDouble   t1, t2, t3;
+        bf2BigNum(&t1, g_bf_y_max);
+        bf2BigNum(&t2, g_bf_y_min);
+        t3 = t1 - t2;
+        mandel_width = t3.BigDoubleToDouble();
+        }
+
+    /*
     if (method >= TIERAZONFILTERS)
 	TZfilter.InitFilter(method, threshold, dStrands, &FilterRGB, UseCurrentPalette);		// initialise the constants used by Tierazon fractals
     if (BigNumFlag)
@@ -148,17 +174,14 @@ int	DoPerturbation(void)
     }
 
 /*************************************************************************
-    Format string derived from a Bignum
-    mpf_get_str() generates strings without decimal points and gives the exponent
-    so we need to format it as a normal number
+    Format Bignum derived from a string
+    mpf_set_str() Bignum from strings in the format:
+    MeN, where M = mantissa and N exponent
 *************************************************************************/
 
-void	ConvertBignum2String(char *s, mpfr_t num)
+void	ConvertString2Bignum(mpfr_t num, char *s)
     {
-    char    FormatString[24];
-
-    sprintf(FormatString, "%%.%dRf", decimals + PRECISION_FACTOR);
-    mpfr_sprintf(s, FormatString, num);
+    mpfr_set_str(num, s, 10, MPFR_RNDN);
     }
 
 /**************************************************************************
@@ -175,7 +198,7 @@ void bf2BigNum(BigDouble *BigNum, bf_t bfNum)
     bigstr = new char[bfLengthNeeded];
 
     bftostr(bigstr, dec, bfNum);
-    ConvertBignum2String(bigstr, BigNum->x);
+    ConvertString2Bignum(BigNum->x, bigstr);
 
     if (bigstr)  {delete[] bigstr; bigstr = NULL;}
     }
@@ -192,11 +215,13 @@ void BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, do
     BigDouble   BigHeight;
     BigDouble   BigTmpx;
     BigDouble   BigXmax, BigXmin, BigYmax, BigYmin;
+    char s[1200];
 
     bf2BigNum(&BigXmax, g_bf_x_max);
     bf2BigNum(&BigXmin, g_bf_x_min);
     bf2BigNum(&BigYmax, g_bf_y_max);
     bf2BigNum(&BigYmin, g_bf_y_min);
+
     // simple normal case first
     // if (g_x_3rd == g_x_min && g_y_3rd == g_y_min)
     if (!cmp_bf(g_bf_x_3rd, g_bf_x_min) && !cmp_bf(g_bf_y_3rd, g_bf_y_min))
