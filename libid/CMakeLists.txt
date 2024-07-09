@@ -15,6 +15,7 @@ add_library(libid
     PertFn.cpp
     Perturbation.cpp
     MandelDerivatives.cpp
+    BigManDerivatives.cpp
 
     include/Point.h
     include/gmp.h

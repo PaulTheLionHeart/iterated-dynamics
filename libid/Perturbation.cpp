@@ -67,13 +67,13 @@ extern void cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double
     so we need to format it as a normal number
 *************************************************************************/
 
-//void ConvertBignum2String(char *s, mpfr_t num)                                // needed only for debugging
-//    {
-//    char FormatString[24];
-//
-//    sprintf(FormatString, "%%.%dRf", decimals + PRECISION_FACTOR);
-//    mpfr_sprintf(s, FormatString, num);
-//    }
+void ConvertBignum2String(char *s, mpfr_t num)                                // can be used for debugging
+    {
+    char FormatString[24];
+
+    sprintf(FormatString, "%%.%dRf", decimals + PRECISION_FACTOR);
+    mpfr_sprintf(s, FormatString, num);
+    }
 
 /**************************************************************************
 	Initialise Perturbation engine
@@ -200,6 +200,22 @@ void bf2BigNum(BigDouble *BigNum, bf_t bfNum)
     bftostr(bigstr, dec, bfNum);
     ConvertString2Bignum(BigNum->x, bigstr);
 
+    if (bigstr)  {delete[] bigstr; bigstr = NULL;}
+    }
+    
+/**************************************************************************
+	Convert Bignum to bf
+**************************************************************************/
+
+void BigNum2bf(bf_t *bfNum, BigDouble BigNum)
+    {
+    // let's just do a quick and dirty for now going via text.
+    char    *bigstr = NULL;
+    int     dec = g_decimals;
+
+    bigstr = new char[SIZEOF_BF_VARS];
+    ConvertBignum2String(bigstr, BigNum.x);
+    strtobf(*bfNum, bigstr);
     if (bigstr)  {delete[] bigstr; bigstr = NULL;}
     }
     

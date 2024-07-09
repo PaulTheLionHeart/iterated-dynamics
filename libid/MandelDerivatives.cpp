@@ -15,9 +15,9 @@
 #include    "bailout_formula.h"
 #include    "pixel_grid.h"
 
-extern  double g_params[];
+extern  double      g_params[];
 extern  bailouts    g_bail_out_test;
-extern  double g_magnitude_limit;
+extern  double      g_magnitude_limit;
 extern  DComplex    g_old_z, g_new_z;
 
 static  Complex Sqr, sqrsqr, z, q;
@@ -227,8 +227,8 @@ int	   RunManDerFunctions(int subtype, Complex *z, Complex *q/*, BYTE *SpecialFl
 	        else
 		        {
 		        *z = z->CPolynomial(degree);
-		        z->x = (g_params[3] == 1.0 ? -z->x : z->x) + q->x;
-		        z->y = (g_params[3] == 1.0 ? z->y : -z->y) + q->y;
+		        z->x = (g_params[5] == 1.0 ? -z->x : z->x) + q->x;
+		        z->y = (g_params[5] == 1.0 ? z->y : -z->y) + q->y;
 		        }
 	        return BailoutTest(z, Sqr);
 
