@@ -16,6 +16,8 @@ add_library(libid
     Perturbation.cpp
     MandelDerivatives.cpp
     BigManDerivatives.cpp
+    TierazonFunctions.cpp
+    BigTZ.cpp
 
     include/Point.h
     include/gmp.h

@@ -32,3 +32,8 @@ int init_mand_derivatives();
 int run_mand_derivatives();
 int init_big_mand_derivatives();
 int run_big_mand_derivatives();
+// PHD 240710
+int init_tierazon();
+int run_tierazon();
+int init_big_tierazon();
+int run_big_tierazon();

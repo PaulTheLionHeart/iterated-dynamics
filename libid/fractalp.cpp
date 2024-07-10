@@ -152,7 +152,10 @@ MOREPARAMS g_more_fractal_params[] =
     {fractal_type::FFORMULA         , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::ANT              , {"+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
     {fractal_type::PERTURBATION     , {"Positive? 1=yes,0=no (for subtype 53)", "", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},                   // PHD 240706
-    {fractal_type::MANDELDERIVATIVES, {"Bailout Test (mod, real, imag, or, and, manh, manr)", "Rotated? (Only for degree > 2, 1=yes 0=no)", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240709
+    {fractal_type::MANDELDERIVATIVES, {"Bailout Test ", "Rotated? (1=yes 0=no) ", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240709
+    {fractal_type::TIERAZON         , {"Bailout Test ", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240710
+//    {fractal_type::MANDELDERIVATIVES, {"Bailout Test (mod, real, imag, or, and, manh, manr)", "Rotated? (Only for degree > 2, 1=yes 0=no)", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240709
+//    {fractal_type::TIERAZON         , {"Bailout Test (mod, real, imag, or, and, manh, manr)", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240710
     {fractal_type::MANDELBROTMIX4   , {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::NOFRACTAL        , { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr    }, {0, 0, 0, 0, 0, 0}}
 };
@@ -181,6 +184,7 @@ AlternateMath g_alternate_math[] =
     {fractal_type::DIVIDE_BROT5, bf_math_type::BIGFLT, DivideBrot5bfFractal, dividebrot5bf_per_pixel, MandelbfSetup},
     {fractal_type::PERTURBATION, bf_math_type::BIGFLT, nullptr, nullptr, InitPerturbation},
     {fractal_type::MANDELDERIVATIVES, bf_math_type::BIGFLT, init_big_mand_derivatives, run_big_mand_derivatives, MandelbfSetup},
+    {fractal_type::TIERAZON, bf_math_type::BIGFLT, init_big_tierazon, run_big_tierazon, MandelbfSetup},
     {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}};
 
 // These are only needed for types with both integer and float variations
@@ -2303,7 +2307,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "perturbation",              // PHD 240709
         {
-            "subtype",
+            "subtype (0 - 54)",
             "Power (for subtype 1, 11 and 53)",
             "a real for subtype 53",
             "a imag for subtype 53"
@@ -2319,13 +2323,26 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "manderivatives",              // PHD 240709
         {
-            "subtype", "Power", realz0, realz0
+            "subtype (0 - 58)", "Power (where appropriate)", realz0, realz0
         },
         {0, 3, 0, 0},
         help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::MORE|fractal_flags::BF_MATH, // PHD 240702
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
         run_mand_derivatives, init_mand_derivatives, StandardSetup, standard_fractal, 
+        STDBAILOUT
+    },
+
+    {
+        "tierazon",              // PHD 240709
+        {
+            "subtype (0 - 177)", "Power (where appropriate)", realz0, realz0
+        },
+        {0, 3, 0, 0},
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::MORE|fractal_flags::BF_MATH, // PHD 240702
+        -2.0F, 2.0F, -1.5F, 1.5F,
+        0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
+        run_tierazon, init_tierazon, StandardSetup, standard_fractal, 
         STDBAILOUT
     },
 

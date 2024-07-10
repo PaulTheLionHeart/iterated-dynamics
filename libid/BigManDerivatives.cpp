@@ -17,8 +17,10 @@
 //#include    "pixel_grid.h"
 
 
-extern double g_params[];
-extern BFComplex bfparm, bfnew, bfold;
+extern  double  g_params[];
+extern  BFComplex bfparm, bfnew, bfold;
+extern  int     g_row;
+extern  int     g_col;
 
 
 static BigComplex   sqrBig, zBig, qBig, sqrsqrBig;
@@ -37,81 +39,81 @@ extern  void        BigNum2bf(bf_t *bfNum, BigDouble BigNum);
 int	BigInitManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     {
     switch (subtype)
-	{
-	case 0:				// Perpendicular Mandelbrot
-	case 1:				// Burning Ship
-	case 3:				// Perpendicular Burning Ship
-	case 5:				// Perpendicular Buffalo
-	case 8:				// Mandelbar Celtic
-	case 9:				// Perpendicular Celtic
-	case 10:			// Cubic Flying Squirrel (Buffalo Imaginary)
-	case 11:			// Heart Mandelbrot
-	case 12:			// Celtic Heart
-	case 13:			// Partial Cubic Burning Ship Real
-	case 14:			// Partial Cubic Burning Ship Imaginary
-	case 15:			// Partial Cubic Buffalo Real (Celtic)
-	case 16:			// Cubic Quasi Burning Ship (Buffalo Burning Ship Hybrid)
-	case 17:			// Cubic Quasi Perpendicular
-	case 18:			// Cubic Quasi Heart
-	case 19:			// Mandelbrot 4th Order
-	case 20:			// Mandelbar 4th Order
-	case 21:			// Burning Ship 4th Order
-	case 22:			// Burning Ship 4th Partial Imag
-	case 23:			// Burning Ship 4th Partial Real
-	case 24:			// Burning Ship 4th Partial Real Mbar
-	case 25:			// Celtic Burning Ship 4th
-	case 26:			// Celtic Burning Ship 4th Partial Imag
-	case 27:			// Celtic Burning Ship 4th Partial Real
-	case 28:			// Celtic Burning Ship 4th Partial Real Mbar
-	case 29:			// Buffalo 4th Order
-	case 30:			// Buffalo 4th Partial Imag
-	case 31:			// Celtic (Buffalo 4th Partial Real)
-	case 32:			// Celtic 4th Mbar
-	case 33:			// False Quasi Perpendicular 4th
-	case 34:			// False Quasi Heart 4th
-	case 35:			// Celtic False Quasi Perpendicular 4th
-	case 36:			// Celtic False Quasi Heart 4th
-	case 37:			// Imag Quasi Perpendicular / Heart 4th
-	case 38:			// Real Quasi Perpendicular 4th
-	case 39:			// Real Quasi Heart 4th
-	case 40:			// Celtic Imag Quasi Perpendicular / Heart 4th
-	case 41:			// Celtic Real Quasi Perpendicular 4th
-	case 42:			// Celtic Real Quasi Heart 4th
-	case 43:			// Mandelbrot 5th
-	case 44:			// Mandelbar 5th (Vertical)
-	case 45:			// Mandelbar 5th (horizontal)
-	case 46:			// Burning Ship 5th
-	case 47:			// Buffalo 5th
-	case 48:			// Burning Ship 5th Partial
-	case 49:			// Burning Ship 5th Partial Mbar
-	case 50:			// Celtic 5th (Buffalo 5th Partial)
-	case 51:			// Celtic 5th Mbar
-	case 52:			// Quazi Burning Ship 5th (BS/Buffalo Hybrid)
-	case 53:			// Quazi Perpendicular 5th
-	case 54:			// Quazi Heart 5th
-	case 57:			// Kung Fu Panda
-	case 58:			// HPDZ Buffalo
-	case 59:			// SzegediButterfly 1
-	case 60:			// SzegediButterfly 2
-//	    if (!juliaflag)
-		    {
-		    zBig->x = qBig->x + g_params[2];
-		    zBig->y = qBig->y + g_params[3];
-		    }
-	    break;
-	case 2:				// Burning Ship of Higher Degree
-	case 4:				// Buffalo
-	case 6:				// Mandelbar (Tricorn)
-	case 7:				// Celtic
-	case 55:			// SimonBrot
-	case 56:			// SimonBrot2
-//	    if (!juliaflag)
-		    {
-		    zBig->x = qBig->x + g_params[2];
-		    zBig->y = qBig->y + g_params[3];
-		    }
-	    break;
-	}
+	    {
+	    case 0:				// Perpendicular Mandelbrot
+	    case 1:				// Burning Ship
+	    case 3:				// Perpendicular Burning Ship
+	    case 5:				// Perpendicular Buffalo
+	    case 8:				// Mandelbar Celtic
+	    case 9:				// Perpendicular Celtic
+	    case 10:			// Cubic Flying Squirrel (Buffalo Imaginary)
+	    case 11:			// Heart Mandelbrot
+	    case 12:			// Celtic Heart
+	    case 13:			// Partial Cubic Burning Ship Real
+	    case 14:			// Partial Cubic Burning Ship Imaginary
+	    case 15:			// Partial Cubic Buffalo Real (Celtic)
+	    case 16:			// Cubic Quasi Burning Ship (Buffalo Burning Ship Hybrid)
+	    case 17:			// Cubic Quasi Perpendicular
+	    case 18:			// Cubic Quasi Heart
+	    case 19:			// Mandelbrot 4th Order
+	    case 20:			// Mandelbar 4th Order
+	    case 21:			// Burning Ship 4th Order
+	    case 22:			// Burning Ship 4th Partial Imag
+	    case 23:			// Burning Ship 4th Partial Real
+	    case 24:			// Burning Ship 4th Partial Real Mbar
+	    case 25:			// Celtic Burning Ship 4th
+	    case 26:			// Celtic Burning Ship 4th Partial Imag
+	    case 27:			// Celtic Burning Ship 4th Partial Real
+	    case 28:			// Celtic Burning Ship 4th Partial Real Mbar
+	    case 29:			// Buffalo 4th Order
+	    case 30:			// Buffalo 4th Partial Imag
+	    case 31:			// Celtic (Buffalo 4th Partial Real)
+	    case 32:			// Celtic 4th Mbar
+	    case 33:			// False Quasi Perpendicular 4th
+	    case 34:			// False Quasi Heart 4th
+	    case 35:			// Celtic False Quasi Perpendicular 4th
+	    case 36:			// Celtic False Quasi Heart 4th
+	    case 37:			// Imag Quasi Perpendicular / Heart 4th
+	    case 38:			// Real Quasi Perpendicular 4th
+	    case 39:			// Real Quasi Heart 4th
+	    case 40:			// Celtic Imag Quasi Perpendicular / Heart 4th
+	    case 41:			// Celtic Real Quasi Perpendicular 4th
+	    case 42:			// Celtic Real Quasi Heart 4th
+	    case 43:			// Mandelbrot 5th
+	    case 44:			// Mandelbar 5th (Vertical)
+	    case 45:			// Mandelbar 5th (horizontal)
+	    case 46:			// Burning Ship 5th
+	    case 47:			// Buffalo 5th
+	    case 48:			// Burning Ship 5th Partial
+	    case 49:			// Burning Ship 5th Partial Mbar
+	    case 50:			// Celtic 5th (Buffalo 5th Partial)
+	    case 51:			// Celtic 5th Mbar
+	    case 52:			// Quazi Burning Ship 5th (BS/Buffalo Hybrid)
+	    case 53:			// Quazi Perpendicular 5th
+	    case 54:			// Quazi Heart 5th
+	    case 57:			// Kung Fu Panda
+	    case 58:			// HPDZ Buffalo
+	    case 59:			// SzegediButterfly 1
+	    case 60:			// SzegediButterfly 2
+//    	    if (!juliaflag)
+		        {
+		        zBig->x = qBig->x + g_params[2];
+		        zBig->y = qBig->y + g_params[3];
+		        }
+	        break;
+	    case 2:				// Burning Ship of Higher Degree
+	    case 4:				// Buffalo
+	    case 6:				// Mandelbar (Tricorn)
+	    case 7:				// Celtic
+	    case 55:			// SimonBrot
+	    case 56:			// SimonBrot2
+//    	    if (!juliaflag)
+		        {
+		        zBig->x = qBig->x + g_params[2];
+		        zBig->y = qBig->y + g_params[3];
+		        }
+	        break;
+	    }
 
 
     return 0;
@@ -124,8 +126,8 @@ int	BigInitManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     {
     switch (subtype)
-	{
-	case 0:						// Perpendicular Mandelbrot
+	    {
+	    case 0:						// Perpendicular Mandelbrot
 
 /**************************************************************************
     Perpendicular Mandelbrot
@@ -142,34 +144,34 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     Zooms 182 magnification 6.13e54
 ***************************************************************************/
 
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = zBig->x;
-	    realimagBig = tBig.BigAbs() * zBig->y;
-	    zBig->x = qBig->x + sqrBig.x - sqrBig.y;
-	    zBig->y = -(realimagBig + realimagBig - qBig->y);
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = zBig->x;
+	        realimagBig = tBig.BigAbs() * zBig->y;
+	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
+	        zBig->y = -(realimagBig + realimagBig - qBig->y);
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 1:						// Burning Ship
-	    {
-	    BigDouble	t, realimagBig;
-	    BigComplex	sqrBig;
+	    case 1:						// Burning Ship
+	        {
+	        BigDouble	t, realimagBig;
+	        BigComplex	sqrBig;
 
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    t = zBig->x * zBig->y;
-	    realimagBig = t.BigAbs();
-	    zBig->x = qBig->x + sqrBig.x - sqrBig.y;
-	    zBig->y = realimagBig + realimagBig - qBig->y;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
-        }
-	case 2:						// Burning Ship of Higher Degree
-	    zBig->x = zBig->x.BigAbs();
-	    zBig->y = -zBig->y.BigAbs();
-	    *zBig = *qBig + zBig->CPolynomial(degree);
-	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        t = zBig->x * zBig->y;
+	        realimagBig = t.BigAbs();
+	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
+	        zBig->y = realimagBig + realimagBig - qBig->y;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
+            }
+	    case 2:						// Burning Ship of Higher Degree
+	        zBig->x = zBig->x.BigAbs();
+	        zBig->y = -zBig->y.BigAbs();
+	        *zBig = *qBig + zBig->CPolynomial(degree);
+	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
 
-	case 3:						// Perpendicular Burning Ship
+	    case 3:						// Perpendicular Burning Ship
 
 /**************************************************************************
     Perpendicular BurningShip
@@ -185,166 +187,166 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     Imaginary -0.355,631,230,436,806,548,631,431,830,9­06,449,574,310,522,006,013,120,497,532,0
     Zooms 182 magnification 6.13e54
 ***************************************************************************/
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    realimagBig = zBig->x * zBig->y.BigAbs();
-	    zBig->x = qBig->x + sqrBig.x - sqrBig.y;
-	    zBig->y = realimagBig + realimagBig + qBig->y;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        realimagBig = zBig->x * zBig->y.BigAbs();
+	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
+	        zBig->y = realimagBig + realimagBig + qBig->y;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 4:						// Buffalo (works according to Kalles Fraktaller)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    if (degree == 2)
-		    {
-		    zBig->y = zBig->x.BigAbs() * zBig->y.BigAbs() * -2.0 - qBig->y;
-		    tBig = sqrBig.x - sqrBig.y;
-		    zBig->x = qBig->x + tBig.BigAbs();
-		    }
-	    else if (degree == 3)
-		    {
-		    tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
-		    zBig->y = tBig.BigAbs() - qBig->y;
-		    tBig = (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-		    zBig->x = qBig->x + tBig.BigAbs();
-		    }
-	    else	// degree > 3
-		    {
-		    *zBig = zBig->CPolynomial(degree);
-		    zBig->y = zBig->y.BigAbs() - qBig->y;
-		    zBig->x = zBig->x.BigAbs() + qBig->x;
-		    }
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 4:						// Buffalo (works according to Kalles Fraktaller)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        if (degree == 2)
+		        {
+		        zBig->y = zBig->x.BigAbs() * zBig->y.BigAbs() * -2.0 - qBig->y;
+		        tBig = sqrBig.x - sqrBig.y;
+		        zBig->x = qBig->x + tBig.BigAbs();
+		        }
+	        else if (degree == 3)
+		        {
+		        tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
+		        zBig->y = tBig.BigAbs() - qBig->y;
+		        tBig = (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
+		        zBig->x = qBig->x + tBig.BigAbs();
+		        }
+	        else	// degree > 3
+		        {
+		        *zBig = zBig->CPolynomial(degree);
+		        zBig->y = zBig->y.BigAbs() - qBig->y;
+		        zBig->x = zBig->x.BigAbs() + qBig->x;
+		        }
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 5:						// Perpendicular Buffalo - (according to Kalles Fraktaller)
-	    tBig = zBig->x.BigAbs();
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->y * tBig * -2.0 + qBig->y;
-	    tBig = sqrBig.x - sqrBig.y;
-	    zBig->x = qBig->x + tBig.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 5:						// Perpendicular Buffalo - (according to Kalles Fraktaller)
+	        tBig = zBig->x.BigAbs();
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->y * tBig * -2.0 + qBig->y;
+	        tBig = sqrBig.x - sqrBig.y;
+	        zBig->x = qBig->x + tBig.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 6:						// Mandelbar (Tricorn)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    if (degree == 2)
-		    {
-		    realimagBig = zBig->x * zBig->y;
-		    zBig->x = qBig->x + sqrBig.x - sqrBig.y;
-		    zBig->y = qBig->y - realimagBig - realimagBig;
-		    }
-	    else
-		    {
-		    *zBig = zBig->CPolynomial(degree);
-		    zBig->y = (g_params[5] == 1.0 ? zBig->y : -zBig->y) + qBig->y;
-		    zBig->x = (g_params[5] == 1.0 ? -zBig->x : zBig->x) + qBig->x;
-		    }
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 6:						// Mandelbar (Tricorn)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        if (degree == 2)
+		        {
+		        realimagBig = zBig->x * zBig->y;
+		        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
+		        zBig->y = qBig->y - realimagBig - realimagBig;
+		        }
+	        else
+		        {
+		        *zBig = zBig->CPolynomial(degree);
+		        zBig->y = (g_params[5] == 1.0 ? zBig->y : -zBig->y) + qBig->y;
+		        zBig->x = (g_params[5] == 1.0 ? -zBig->x : zBig->x) + qBig->x;
+		        }
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 7:						// Celtic
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    if (degree == 2)
-		    {
-		    realimagBig = zBig->x * zBig->y;
-		    zBig->y = -realimagBig - realimagBig - qBig->y;
-		    tBig = sqrBig.x - sqrBig.y;
-		    zBig->x = -qBig->x - tBig.BigAbs();
-		    }
-	    else	// degree > 2
-		    {
-		    *zBig = zBig->CPolynomial(degree);
-		    zBig->y += qBig->y;
-		    zBig->x = -qBig->x - zBig->x.BigAbs();
-		    }
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 7:						// Celtic
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        if (degree == 2)
+		        {
+		        realimagBig = zBig->x * zBig->y;
+		        zBig->y = -realimagBig - realimagBig - qBig->y;
+		        tBig = sqrBig.x - sqrBig.y;
+		        zBig->x = -qBig->x - tBig.BigAbs();
+		        }
+	        else	// degree > 2
+		        {
+		        *zBig = zBig->CPolynomial(degree);
+		        zBig->y += qBig->y;
+		        zBig->x = -qBig->x - zBig->x.BigAbs();
+		        }
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 8:						// Mandelbar Celtic
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x * zBig->y * -2.0 + qBig->y;
-	    tBig = sqrBig.x - sqrBig.y;
-	    zBig->x = qBig->x + tBig.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 8:						// Mandelbar Celtic
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x * zBig->y * -2.0 + qBig->y;
+	        tBig = sqrBig.x - sqrBig.y;
+	        zBig->x = qBig->x + tBig.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 9:						// Perpendicular Celtic
-	    tBig = zBig->x.BigAbs();
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->y * tBig * -2.0 + qBig->y;
-	    tBig = sqrBig.x - sqrBig.y;
-	    zBig->x = qBig->x + tBig.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 9:						// Perpendicular Celtic
+	        tBig = zBig->x.BigAbs();
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->y * tBig * -2.0 + qBig->y;
+	        tBig = sqrBig.x - sqrBig.y;
+	        zBig->x = qBig->x + tBig.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 10:					// Cubic Flying Squirrel (Buffalo Imaginary)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
-	    zBig->y = tBig.BigAbs() - qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 10:					// Cubic Flying Squirrel (Buffalo Imaginary)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
+	        zBig->y = tBig.BigAbs() - qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 11:					// Heart Mandelbrot
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
-	    zBig->x = sqrBig.x - sqrBig.y + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 11:					// Heart Mandelbrot
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
+	        zBig->x = sqrBig.x - sqrBig.y + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 12:					// Celtic Heart
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
-	    tBig = sqrBig.x - sqrBig.y;
-	    zBig->x = qBig->x + tBig.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 12:					// Celtic Heart
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
+	        tBig = sqrBig.x - sqrBig.y;
+	        zBig->x = qBig->x + tBig.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 13:					// Partial Cubic Burning Ship Real
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 13:					// Partial Cubic Burning Ship Real
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 14:					// Partial Cubic Burning Ship Imaginary
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y.BigAbs() + qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 14:					// Partial Cubic Burning Ship Imaginary
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y.BigAbs() + qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 15:					// Partial Cubic Buffalo Real (Celtic)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
-	    tBig = (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-	    zBig->x = qBig->x + tBig.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 15:					// Partial Cubic Buffalo Real (Celtic)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
+	        tBig = (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
+	        zBig->x = qBig->x + tBig.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 16:					// Cubic Quasi Burning Ship (Buffalo Burning Ship Hybrid)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
-	    zBig->y = -tBig.BigAbs() + qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 16:					// Cubic Quasi Burning Ship (Buffalo Burning Ship Hybrid)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
+	        zBig->y = -tBig.BigAbs() + qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 17:					// Cubic Quasi Perpendicular
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = sqrBig.x * 3.0 - sqrBig.y;
-	    zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 17:					// Cubic Quasi Perpendicular
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = sqrBig.x * 3.0 - sqrBig.y;
+	        zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 18:					// Cubic Quasi Heart
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = sqrBig.x * 3.0 - sqrBig.y;
-	    zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
-	    zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 18:					// Cubic Quasi Heart
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = sqrBig.x * 3.0 - sqrBig.y;
+	        zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
+	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
     /****************************************************************
 	4th Order Fractals:
@@ -354,342 +356,342 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	Non ABS Variations (2)
     ****************************************************************/
 
-	case 19:					// Mandelbrot 4th Order
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    realimagBig = zBig->x * zBig->y;
-	    zBig->y = realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 19:					// Mandelbrot 4th Order
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        realimagBig = zBig->x * zBig->y;
+	        zBig->y = realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 20:					// Mandelbar 4th Order
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    realimagBig = zBig->x * zBig->y;
-	    zBig->y = -realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 20:					// Mandelbar 4th Order
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        realimagBig = zBig->x * zBig->y;
+	        zBig->y = -realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
     /****************************************************************
-	***Straight ABS Variations (16)
+	Straight ABS Variations (16)
     ****************************************************************/
 
-	case 21:					// Burning Ship 4th Order
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    realimagBig = zBig->x * zBig->y;
-	    zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 21:					// Burning Ship 4th Order
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        realimagBig = zBig->x * zBig->y;
+	        zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 22:					// Burning Ship 4th Partial Imag
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 22:					// Burning Ship 4th Partial Imag
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 23:					// Burning Ship 4th Partial Real
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 23:					// Burning Ship 4th Partial Real
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 24:					// Burning Ship 4th Partial Real Mbar
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 24:					// Burning Ship 4th Partial Real Mbar
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 25:					// Celtic Burning Ship 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    realimagBig = zBig->x * zBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 25:					// Celtic Burning Ship 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        realimagBig = zBig->x * zBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 26:					// Celtic Burning Ship 4th Partial Imag
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 26:					// Celtic Burning Ship 4th Partial Imag
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 27:					// Celtic Burning Ship 4th Partial Real
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 27:					// Celtic Burning Ship 4th Partial Real
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 28:					// Celtic Burning Ship 4th Partial Real Mbar
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 28:					// Celtic Burning Ship 4th Partial Real Mbar
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 29:					// Buffalo 4th Order
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = zBig->x * zBig->y * (sqrBig.x - sqrBig.y);
-	    zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 29:					// Buffalo 4th Order
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = zBig->x * zBig->y * (sqrBig.x - sqrBig.y);
+	        zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 30:					// Buffalo 4th Partial Imag
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = zBig->x * zBig->y * (sqrBig.x - sqrBig.y);
-	    zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 30:					// Buffalo 4th Partial Imag
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = zBig->x * zBig->y * (sqrBig.x - sqrBig.y);
+	        zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 31:					// Celtic (Buffalo 4th Partial Real)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 31:					// Celtic (Buffalo 4th Partial Real)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 32:					// Celtic 4th Mbar
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    zBig->y = -zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 32:					// Celtic 4th Mbar
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        zBig->y = -zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
     /**************************************************************************
 	Quasi ABS Variations (10)
     ***************************************************************************/
 
-	case 33:					// False Quasi Perpendicular 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 33:					// False Quasi Perpendicular 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 34:					// False Quasi Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 34:					// False Quasi Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 35:					// Celtic False Quasi Perpendicular 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 35:					// Celtic False Quasi Perpendicular 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 36:					// Celtic False Quasi Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 36:					// Celtic False Quasi Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 37:					// Imag Quasi Perpendicular / Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 37:					// Imag Quasi Perpendicular / Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 38:					// Real Quasi Perpendicular 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 38:					// Real Quasi Perpendicular 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 39:					// Real Quasi Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 39:					// Real Quasi Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 40:					// Celtic Imag Quasi Perpendicular / Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 40:					// Celtic Imag Quasi Perpendicular / Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 41:					// Celtic Real Quasi Perpendicular 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 41:					// Celtic Real Quasi Perpendicular 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 42:					// Celtic Real Quasi Heart 4th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    tBig = (sqrBig.x - sqrBig.y);
-	    zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
-	    tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 42:					// Celtic Real Quasi Heart 4th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        tBig = (sqrBig.x - sqrBig.y);
+	        zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
+	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
     /****************************************************************
 	5th Order Fractals:
     ****************************************************************/
 
-	case 43:					// Mandelbrot 5th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 43:					// Mandelbrot 5th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 44:					// Mandelbar 5th (Vertical)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 44:					// Mandelbar 5th (Vertical)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 45:					// Mandelbar 5th (horizontal)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = -(sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 45:					// Mandelbar 5th (horizontal)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = -(sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 46:					// Burning Ship 5th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y.BigAbs() + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 46:					// Burning Ship 5th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y.BigAbs() + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 47:					// Buffalo 5th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y;
-	    zBig->y = tBig.BigAbs() + qBig->y;
-	    tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 47:					// Buffalo 5th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y;
+	        zBig->y = tBig.BigAbs() + qBig->y;
+	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 48:					// Burning Ship 5th Partial
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 48:					// Burning Ship 5th Partial
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 49:					// Burning Ship 5th Partial Mbar
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 49:					// Burning Ship 5th Partial Mbar
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 50:					// Celtic 5th (Buffalo 5th Partial)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 50:					// Celtic 5th (Buffalo 5th Partial)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 51:					// Celtic 5th Mbar
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
-	    tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
-	    zBig->x = tBig.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 51:					// Celtic 5th Mbar
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
+	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
+	        zBig->x = tBig.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 52:					// Quazi Burning Ship 5th (BS/Buffalo Hybrid)
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y;
-	    zBig->y = -tBig.BigAbs() + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 52:					// Quazi Burning Ship 5th (BS/Buffalo Hybrid)
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y;
+	        zBig->y = -tBig.BigAbs() + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 53:					// Quazi Perpendicular 5th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
-	    zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 53:					// Quazi Perpendicular 5th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
+	        zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 54:					// Quazi Heart 5th
-	    sqrBig.x = zBig->x.BigSqr();
-	    sqrBig.y = zBig->y.BigSqr();
-	    sqrsqrBig.x = sqrBig.x.BigSqr();
-	    sqrsqrBig.y = sqrBig.y.BigSqr();
-	    RealImagSqrBig = sqrBig.x * sqrBig.y;
-	    tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
-	    zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
-	    zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	    return (sqrBig.x + sqrBig.y > BigBailout);
+	    case 54:					// Quazi Heart 5th
+	        sqrBig.x = zBig->x.BigSqr();
+	        sqrBig.y = zBig->y.BigSqr();
+	        sqrsqrBig.x = sqrBig.x.BigSqr();
+	        sqrsqrBig.y = sqrBig.y.BigSqr();
+	        RealImagSqrBig = sqrBig.x * sqrBig.y;
+	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
+	        zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
+	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
+	        return (sqrBig.x + sqrBig.y > BigBailout);
 
-	case 55:					// SimonBrot
+	    case 55:					// SimonBrot
 /**************************************************************************
 	Run SimonBrot type fractals
 	z^n * |z|^2 + c	    (normal)
@@ -699,59 +701,59 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	some of the terms are fractions, this could be difficult to implement. In a roundabout way, there is
 	a power zero Simonbrot on Kalles Fraktaler, because the power zero Simonbrot is actually the Burning Ship.
 **************************************************************************/
-	    {
-	    BigComplex	zabsBig, tempzBig, sqrtzBig;
+	        {
+	        BigComplex	zabsBig, tempzBig, sqrtzBig;
 
-	    zabsBig.x = zBig->x.BigAbs();
-	    zabsBig.y = zBig->y.BigAbs();
-	    tempzBig.y = zBig->y * zabsBig.x + zBig->x * zabsBig.y;
-	    tempzBig.x = zBig->x * zabsBig.x - zBig->y * zabsBig.y;
-	    if (degree % 2 == 1)
-		    sqrtzBig = zBig->CSqrt();				// use square root power if degree is odd
-	    else
-		    sqrtzBig = 1.0;
-	    *zBig = tempzBig.CPolynomial(degree / 2) * sqrtzBig + *qBig;
-	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
-	    }
+	        zabsBig.x = zBig->x.BigAbs();
+	        zabsBig.y = zBig->y.BigAbs();
+	        tempzBig.y = zBig->y * zabsBig.x + zBig->x * zabsBig.y;
+	        tempzBig.x = zBig->x * zabsBig.x - zBig->y * zabsBig.y;
+	        if (degree % 2 == 1)
+		        sqrtzBig = zBig->CSqrt();				// use square root power if degree is odd
+	        else
+		        sqrtzBig = 1.0;
+	        *zBig = tempzBig.CPolynomial(degree / 2) * sqrtzBig + *qBig;
+	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+	        }
 
-	case 56:					// SimonBrot2
+	    case 56:					// SimonBrot2
 /**************************************************************************
 	Run SimonBrot2 type fractals
 	z^n * |z^2| + c	    (SimonBrot2)
 **************************************************************************/
-	    {
-	    BigComplex	zabsBig, tempzBig, sqrtzBig;
+	        {
+	        BigComplex	zabsBig, tempzBig, sqrtzBig;
 
-	    tempzBig = *zBig * *zBig;
-	    zabsBig.x = tempzBig.x.BigAbs();
-	    zabsBig.y = -tempzBig.y.BigAbs();
-	    tempzBig = zabsBig;
-	    if (degree % 2 == 1)
-		    sqrtzBig = zBig->CSqrt();				// use square root power if degree is odd
-	    else
-		    sqrtzBig = 1.0;
-	    *zBig = zBig->CPolynomial(degree / 2) * sqrtzBig * tempzBig + *qBig;
-	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
-	    }
+	        tempzBig = *zBig * *zBig;
+	        zabsBig.x = tempzBig.x.BigAbs();
+	        zabsBig.y = -tempzBig.y.BigAbs();
+	        tempzBig = zabsBig;
+	        if (degree % 2 == 1)
+		        sqrtzBig = zBig->CSqrt();				// use square root power if degree is odd
+	        else
+		        sqrtzBig = 1.0;
+	        *zBig = zBig->CPolynomial(degree / 2) * sqrtzBig * tempzBig + *qBig;
+	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+	        }
 
-	case 57:					// Kung Fu Panda
+	    case 57:					// Kung Fu Panda
 /**************************************************************************
 	Kung Fu Panda type fractals
 	z = abs(z*z)
 	z = z * z + p
 **************************************************************************/
-	    {
-	    BigComplex	t1, t2;
+	        {
+	        BigComplex	t1, t2;
 
-	    t1 = *zBig * *zBig;
-	    t2.x = t1.x.BigAbs();
-	    t2.y = t1.y.BigAbs();
-	    *zBig = t2 * t2 - *qBig;
+	        t1 = *zBig * *zBig;
+	        t2.x = t1.x.BigAbs();
+	        t2.y = t1.y.BigAbs();
+	        *zBig = t2 * t2 - *qBig;
 
-	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
-	    }
+	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+	        }
 
-	case 58:					// HPDZ Buffalo
+	    case 58:					// HPDZ Buffalo
 /**************************************************************************
 	HPDZ Buffalo type fractals
 	z := (((x^2 - y^2) - |x|) + i (|2xy| - |y|)) + c
@@ -759,23 +761,23 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	w := |x| + i |y|
 	z := w^2 - w + c
 **************************************************************************/
-	    {
-	    BigComplex w;
+	        {
+	        BigComplex w;
 
-	    w.x = zBig->x.BigAbs();
-	    w.y = zBig->y.BigAbs();
-	    *zBig = w * w - w;
-	    zBig->x += qBig->x;
-	    zBig->y -= qBig->y;
-//	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
-//	    ShowBignum(zBig->x, " CPixel Inside Buffalo Z.x");
-//	    ShowBignum(zBig->y, "CPixel Inside Buffalo Z.y");
-//	    ShowBignum(BigBailout, "CPixel bailout");
-	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
-	}
+	        w.x = zBig->x.BigAbs();
+	        w.y = zBig->y.BigAbs();
+	        *zBig = w * w - w;
+	        zBig->x += qBig->x;
+	        zBig->y -= qBig->y;
+//    	    return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+//    	    ShowBignum(zBig->x, " CPixel Inside Buffalo Z.x");
+//    	    ShowBignum(zBig->y, "CPixel Inside Buffalo Z.y");
+//    	    ShowBignum(BigBailout, "CPixel bailout");
+	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+	        }
 
 #ifdef SZEGEDBUTTERFLY
-	case 59:					// SzegediButterfly 1
+	    case 59:					// SzegediButterfly 1
 /**************************************************************************
 	Szegedi Butterfly
 	double temp = complex[0].getIm();
@@ -783,34 +785,34 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	complex[0] = new Complex(temp * temp - Math.sqrt(complex[0].getAbsRe()), temp2 * temp2 - Math.sqrt(complex[0].getAbsIm())).plus_mutable(complex[1]);
 	complex[0] = new Complex(temp2 * temp2 - Math.sqrt(complex[0].getAbsIm()), temp * temp - Math.sqrt(complex[0].getAbsRe())).plus_mutable(complex[1]);
 **************************************************************************/
-	    {
-	    sqr.x = z->x * z->x;
-	    sqr.y = z->y * z->y;
+	        {
+	        sqr.x = z->x * z->x;
+	        sqr.y = z->y * z->y;
 
-	    z->x = sqr.y - sqrt(fabs(z->x));
-	    z->y = sqr.x - sqrt(fabs(z->y));
-	    *z += *q;
+	        z->x = sqr.y - sqrt(fabs(z->x));
+	        z->y = sqr.x - sqrt(fabs(z->y));
+	        *z += *q;
 
-	    return (z->CSumSqr() >= rqlim);
-	    }
+	        return (z->CSumSqr() >= rqlim);
+	        }
 
-	case 60:					// SzegediButterfly 2
-	    {
-	    double  temp;
+	    case 60:					// SzegediButterfly 2
+	        {
+	        double  temp;
 
-	    sqr.x = z->x * z->x;
-	    sqr.y = z->y * z->y;
+	        sqr.x = z->x * z->x;
+	        sqr.y = z->y * z->y;
 
-	    temp = sqr.x - sqrt(fabs(z->y));
-	    z->y = sqr.y - sqrt(fabs(z->x));
-	    z->x = temp;
-	    *z += *q;
+	        temp = sqr.x - sqrt(fabs(z->y));
+	        z->y = sqr.y - sqrt(fabs(z->x));
+	        z->x = temp;
+	        *z += *q;
 
-	    return (z->CSumSqr() >= rqlim);
-	    }
+	        return (z->CSumSqr() >= rqlim);
+	        }
 
 #endif // SZEGEDBUTTERFLY
-	}
+	    }
     return 0;
     }
 
@@ -820,6 +822,10 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 
 int init_big_mand_derivatives()
     {
+    // parm.x = g_x_min + col*delx + row*delx2
+    mult_bf_int(bfparm.x, bfxdel, (U16) g_col);
+    mult_bf_int(bftmp, bfxdel2, (U16) g_row);
+
     bf2BigNum(&qBig.x, bfparm.x);
     bf2BigNum(&qBig.y, bfparm.y);
     bf2BigNum(&zBig.x, bfold.x);

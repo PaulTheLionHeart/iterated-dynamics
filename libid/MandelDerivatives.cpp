@@ -26,6 +26,8 @@ static  int degree, subtype;
 
 bool BailoutTest(Complex *z, Complex SqrZ);
 
+extern  bool FractintBailoutTest(Complex *z);
+
 /**************************************************************************
 	Initialise functions for each pixel
 **************************************************************************/
@@ -96,7 +98,6 @@ int	   InitManDerFunctions(int subtype, Complex *z, Complex *q)
 		        }
 	        Sqr = 0;
 	        real_imag = 0.0;
-
 	        break;
 	    case 2:				// Burning Ship of Higher Degree
 	    case 4:				// Buffalo
@@ -155,14 +156,11 @@ int	   RunManDerFunctions(int subtype, Complex *z, Complex *q/*, BYTE *SpecialFl
 	        return BailoutTest(z, Sqr);
 
 	    case 2:						// Burning Ship of Higher Degree
-	        Sqr.x = z->x * z->x;    // only required to make bailout function work
-	        Sqr.y = z->y * z->y;
 	        z->x = fabs(z->x);
 	        z->y = -fabs(z->y);
 	        *z = z->CPolynomial(degree);
 	        *z = *z + *q;
-	        return BailoutTest(z, Sqr);
-//	        return FractintBailoutTest(z);
+	        return FractintBailoutTest(z);
 
 	    case 3:						// Perpendicular Burning Ship
 
