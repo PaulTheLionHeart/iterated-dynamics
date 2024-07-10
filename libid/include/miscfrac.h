@@ -37,3 +37,5 @@ int init_tierazon();
 int run_tierazon();
 int init_big_tierazon();
 int run_big_tierazon();
+int init_art_matrix();
+int run_art_matrix();

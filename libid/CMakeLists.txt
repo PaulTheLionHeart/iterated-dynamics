@@ -18,6 +18,7 @@ add_library(libid
     BigManDerivatives.cpp
     TierazonFunctions.cpp
     BigTZ.cpp
+    ArtMatrix.cpp
 
     include/Point.h
     include/gmp.h
