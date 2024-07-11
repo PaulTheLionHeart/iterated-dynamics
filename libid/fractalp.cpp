@@ -184,8 +184,8 @@ AlternateMath g_alternate_math[] =
     {fractal_type::FPMANDELZPOWER, bf_math_type::BIGFLT, JuliaZpowerbfFractal, mandelbf_per_pixel, MandelbfSetup},
     {fractal_type::DIVIDE_BROT5, bf_math_type::BIGFLT, DivideBrot5bfFractal, dividebrot5bf_per_pixel, MandelbfSetup},
     {fractal_type::PERTURBATION, bf_math_type::BIGFLT, nullptr, nullptr, InitPerturbation},
-    {fractal_type::MANDELDERIVATIVES, bf_math_type::BIGFLT, init_big_mand_derivatives, run_big_mand_derivatives, MandelbfSetup},
-    {fractal_type::TIERAZON, bf_math_type::BIGFLT, init_big_tierazon, run_big_tierazon, MandelbfSetup},
+    {fractal_type::MANDELDERIVATIVES, bf_math_type::BIGFLT, run_big_mand_derivatives, init_big_mand_derivatives, MandelbfSetup},
+    {fractal_type::TIERAZON, bf_math_type::BIGFLT, run_big_tierazon, init_big_tierazon, MandelbfSetup},
     {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}};
 
 // These are only needed for types with both integer and float variations

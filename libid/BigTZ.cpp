@@ -2377,15 +2377,18 @@ int	BigRunTierazonFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 
 int init_big_tierazon()
     {
-    // parm.x = g_x_min + col*delx + row*delx2
-    mult_bf_int(bfparm.x, bfxdel, (U16) g_col);
-    mult_bf_int(bftmp, bfxdel2, (U16) g_row);
+    BigDouble BigDelx, BigDely, BigXMin, BigYMax;
 
-    bf2BigNum(&qBig.x, bfparm.x);
-    bf2BigNum(&qBig.y, bfparm.y);
+    bf2BigNum(&BigDelx, bfxdel);
+    bf2BigNum(&BigDely, bfydel);
+    bf2BigNum(&BigXMin, g_bf_x_min);
+    bf2BigNum(&BigYMax, g_bf_y_max);
+
+    qBig.y = BigYMax - BigDely * (double) g_row;
+    qBig.x = BigDelx * (double) g_col + BigXMin;
+
     bf2BigNum(&zBig.x, bfold.x);
     bf2BigNum(&zBig.y, bfold.y);
-
     subtype = (int) g_params[0];
     degree = (int) g_params[1];
     //    g_bail_out_test = (bailouts) g_params[4];
@@ -2396,7 +2399,7 @@ int init_big_tierazon()
     }
 
 /**************************************************************************
-    Run functions for each pixel
+    Run functions for each orbit
 **************************************************************************/
 
 int run_big_tierazon()
@@ -2405,8 +2408,5 @@ int run_big_tierazon()
     ReturnMode = BigRunTierazonFunctions(subtype, &zBig, &qBig);
     BigNum2bf(&bfnew.x, zBig.x);
     BigNum2bf(&bfnew.y, zBig.y);
-
-//    g_new_z.x = zBig.x;
-//    g_new_z.y = zBig.y;
     return ReturnMode;
     }

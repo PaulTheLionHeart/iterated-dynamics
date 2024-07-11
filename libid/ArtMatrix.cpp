@@ -24,7 +24,7 @@ extern double g_magnitude_limit;
 extern DComplex g_old_z, g_new_z;
 extern long g_max_iterations; // try this many iterations
 extern long g_color_iter;
-
+extern int g_color;
 extern  bool juliaflag; // for the time being
 
 static int type, subtype, special;
@@ -39,7 +39,7 @@ static int penn[4];
 
 static long color;
 
-static unsigned char phaseflag;
+unsigned char g_phaseflag;
 
 /*
 param 0 = type
@@ -306,19 +306,21 @@ int RunArtMatrix(int type, Complex *z, Complex *q)
 	        //    v.y += param[2];
 	        if (v.CSumSqr() <= 0.000001)
 		        {
-		        phaseflag = 0;				        // first phase
+		        g_phaseflag = 0;				        // first phase
 		        return(TRUE);
 		        }
 	        v = *z - lm5;
 	        if (v.CSumSqr() <= 0.000001)
 		        {
-		        phaseflag = 1;				        // second phase
+		        g_phaseflag = 1;				        // second phase
+                g_color += special;
 		        return(TRUE);
 		        }
 	        v = *z + lp5;
 	        if (v.CSumSqr() <= 0.000001)
 		        {
-		        phaseflag = 2;				        // third phase
+		        g_phaseflag = 2;				        // third phase
+                g_color += special * 2;
 		        return(TRUE);
 		        }
 	        return(FALSE);
@@ -337,12 +339,12 @@ int RunArtMatrix(int type, Complex *z, Complex *q)
 
 	        if (distance <= epsilon)
 		        {
-		        phaseflag = 0;			        // first phase
+		        g_phaseflag = 0;			        // first phase
 		        return(TRUE);
 		        }
 	        if (distance > escape)
 		        {
-		        phaseflag = 1;			        // second phase
+		        g_phaseflag = 1;			        // second phase
 		        return(TRUE);
 		        }
 	        return(FALSE);
@@ -403,7 +405,7 @@ int init_art_matrix()
     }
 
 /**************************************************************************
-	Run functions for each pixel
+	Run functions for each orbit
 **************************************************************************/
 
 int run_art_matrix()

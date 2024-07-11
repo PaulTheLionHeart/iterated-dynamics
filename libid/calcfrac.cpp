@@ -180,7 +180,9 @@ int g_attractor_period[MAX_NUM_ATTRACTORS] = { 0 };         // period of the fin
 int     g_inside_color = 0;             // inside color: 1=blue
 int     g_outside_color = COLOR_BLACK;  // outside color
 
-// --------------------------------------------------------------------
+extern unsigned char g_phaseflag;       // used for phase colours in Art Matrix fractals    // PHD 240711
+
+    // --------------------------------------------------------------------
 //              These variables are external for speed's sake only
 // --------------------------------------------------------------------
 
@@ -2231,6 +2233,14 @@ plot_pixel:
             g_color = 1;
         }
     }
+    if (g_fractal_type == fractal_type::ARTMATRIX && (g_params[0] == 1.0 || g_params[0] == 2.0))            // PHD240711
+        {
+        if (g_color_iter < g_max_iterations - 10)
+            g_color += (g_phaseflag * (int) g_params[2]);                                                   // plot different colours for different phases
+        else
+            g_color = 0;                                                                                    // needs more work!!!
+        }
+        
     (*g_plot)(g_col, g_row, g_color);
 
     g_max_iterations = savemaxit;

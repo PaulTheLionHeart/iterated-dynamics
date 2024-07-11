@@ -802,14 +802,14 @@ int init_mand_derivatives()
     subtype = (int) g_params[0];
     degree = (int) g_params[1];
     g_bail_out_test = (bailouts) g_params[4];
-    if (degree < 1)
-        degree = 1;
+    if (degree < 2)
+        degree = 2;
     InitManDerFunctions(subtype, &z, &q);
     return 0;
     }
 
 /**************************************************************************
-	Run functions for each pixel
+	Run functions for each orbit
 **************************************************************************/
 
 int run_mand_derivatives()
