@@ -186,6 +186,7 @@ AlternateMath g_alternate_math[] =
     {fractal_type::PERTURBATION, bf_math_type::BIGFLT, nullptr, nullptr, InitPerturbation},
     {fractal_type::MANDELDERIVATIVES, bf_math_type::BIGFLT, run_big_mand_derivatives, init_big_mand_derivatives, MandelbfSetup},
     {fractal_type::TIERAZON, bf_math_type::BIGFLT, run_big_tierazon, init_big_tierazon, MandelbfSetup},
+    {fractal_type::ARTMATRIX, bf_math_type::BIGFLT, run_big_art_matrix, init_big_art_matrix, MandelbfSetup},
     {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}};
 
 // These are only needed for types with both integer and float variations
@@ -2353,7 +2354,7 @@ fractalspecificstuff g_fractal_specific[] =
             "type (0 - 3)", "subtype", "special colour", realz0
         },
         {0, 0, 2, 0},
-        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::MORE/*|fractal_flags::BF_MATH*/, 
+        help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::MORE|fractal_flags::BF_MATH, 
         -2.0F, 2.0F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
         run_art_matrix, init_art_matrix, StandardSetup, standard_fractal, 
