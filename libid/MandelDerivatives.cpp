@@ -27,6 +27,7 @@ static  int degree, subtype;
 bool BailoutTest(Complex *z, Complex SqrZ);
 
 extern  bool FractintBailoutTest(Complex *z);
+extern  bool juliaflag; // for the time being - declared in TierazonFunctions.cpp
 
 /**************************************************************************
 	Initialise functions for each pixel
@@ -91,7 +92,7 @@ int	   InitManDerFunctions(int subtype, Complex *z, Complex *q)
 	    case 58:			// HPDZ Buffalo
 	    case 59:			// SzegediButterfly 1
 	    case 60:			// SzegediButterfly 2
-//	        if (!juliaflag)                             // let's worry about Julai sets later
+	        if (!juliaflag)                             // let's worry about Julai sets later
 		        {
 		        z->x = q->x + g_params[2];
 		        z->y = q->y + g_params[3];
@@ -105,7 +106,7 @@ int	   InitManDerFunctions(int subtype, Complex *z, Complex *q)
 	    case 7:				// Celtic
 	    case 55:			// SimonBrot
 	    case 56:			// SimonBrot2
-//	        if (!juliaflag)
+	        if (!juliaflag)
 		        {
 		        z->x = q->x + g_params[2];
 		        z->y = q->y + g_params[3];

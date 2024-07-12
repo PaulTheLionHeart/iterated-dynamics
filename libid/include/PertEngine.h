@@ -15,34 +15,21 @@
 
 #define	MAXPOWER    28
 #define MAXFILTER   9
-#define ALLOW_MPFR
 
 class CPertEngine 
     {
     public:
-#ifdef ALLOW_MPFR
-    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
-#else
-    int initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
-#endif // ALLOW_MPFR
-    int calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
+    int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
+    int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
     int     calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
             Point *glitchPoints, int user_data(), void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
-#ifdef ALLOW_MPFR
     int     ReferenceZoomPoint(BigComplex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
-#else
-    int     ReferenceZoomPoint(Complex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
-#endif // ALLOW_MPFR
 	void	LoadPascal(long PascalArray[], int n);
 	double	DiffAbs(const double c, const double d);
 	void	PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *DeltaSub0);
-#ifdef ALLOW_MPFR
-    void RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZTimes2);
-#else
-    void RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2);
-#endif // ALLOW_MPFR
+    void    RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZTimes2);
 	void	CloseTheDamnPointers(void);
 
 	Complex *XSubN = NULL;
@@ -67,11 +54,7 @@ class CPertEngine
 	int	    OutsideMethod;			// the number of the outside filter
 	long	GlitchPointCount;
 	long	RemainingPointCount;
-#ifdef ALLOW_MPFR
     BigDouble    xZoomPt, yZoomPt;
-#else
-    double    xZoomPt, yZoomPt;
-#endif // ALLOW_MPFR
 	double	ZoomRadius;
 	bool	calculateGlitches = true;
 	bool	seriesApproximation = false;

@@ -5,8 +5,6 @@
 #include "BigComplex.h"
 #include "Complex.h"
 
-#ifdef ALLOW_MPFR
-
 //Complex::Complex(void)
 //    {
 //    }
@@ -1012,4 +1010,3 @@ void	BigComplex::MTCCos(BigComplex *out, BigComplex in, BigDouble t1, BigDouble 
     }
 #endif // ALLOWNEWTRIG
 
-#endif //ALLOW_MPFR

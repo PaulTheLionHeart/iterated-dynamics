@@ -1383,6 +1383,8 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     double totaldist = 0.0;
     DComplex lastz = { 0.0 };
 
+    bool IsInside = false;              // used to process Art Matrix Newton and separate phases without currupting inside  // PHD 240712
+
     lcloseprox = (long)(g_close_proximity*g_fudge_factor);
     savemaxit = g_max_iterations;
     if (g_inside_color == STARTRAIL)
@@ -1546,6 +1548,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     {
         // calculation of one orbit goes here
         // input in "old" -- output in "new"
+        IsInside = false;                   // PHD 240712
         if (g_color_iter % check_freq == 0)
         {
             if (check_key())
@@ -1573,7 +1576,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             {
                 if (sqr(deriv.x)+sqr(deriv.y) > dem_toobig)
                 {
-                    break;
+                    break;      
                 }
             }
             else
@@ -2111,6 +2114,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     goto plot_pixel;
 
 plot_inside: // we're "inside"
+    IsInside = true;
     if (g_periodicity_check < 0 && caught_a_cycle)
     {
         g_color_iter = 7;           // show periodicity
@@ -2233,12 +2237,10 @@ plot_pixel:
             g_color = 1;
         }
     }
-    if (g_fractal_type == fractal_type::ARTMATRIX && (g_params[0] == 1.0 || g_params[0] == 2.0))            // PHD240711
+    if (g_fractal_type == fractal_type::ARTMATRIX && (g_params[0] == 1.0 || g_params[0] == 2.0))            // PHD 240711
         {
-        if (g_color_iter < g_max_iterations - 10)
+        if (!IsInside)
             g_color += (g_phaseflag * (int) g_params[2]);                                                   // plot different colours for different phases
-        else
-            g_color = 0;                                                                                    // needs more work!!!
         }
         
     (*g_plot)(g_col, g_row, g_color);

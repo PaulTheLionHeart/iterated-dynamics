@@ -36,7 +36,6 @@ static  BigDouble BigBailout, tBig, realimagBig, RealImagSqrBig;
 static  int     degree, subtype;
 static  double  d;
 
-// extern	void	ShowBignum(BigDouble x, char *Location);
 extern  void    bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern  void    BigNum2bf(bf_t *bfNum, BigDouble BigNum);
 
@@ -44,13 +43,13 @@ extern  bool    juliaflag;              // for the time being - declared in Tier
 
 extern	void	ShowBignum(BigDouble x, char *Location);
 
-
 /**************************************************************************
 	Initialise functions for each pixel
 **************************************************************************/
 
 int	BigInitTierazonFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     {
+    BigBailout = g_magnitude_limit;
     switch (subtype)
 	    {
 	    case 0:						// Mandelbrot
@@ -810,7 +809,7 @@ int	BigRunTierazonFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        z2Big = *zBig;
 	        *zBig = z1Big;
 	        d = zBig->CSumSqr();
-                return (d > g_magnitude_limit);
+            return (d > g_magnitude_limit);
 
 	    case 4:						// Talis, z=((z*z)/(1+z))+c
 	        *zBig = zBig->CSqr() / (*zBig + 1) + *qBig;

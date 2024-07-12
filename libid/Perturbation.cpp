@@ -85,7 +85,6 @@ bool	InitPerturbation(void)
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
     char s[1200];
 
-#ifdef ALLOW_MPFR
     int bitcount = decimals * 5;
     if (bitcount < 30)
         bitcount = 30;
@@ -108,13 +107,6 @@ bool	InitPerturbation(void)
         yBigCentre = yCentre;
         }
 
-#else
-    LDBL    Magnification;
-
-    cvtcentermag(&xCentre, &yCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);
-#endif // ALLOW_MPFR
-
-
     if (bf_math == bf_math_type::NONE) 
         mandel_width = g_y_max - g_y_min;
     else
@@ -131,17 +123,9 @@ bool	InitPerturbation(void)
 	TZfilter.InitFilter(method, threshold, dStrands, &FilterRGB, UseCurrentPalette);		// initialise the constants used by Tierazon fractals
     if (BigNumFlag)
 	mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
-*/
-#ifdef ALLOW_MPFR
+    */
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
-#else
-    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xCentre, -yCentre, mandel_width / 2, bflength/*, &TZfilter*/);
-#endif // ALLOW_MPFR
-
-
     DoPerturbation();
-
-
     return false;
     }
 
@@ -258,7 +242,7 @@ void BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, do
         *Rotation = 0.0;
         *Skew = 0.0;
         }
-/*
+/*              // something for later...
         else
         {
             bftmpx = alloc_stack(bflength + 2);

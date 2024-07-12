@@ -22,14 +22,11 @@ extern double g_magnitude_limit;
 extern long g_max_iterations; // try this many iterations
 extern long g_color_iter;
 
-static BigComplex aBig, bBig, a2Big, lm5Big, lp5Big, aa3Big, vBig, zBig, l2Big, t2Big, t3Big, ozBig, temp1Big, temp2Big,
-    ztBig,
-    qBig;
+static BigComplex aBig, bBig, a2Big, lm5Big, lp5Big, aa3Big, vBig, zBig, l2Big, t2Big, t3Big, ozBig, temp1Big, temp2Big, qBig;
 static BigDouble BigBailout, tBig, realimagBig, RealImagSqrBig;
 static int type, subtype, special;
 static double absolute, distance, der, epsilon, escape;
 
-// extern	void	ShowBignum(BigDouble x, char *Location);
 extern void bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern void BigNum2bf(bf_t *bfNum, BigDouble BigNum);
 
@@ -37,7 +34,6 @@ extern bool juliaflag; // for the time being - declared in TierazonFunctions.cpp
 extern unsigned char g_phaseflag;
 
 extern void ShowBignum(BigDouble x, char *Location);
-
 
 /**************************************************************************
 	Initialise functions for each pixel
@@ -52,23 +48,23 @@ int	BigInitArtMatrix(WORD type, BigComplex *zBig, BigComplex *qBig)
 	        BigComplex	tempBig;
 
 	        switch ((int) g_params[1])
-		    {
-		    case 0:
-		        subtype = 'B';
-		        break;
-		    case 1:
-		        subtype = 'C';
-		        break;
-		    case 2:
-		        subtype = 'F';
-		        break;
-		    case 3:
-		        subtype = 'K';
-		        break;
-		    default:
-		        subtype = 'B';
-		        break;
-		    }
+		        {
+		        case 0:
+		            subtype = 'B';
+		            break;
+		        case 1:
+		            subtype = 'C';
+		            break;
+		        case 2:
+		            subtype = 'F';
+		            break;
+		        case 3:
+		            subtype = 'K';
+		            break;
+		        default:
+		            subtype = 'B';
+		            break;
+		        }
 	        special = (int)g_params[2];
 	        if (special < 0)
 		        special = 0;
@@ -99,11 +95,11 @@ int	BigInitArtMatrix(WORD type, BigComplex *zBig, BigComplex *qBig)
 		            }
 		        }
 	        else if (subtype == 'K')			        // CKIN 
-		    {
-		    aBig = 0;
-		    vBig = 0;
-		    bBig = *qBig;				                // B = T
-		    }
+		        {
+		        aBig = 0;
+		        vBig = 0;
+		        bBig = *qBig;				                // B = T
+		        }
 	        aa3Big = aBig.CSqr()*3.0;			        // AA3 = A*A*3
 	        if (!juliaflag)
 		    *zBig = -aBig;				                // Z = -A
@@ -123,19 +119,18 @@ int	BigInitArtMatrix(WORD type, BigComplex *zBig, BigComplex *qBig)
 //	        period_level = FALSE;			            // no periodicity checking
 	        double	one = 1.0;
 	        if ((absolute = qBig->CSumSqr()) > one)
-		    return(-1);				                    // not inside set
+		        return(-1);				                // not inside set
 	        zBig->x = 1.0;
 	        zBig->y = 0.0;
-	        /* DO 300 I = 1,100 */
-	        /* 300  Z = L*(Z + 1/Z) */
+	        // DO 300 I = 1,100
+	        // 300  Z = L*(Z + 1/Z)
 	        for (int i = 0; i < 100; ++i)
-		    *zBig = (*zBig + zBig->CInvert()) * *qBig;
-
+		        *zBig = (*zBig + zBig->CInvert()) * *qBig;
 	        distance = 1.0;				                // D = 1 
 	        ozBig = zBig->CInvert();			        // OZ = 1/Z
 	        break;
 	        }
-       case 3:                                           // Rational Maps not implemented in bignum
+       case 3:                                          // Rational Maps not implemented in bignum
             {
             }
             break;
@@ -157,41 +152,41 @@ int	BigRunArtMatrix(WORD type, BigComplex *zBig, BigComplex *qBig)
 	        BigComplex	tempBig;
 
 	        if (subtype == 'K')				            // CKIN
-		    *zBig = zBig->CCube() + bBig;		        // Z = Z*Z*Z + B
+		        *zBig = zBig->CCube() + bBig;		    // Z = Z*Z*Z + B
 	        else					                    // Z = Z*Z*Z - AA3*Z + B
-		    {
-		    tempBig = zBig->CCube() + bBig;		        // Z = Z*Z*Z + B
-		    *zBig = tempBig - aa3Big * *zBig;	        // Z = Z*Z*Z - AA3*Z + B
-		    }
+		        {
+		        tempBig = zBig->CCube() + bBig;		    // Z = Z*Z*Z + B
+		        *zBig = tempBig - aa3Big * *zBig;	    // Z = Z*Z*Z - AA3*Z + B
+		        }
 	        if (zBig->CSumSqr() >= 100.0)
-		    return (TRUE);
-	        else
-		    {
-		    if (subtype == 'F')
-		        {
-		        if (qBig->CSumSqr() <= 0.111111)
-			    {
-			    g_color_iter = special;
-//			    *SpecialFlag = TRUE;		            // for decomp and biomorph
-			    return (TRUE);
-			    }
-		        vBig = *zBig + a2Big;
-		        }
-		    else if (subtype == 'K')
-		        vBig = *zBig - vBig;
-		    else
-		        vBig = *zBig - aBig;
-		    if (vBig.CSumSqr() <= 0.000001)
-		        {
-		        g_color_iter = special;
-//		        *SpecialFlag = TRUE;		        // for decomp and biomorph
 		        return (TRUE);
+	        else
+		        {
+		        if (subtype == 'F')
+		            {
+		            if (qBig->CSumSqr() <= 0.111111)
+			            {
+			            g_color_iter = special;
+    //			        *SpecialFlag = TRUE;		    // for decomp and biomorph
+			            return (TRUE);
+			            }
+		            vBig = *zBig + a2Big;
+		            }
+		        else if (subtype == 'K')
+		            vBig = *zBig - vBig;
+		        else
+		            vBig = *zBig - aBig;
+		        if (vBig.CSumSqr() <= 0.000001)
+		            {
+		            g_color_iter = special;
+    //		        *SpecialFlag = TRUE;		        // for decomp and biomorph
+		            return (TRUE);
+		            }
 		        }
-		    }
 	        return(FALSE);
 	        }
 
-	    case 1:				                        // Art Matrix Newton
+	    case 1:				                            // Art Matrix Newton
 	        {
 	        BigComplex	z2Big;
 
@@ -274,7 +269,8 @@ int init_big_art_matrix()
 
     bf2BigNum(&zBig.x, bfold.x);
     bf2BigNum(&zBig.y, bfold.y);
-    subtype = (int) g_params[0];
+    type = (int) g_params[0];
+    subtype = (int) g_params[1];
     BigInitArtMatrix(subtype, &zBig, &qBig);
     return 0;
     }
@@ -286,7 +282,7 @@ int init_big_art_matrix()
 int run_big_art_matrix()
     {
     int ReturnMode;
-    ReturnMode = BigRunArtMatrix(subtype, &zBig, &qBig);
+    ReturnMode = BigRunArtMatrix(type, &zBig, &qBig);
     BigNum2bf(&bfnew.x, zBig.x);
     BigNum2bf(&bfnew.y, zBig.y);
     return ReturnMode;

@@ -1,5 +1,5 @@
 /*
-    FUNCTIONS.CPP a module for the per pixel calculations of fractals. 
+    ARTMATRIX.CPP a module for the per pixel calculations of Art Matrix fractals. 
     
     Written in Microsoft Visual 'C++' by Paul de Leeuw.
 

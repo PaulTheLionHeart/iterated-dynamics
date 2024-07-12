@@ -16,24 +16,22 @@
 #include	"resource.h"
 #include    "pixel_grid.h"
 
-
 extern  double  g_params[];
 extern  BFComplex bfparm, bfnew, bfold;
 extern  int     g_row;
 extern  int     g_col;
+extern  double  g_magnitude_limit;
 
-
-static BigComplex   sqrBig, zBig, qBig, sqrsqrBig;
-static BigDouble    BigBailout, tBig, realimagBig, RealImagSqrBig;
-static int          degree, subtype;
+static  BigComplex  sqrBig, zBig, qBig, sqrsqrBig;
+static  BigDouble   /*BigBailout, */tBig, realimagBig, RealImagSqrBig;
+static  int         degree, subtype;
+static  double      d;
 
 //extern	void	ShowBignum(BigDouble x, char *Location);
 extern  void        bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern  void        BigNum2bf(bf_t *bfNum, BigDouble BigNum);
 
-
-static  Complex     z, c;
-
+extern bool juliaflag; // for the time being - declared in TierazonFunctions.cpp
 
 /**************************************************************************
 	Initialise functions for each pixel
@@ -41,6 +39,7 @@ static  Complex     z, c;
 
 int	BigInitManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
     {
+//    BigBailout = g_magnitude_limit;
     switch (subtype)
 	    {
 	    case 0:				// Perpendicular Mandelbrot
@@ -98,7 +97,7 @@ int	BigInitManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	    case 58:			// HPDZ Buffalo
 	    case 59:			// SzegediButterfly 1
 	    case 60:			// SzegediButterfly 2
-//    	    if (!juliaflag)
+    	    if (!juliaflag)
 		        {
 		        zBig->x = qBig->x + g_params[2];
 		        zBig->y = qBig->y + g_params[3];
@@ -110,7 +109,7 @@ int	BigInitManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	    case 7:				// Celtic
 	    case 55:			// SimonBrot
 	    case 56:			// SimonBrot2
-//    	    if (!juliaflag)
+    	    if (!juliaflag)
 		        {
 		        zBig->x = qBig->x + g_params[2];
 		        zBig->y = qBig->y + g_params[3];
@@ -153,7 +152,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = tBig.BigAbs() * zBig->y;
 	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
 	        zBig->y = -(realimagBig + realimagBig - qBig->y);
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 1:						// Burning Ship
 	        {
@@ -166,13 +166,15 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = t.BigAbs();
 	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
 	        zBig->y = realimagBig + realimagBig - qBig->y;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
             }
 	    case 2:						// Burning Ship of Higher Degree
 	        zBig->x = zBig->x.BigAbs();
 	        zBig->y = -zBig->y.BigAbs();
 	        *zBig = *qBig + zBig->CPolynomial(degree);
-	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 3:						// Perpendicular Burning Ship
 
@@ -195,7 +197,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = zBig->x * zBig->y.BigAbs();
 	        zBig->x = qBig->x + sqrBig.x - sqrBig.y;
 	        zBig->y = realimagBig + realimagBig + qBig->y;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 4:						// Buffalo (works according to Kalles Fraktaller)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -219,7 +222,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 		        zBig->y = zBig->y.BigAbs() - qBig->y;
 		        zBig->x = zBig->x.BigAbs() + qBig->x;
 		        }
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 5:						// Perpendicular Buffalo - (according to Kalles Fraktaller)
 	        tBig = zBig->x.BigAbs();
@@ -228,7 +232,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->y * tBig * -2.0 + qBig->y;
 	        tBig = sqrBig.x - sqrBig.y;
 	        zBig->x = qBig->x + tBig.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 6:						// Mandelbar (Tricorn)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -245,7 +250,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 		        zBig->y = (g_params[5] == 1.0 ? zBig->y : -zBig->y) + qBig->y;
 		        zBig->x = (g_params[5] == 1.0 ? -zBig->x : zBig->x) + qBig->x;
 		        }
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 7:						// Celtic
 	        sqrBig.x = zBig->x.BigSqr();
@@ -263,7 +269,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 		        zBig->y += qBig->y;
 		        zBig->x = -qBig->x - zBig->x.BigAbs();
 		        }
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 8:						// Mandelbar Celtic
 	        sqrBig.x = zBig->x.BigSqr();
@@ -271,7 +278,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x * zBig->y * -2.0 + qBig->y;
 	        tBig = sqrBig.x - sqrBig.y;
 	        zBig->x = qBig->x + tBig.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 9:						// Perpendicular Celtic
 	        tBig = zBig->x.BigAbs();
@@ -280,7 +288,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->y * tBig * -2.0 + qBig->y;
 	        tBig = sqrBig.x - sqrBig.y;
 	        zBig->x = qBig->x + tBig.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 10:					// Cubic Flying Squirrel (Buffalo Imaginary)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -288,14 +297,16 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
 	        zBig->y = tBig.BigAbs() - qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 11:					// Heart Mandelbrot
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
 	        zBig->x = sqrBig.x - sqrBig.y + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 12:					// Celtic Heart
 	        sqrBig.x = zBig->x.BigSqr();
@@ -303,21 +314,24 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x.BigAbs() * zBig->y * 2.0 - qBig->y;
 	        tBig = sqrBig.x - sqrBig.y;
 	        zBig->x = qBig->x + tBig.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 13:					// Partial Cubic Burning Ship Real
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 14:					// Partial Cubic Burning Ship Imaginary
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y.BigAbs() + qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 15:					// Partial Cubic Buffalo Real (Celtic)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -325,7 +339,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y + qBig->y;
 	        tBig = (sqrBig.x - sqrBig.y * 3.0) * zBig->x;
 	        zBig->x = qBig->x + tBig.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 16:					// Cubic Quasi Burning Ship (Buffalo Burning Ship Hybrid)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -333,7 +348,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x * 3.0 - sqrBig.y) * zBig->y;
 	        zBig->y = -tBig.BigAbs() + qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 17:					// Cubic Quasi Perpendicular
 	        sqrBig.x = zBig->x.BigSqr();
@@ -341,7 +357,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * 3.0 - sqrBig.y;
 	        zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 18:					// Cubic Quasi Heart
 	        sqrBig.x = zBig->x.BigSqr();
@@ -349,15 +366,16 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * 3.0 - sqrBig.y;
 	        zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
 	        zBig->x = qBig->x + (sqrBig.x - sqrBig.y * 3.0) * zBig->x.BigAbs();
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
-    /****************************************************************
+/****************************************************************
 	4th Order Fractals:
-    ****************************************************************/
+****************************************************************/
 
-    /****************************************************************
+/****************************************************************
 	Non ABS Variations (2)
-    ****************************************************************/
+****************************************************************/
 
 	    case 19:					// Mandelbrot 4th Order
 	        sqrBig.x = zBig->x.BigSqr();
@@ -365,7 +383,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = zBig->x * zBig->y;
 	        zBig->y = realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 20:					// Mandelbar 4th Order
 	        sqrBig.x = zBig->x.BigSqr();
@@ -373,11 +392,12 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = zBig->x * zBig->y;
 	        zBig->y = -realimagBig * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
-    /****************************************************************
+/****************************************************************
 	Straight ABS Variations (16)
-    ****************************************************************/
+****************************************************************/
 
 	    case 21:					// Burning Ship 4th Order
 	        sqrBig.x = zBig->x.BigSqr();
@@ -385,28 +405,32 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        realimagBig = zBig->x * zBig->y;
 	        zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 22:					// Burning Ship 4th Partial Imag
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 23:					// Burning Ship 4th Partial Real
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 24:					// Burning Ship 4th Partial Real Mbar
 	        sqrBig.x = zBig->x.BigSqr();
 	        sqrBig.y = zBig->y.BigSqr();
 	        zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 25:					// Celtic Burning Ship 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -415,7 +439,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->y = realimagBig.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 26:					// Celtic Burning Ship 4th Partial Imag
 	        sqrBig.x = zBig->x.BigSqr();
@@ -423,7 +448,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->y = zBig->x * zBig->y.BigAbs() * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 27:					// Celtic Burning Ship 4th Partial Real
 	        sqrBig.x = zBig->x.BigSqr();
@@ -431,7 +457,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->y = zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 28:					// Celtic Burning Ship 4th Partial Real Mbar
 	        sqrBig.x = zBig->x.BigSqr();
@@ -439,7 +466,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->y = -zBig->x.BigAbs() * zBig->y * 4.0 * (sqrBig.x - sqrBig.y) + qBig->y;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 29:					// Buffalo 4th Order
 	        sqrBig.x = zBig->x.BigSqr();
@@ -448,7 +476,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 30:					// Buffalo 4th Partial Imag
 	        sqrBig.x = zBig->x.BigSqr();
@@ -456,7 +485,9 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = zBig->x * zBig->y * (sqrBig.x - sqrBig.y);
 	        zBig->y = tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
+//	        return (sqrBig.x + sqrBig.y > BigBailout);
 
 	    case 31:					// Celtic (Buffalo 4th Partial Real)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -464,7 +495,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 32:					// Celtic 4th Mbar
 	        sqrBig.x = zBig->x.BigSqr();
@@ -472,11 +504,12 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = -zBig->x * zBig->y * (sqrBig.x - sqrBig.y) * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
-    /**************************************************************************
+/**************************************************************************
 	Quasi ABS Variations (10)
-    ***************************************************************************/
+***************************************************************************/
 
 	    case 33:					// False Quasi Perpendicular 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -484,7 +517,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x - sqrBig.y);
 	        zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 34:					// False Quasi Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -492,7 +526,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x - sqrBig.y);
 	        zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 35:					// Celtic False Quasi Perpendicular 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -501,7 +536,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = -zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 36:					// Celtic False Quasi Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -510,7 +546,9 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
+//	        return (sqrBig.x + sqrBig.y > BigBailout);
 
 	    case 37:					// Imag Quasi Perpendicular / Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -518,7 +556,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x - sqrBig.y);
 	        zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 38:					// Real Quasi Perpendicular 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -526,7 +565,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x - sqrBig.y);
 	        zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 39:					// Real Quasi Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -534,7 +574,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrBig.x - sqrBig.y);
 	        zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        zBig->x = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0 + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 40:					// Celtic Imag Quasi Perpendicular / Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -543,7 +584,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x * zBig->y.BigAbs() * tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 41:					// Celtic Real Quasi Perpendicular 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -552,7 +594,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = -zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 42:					// Celtic Real Quasi Heart 4th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -561,11 +604,12 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = zBig->x.BigAbs() * zBig->y * tBig.BigAbs() * 4.0 + qBig->y;
 	        tBig = sqrBig.x * sqrBig.x + sqrBig.y * sqrBig.y - sqrBig.x * sqrBig.y * 6.0;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
-    /****************************************************************
+/****************************************************************
 	5th Order Fractals:
-    ****************************************************************/
+****************************************************************/
 
 	    case 43:					// Mandelbrot 5th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -575,7 +619,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 44:					// Mandelbar 5th (Vertical)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -585,7 +630,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 45:					// Mandelbar 5th (horizontal)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -595,7 +641,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = -(sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 46:					// Burning Ship 5th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -605,7 +652,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y.BigAbs() + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 47:					// Buffalo 5th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -617,7 +665,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = tBig.BigAbs() + qBig->y;
 	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 48:					// Burning Ship 5th Partial
 	        sqrBig.x = zBig->x.BigSqr();
@@ -627,7 +676,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 49:					// Burning Ship 5th Partial Mbar
 	        sqrBig.x = zBig->x.BigSqr();
@@ -637,7 +687,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        RealImagSqrBig = sqrBig.x * sqrBig.y;
 	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 50:					// Celtic 5th (Buffalo 5th Partial)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -648,7 +699,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 51:					// Celtic 5th Mbar
 	        sqrBig.x = zBig->x.BigSqr();
@@ -659,7 +711,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        zBig->y = -(sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y + qBig->y;
 	        tBig = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x;
 	        zBig->x = tBig.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 52:					// Quazi Burning Ship 5th (BS/Buffalo Hybrid)
 	        sqrBig.x = zBig->x.BigSqr();
@@ -670,7 +723,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y) * zBig->y;
 	        zBig->y = -tBig.BigAbs() + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 53:					// Quazi Perpendicular 5th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -681,7 +735,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
 	        zBig->y = -tBig.BigAbs() * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 54:					// Quazi Heart 5th
 	        sqrBig.x = zBig->x.BigSqr();
@@ -692,7 +747,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        tBig = (sqrsqrBig.x * 5.0 - RealImagSqrBig * 10.0 + sqrsqrBig.y);
 	        zBig->y = tBig.BigAbs() * zBig->y + qBig->y;
 	        zBig->x = (sqrsqrBig.x - RealImagSqrBig * 10.0 + sqrsqrBig.y * 5.0) * zBig->x.BigAbs() + qBig->x;
-	        return (sqrBig.x + sqrBig.y > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 
 	    case 55:					// SimonBrot
 /**************************************************************************
@@ -716,7 +772,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        else
 		        sqrtzBig = 1.0;
 	        *zBig = tempzBig.CPolynomial(degree / 2) * sqrtzBig + *qBig;
-	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 	        }
 
 	    case 56:					// SimonBrot2
@@ -736,7 +793,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        else
 		        sqrtzBig = 1.0;
 	        *zBig = zBig->CPolynomial(degree / 2) * sqrtzBig * tempzBig + *qBig;
-	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 	        }
 
 	    case 57:					// Kung Fu Panda
@@ -753,7 +811,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 	        t2.y = t1.y.BigAbs();
 	        *zBig = t2 * t2 - *qBig;
 
-	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 	        }
 
 	    case 58:					// HPDZ Buffalo
@@ -776,7 +835,8 @@ int	BigRunManDerFunctions(int subtype, BigComplex *zBig, BigComplex *qBig)
 //    	    ShowBignum(zBig->x, " CPixel Inside Buffalo Z.x");
 //    	    ShowBignum(zBig->y, "CPixel Inside Buffalo Z.y");
 //    	    ShowBignum(BigBailout, "CPixel bailout");
-	        return (zBig->x.BigSqr() + zBig->y.BigSqr() > BigBailout);
+   	        d = zBig->CSumSqr();
+            return (d > g_magnitude_limit);
 	        }
 
 #ifdef SZEGEDBUTTERFLY
@@ -835,8 +895,8 @@ int init_big_mand_derivatives()
     qBig.y = BigYMax - BigDely * (double) g_row;
     qBig.x = BigDelx * (double) g_col + BigXMin;
 
-//    bf2BigNum(&zBig.x, bfold.x);
-//    bf2BigNum(&zBig.y, bfold.y);
+    bf2BigNum(&zBig.x, bfold.x);
+    bf2BigNum(&zBig.y, bfold.y);
     subtype = (int) g_params[0];
     degree = (int) g_params[1];
     //    g_bail_out_test = (bailouts) g_params[4];
@@ -854,8 +914,8 @@ int run_big_mand_derivatives()
     {
     int ReturnMode;
     ReturnMode = BigRunManDerFunctions(subtype, &zBig, &qBig);
-//    BigNum2bf(&bfnew.x, zBig.x);
-//    BigNum2bf(&bfnew.y, zBig.y);
+    BigNum2bf(&bfnew.x, zBig.x);
+    BigNum2bf(&bfnew.y, zBig.y);
     return ReturnMode;
     }
 
