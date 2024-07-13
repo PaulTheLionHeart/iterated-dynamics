@@ -20,6 +20,7 @@ add_library(libid
     BigTZ.cpp
     ArtMatrix.cpp
     BigArtMatrix.cpp
+    fourier.cpp
 
     include/Point.h
     include/gmp.h

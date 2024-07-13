@@ -42,3 +42,5 @@ int run_art_matrix();
 // PHD 240712
 int init_big_art_matrix();
 int run_big_art_matrix();
+// PHD 240713
+bool Fourier();

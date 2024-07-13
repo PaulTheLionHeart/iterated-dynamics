@@ -204,6 +204,7 @@ enum class fractal_type
     MANDELDERIVATIVES           = 175,
     TIERAZON                    = 176,      // PHD240710
     ARTMATRIX                   = 177,
+    FOURIER                     = 178
 };
 
 inline int operator+(fractal_type rhs)
