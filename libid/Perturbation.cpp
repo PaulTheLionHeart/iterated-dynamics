@@ -120,9 +120,9 @@ bool	InitPerturbation(void)
 
     /*
     if (method >= TIERAZONFILTERS)
-	TZfilter.InitFilter(method, threshold, dStrands, &FilterRGB, UseCurrentPalette);		// initialise the constants used by Tierazon fractals
+	    TZfilter.InitFilter(method, threshold, dStrands, &FilterRGB, UseCurrentPalette);		// initialise the constants used by Tierazon fractals
     if (BigNumFlag)
-	mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
+	    mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
     */
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
     DoPerturbation();

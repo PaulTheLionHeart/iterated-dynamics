@@ -13,7 +13,6 @@
 #include	"resource.h"
 #include	"fractype.h"
 #include	"id.h"
-#include    "Plot.h"
 #include    "drivers.h"
 #include    "read_ticker.h"
 
@@ -34,7 +33,7 @@
 #define	SINEWAVE	4
 #define	COSINEWAVE	5
 #define	IMPULSE		6
-#define	USER		'U'
+#define	USER		'U'     // can be implemented when we get a better GUI
 #define HALF_PI     PI/2
 #define TWO_PI      PI*2
 #define BYTE        UINT8
@@ -162,7 +161,7 @@ void	InitFourier(void)
     if (WaveType < 0 || WaveType > 6)
         WaveType = 0;
     delay = (int) g_params[1];
-    if (delay < 0 || delay > 1000)
+    if (delay < 0 || delay > 5000)
         delay = 100;
     NumHarmonics = (int) g_params[2];
     if (NumHarmonics < 1 || NumHarmonics >= FOURIERMAX)
@@ -220,7 +219,7 @@ void	InitFourier(void)
 		        FourierArray[i].magcos = 1.0 / (double)(i * i);	// n squared
 		        break;
 	        case FULLWAVE:
-		        if (i == 1)					// reject first harmonic  - no divide by 0
+		        if (i == 1)					    // reject first harmonic  - no divide by 0
 		            {
 		            FourierArray[i].magcos = 0.0;
 		            continue;
@@ -247,8 +246,7 @@ int	FourierStep(int TotalFrames, int ThisStep)
     static	double	angle;
     int		k, m, index1, index2;
     static	int	HorPos, OldHorPos;
-//    BYTE	*buffer = nullptr;
-    int	    *buffer = nullptr;
+    BYTE	*buffer = nullptr;
     long	address;
     static	int	colour = 0;
     bool    MovingWave = true;
@@ -258,8 +256,7 @@ int	FourierStep(int TotalFrames, int ThisStep)
     if (driver_key_pressed())
        return -1;
                      
-//    buffer = new BYTE[g_screen_x_dots * 3];
-    buffer = new int[g_screen_x_dots * g_screen_y_dots];
+    buffer = new BYTE[g_screen_x_dots * 3];     // ready for 24 bit true colour
     if (buffer == nullptr)
         return -1;
 
@@ -273,7 +270,6 @@ int	FourierStep(int TotalFrames, int ThisStep)
     angle = (TWO_PI / (double)TotalFrames) * (double) ThisStep;
     CalculateFourier(angle);
     Harmonics(FALSE, TotalFrames);		// write new vectors
-//    InvalidateRect(hwnd, &r, FALSE);
     driver_flush();
     index1 = WavePtr - 1;
     index2 = WavePtr - 2;
@@ -289,32 +285,25 @@ int	FourierStep(int TotalFrames, int ThisStep)
 
 	    if (MovingWave)
 	        {
-//	        for (k = 0; k < g_screen_y_dots; k++)
-//		        {
+	        for (k = 0; k < g_screen_y_dots; k++)
+		        {
 //		        address = WIDTHBYTES((UINT32)g_screen_x_dots * (UINT32)bits_per_pixel) * k + (g_screen_x_dots / 2 - 3) * 3;
 //		        memcpy(buffer, Dib.DibPixels + address, (g_screen_x_dots / 2) * 3);
 //		        memcpy(Dib.DibPixels + address + 3, buffer, (g_screen_x_dots / 2 - 1) * 3);
-            // this is a rediculous way to move half the screen, but I can't find out how to do it with memcpy()
-	        for (k = 0; k < g_screen_y_dots; k++)
-                for (m = g_screen_x_dots / 2; m < g_screen_x_dots; m++)
-                    *(buffer + k * g_screen_x_dots + m) = driver_read_pixel(m, k);
-	        for (k = 0; k < g_screen_y_dots; k++)
-                for (m = g_screen_x_dots / 2; m < g_screen_x_dots; m++)
-                    driver_write_pixel(m, k, 0);
-	        for (k = 0; k < g_screen_y_dots; k++)
-                for (m = g_screen_x_dots / 2; m < g_screen_x_dots - 1; m++)
-                    driver_write_pixel(m + 1, k, *(buffer + k * g_screen_x_dots + m));
+                driver_read_span(k, g_screen_x_dots / 2 - 1, g_screen_x_dots - 1, buffer);
+                driver_write_span(k, g_screen_x_dots / 2, g_screen_x_dots - 1, buffer);
+                }
+
 	        driver_draw_line((WORD)(g_screen_x_dots / 2), (WORD)(g_screen_y_dots - WaveformArray[index2]), 
 					        (WORD)(g_screen_x_dots / 2 + 1), (WORD)(g_screen_y_dots - WaveformArray[index1]), colour);
 	        }
 	    else
-
 	        driver_draw_line((WORD) (OldHorPos - 2), (WORD) (g_screen_y_dots - WaveformArray[index2]), 
 		    (WORD)((HorPos > OldHorPos) ? (HorPos - 2) : OldHorPos),	// remove retrace
 		    (WORD)(g_screen_y_dots - WaveformArray[index1]), colour);
 	    }
 
-    if (colour++ >= g_max_iterations)
+    if (colour++ >= g_max_iterations)                   // rotate through palette
         colour = 1;
     if (buffer)  {delete[] buffer; buffer = nullptr;}
 
