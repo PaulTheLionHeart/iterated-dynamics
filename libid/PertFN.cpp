@@ -3,8 +3,9 @@
 // Written in Microsoft Visual C++ by Paul de Leeuw.
 //////////////////////////////////////////////////////////////////////
 
-#include "PertEngine.h"
 #include <sqr.h>
+#include "PertEngine.h"
+#include "BigComplex.h"
 
     //////////////////////////////////////////////////////////////////////
 // Individual function point calculations
@@ -647,7 +648,8 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 
 	        DeltaSubN->y = Dni;
 	        DeltaSubN->x = Dnr;
-	    default:
+            break;
+        default:
             Dnr = (2 * r + a) * a - (2 * i + b) * b + a0;
             Dni = 2 * ((r + a) * b + i * a) + b0;
             DeltaSubN->y = Dni;
