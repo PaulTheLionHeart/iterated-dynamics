@@ -472,7 +472,7 @@ int CPertEngine::ReferenceZoomPoint(BigComplex *centre, int maxIteration, int us
 	    // pre multiply by two
 	    ZTimes2 = Z.CDouble();
 	    Complex c {Z.x.BigDoubleToDouble(), Z.y.BigDoubleToDouble()};
-	    Complex TwoC {ZTimes2.x.BigDoubleToDouble(), ZTimes2.y.BigDoubleToDouble()};
+//	    Complex TwoC {ZTimes2.x.BigDoubleToDouble(), ZTimes2.y.BigDoubleToDouble()};
        // The reason we are storing the same value times two is that we can precalculate this value here
        // because multiplying this value by two is needed many times in the program.
 	    // Also, for some reason, we can't multiply complex numbers by anything greater than 1 using std::complex, so we have to multiply the individual terms each time.

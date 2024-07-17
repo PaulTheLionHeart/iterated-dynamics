@@ -90,12 +90,17 @@ bool	InitPerturbation(void)
         bitcount = 30;
     if (bitcount > SIZEOF_BF_VARS - 10)
         bitcount = SIZEOF_BF_VARS - 10;
+
 //    mpfr_set_default_prec(bitcount);
 
     BigDouble xBigCentre, yBigCentre;
     double  Magnification;
 
-    if (bf_math != bf_math_type::NONE)      // we assume bignum is flagged and bf variables are initialised
+//    mpfr_set_default_prec(1600);
+//    xBigCentre.ChangePrecision(1600);
+//    yBigCentre.ChangePrecision(1600);
+
+    if (bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
         {
         BigCvtcentermag(&xBigCentre, &yBigCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);              // have to make a mpfr version of this
         }
