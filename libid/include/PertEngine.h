@@ -54,7 +54,7 @@ class CPertEngine
 	int	    OutsideMethod;			// the number of the outside filter
 	long	GlitchPointCount;
 	long	RemainingPointCount;
-    BigDouble    xZoomPt, yZoomPt;
+    mpfr_t	xZoomPt, yZoomPt;
 	double	ZoomRadius;
 	bool	calculateGlitches = true;
 	bool	seriesApproximation = false;

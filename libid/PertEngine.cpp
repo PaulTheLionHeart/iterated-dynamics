@@ -53,10 +53,18 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
     
 //    method = TZfilter->method;
 
-    xZoomPt = xZoomPointin;
-    yZoomPt = yZoomPointin;
+    int bitcount = decimals * 5;
+    if (bitcount < 30)
+        bitcount = 30;
+    if (bitcount > SIZEOF_BF_VARS - 10)
+        bitcount = SIZEOF_BF_VARS - 10;
+    mpfr_set_default_prec(bitcount);
+    mpfr_init(xZoomPt);
+    mpfr_init(yZoomPt);
+    mpfr_set(xZoomPt, xZoomPointin.x, MPFR_RNDN);
+    mpfr_set(yZoomPt, yZoomPointin.x, MPFR_RNDN);
 
-/*
+    /*
     if (method >= TIERAZONFILTERS)
 	    {
 	    q = { mpfr_get_d(xZoomPt, MPFR_RNDN), mpfr_get_d(yZoomPt, MPFR_RNDN) };
@@ -150,8 +158,8 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	    //Check whether this is the first time running the loop. 
 	    if (referencePoints == 1) 
 	        {
-            C.x = xZoomPt;
-            C.y = yZoomPt;
+	        mpfr_init_set(C.x.x, xZoomPt, MPFR_RNDN);
+	        mpfr_init_set(C.y.x, yZoomPt, MPFR_RNDN);
             ReferenceCoordinate = C;
  
 	        calculatedRealDelta = 0;
@@ -228,6 +236,8 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
 void CPertEngine::CloseTheDamnPointers(void)
     {
+    if (xZoomPt->_mpfr_d) mpfr_clear(xZoomPt);
+    if (yZoomPt->_mpfr_d) mpfr_clear(yZoomPt);
     if (pointsRemaining) {delete[] pointsRemaining; pointsRemaining = NULL;}
     if (glitchPoints) {delete[] glitchPoints; glitchPoints = NULL;}
     if (XSubN) { delete[] XSubN; XSubN = NULL; }
@@ -460,10 +470,10 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 int CPertEngine::ReferenceZoomPoint(BigComplex *centre, int maxIteration, int user_data(), char* StatusBarInfo)
     {
     // Raising this number makes more calculations, but less variation between each calculation (less chance of mis-identifying a glitched point).
-    BigComplex ZTimes2, Z;
+    BigComplex  ZTimes2, Z;
     BigDouble   TempReal, TempImag;
     BigDouble	zisqr, zrsqr, realimag;
-    double glitchTolerancy = 1e-6;
+    double      glitchTolerancy = 1e-6;
 
     Z = *centre;
 

@@ -665,7 +665,7 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 
 void CPertEngine::RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZTimes2)
     {
-    mpfr_t	TempReal, TempImag, SqrReal, SqrImag, RealImag;
+    mpfr_t	    TempReal, TempImag, SqrReal, SqrImag, RealImag;
     BigDouble	zisqr, zrsqr, realimag, temp, RealImagSqr;
     BigComplex	sqrsqr, zabsBig, tempzBig, sqrtzBig;
     BigComplex	aBig;
