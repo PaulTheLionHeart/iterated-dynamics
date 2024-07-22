@@ -157,7 +157,7 @@ MOREPARAMS g_more_fractal_params[] =
 //    {fractal_type::MANDELDERIVATIVES, {"Bailout Test (mod, real, imag, or, and, manh, manr)", "Rotated? (Only for degree > 2, 1=yes 0=no)", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240709
 //    {fractal_type::TIERAZON         , {"Bailout Test (mod, real, imag, or, and, manh, manr)", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},       // PHD 240710
     {fractal_type::ARTMATRIX        , {imagz0, "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},                                                        // PHD 240714
-    {fractal_type::FOURIER          , {"move wave? (1 = yes)" "", "", "", "", "", "" }, {1, 0, 0, 0, 0, 0}},                                    // PHD 240714
+    {fractal_type::FOURIER          , {"move wave? (1 = yes)", "plot circles? (1 = yes)", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},             // PHD 240722
     {fractal_type::MANDELBROTMIX4   , {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::NOFRACTAL        , { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr    }, {0, 0, 0, 0, 0, 0}}
 };

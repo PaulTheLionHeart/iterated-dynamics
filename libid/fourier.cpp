@@ -15,6 +15,7 @@
 #include	"id.h"
 #include    "drivers.h"
 #include    "read_ticker.h"
+#include "id_keys.h"
 
 #define	PREVIEW_HEIGHT	168
 #define	PREVIEW_WIDTH	180
@@ -41,6 +42,9 @@
 #define DWORD       UINT32;
 // Macro to determine to round off the given value to the closest byte
 #define WIDTHBYTES(i) ((i + 31) / 32 * 4)
+#ifndef sqr
+#define sqr(x) ((x) * (x))
+#endif
 
 struct	fourierstruct
     {    
@@ -60,13 +64,56 @@ int	WaveformArray[MAXSTEPS];
 
 static  int	    WavePtr = 0;	    // point to the currently updated location
 static	short	level[LEVELS];
-static  bool	MovingWave = true;
+//static  bool	MovingWave = true;
+//static  bool    PlotCircles = false;
 static  int     time_to_break;      // time to break out of animation?
-static bool     first = true;
-static int      NumHarmonics = 60, steps = 400, delay = 20;
-static double   MagX, MagY;         // magnitude of the fundamental expressed in screen size
+static  bool     first = true;
+static  int      NumHarmonics = 60, steps = 400, delay = 20;
+static  double   MagX, MagY;         // magnitude of the fundamental expressed in screen size
 
 extern int      driver_key_pressed();
+extern void (*g_plot)(int, int, int); // function pointer
+
+/**************************************************************************
+        Display a Circle (based on Michener's Algorithm)
+***************************************************************************/
+
+/*
+void	CPlot::DoPlot(int x, int y, DWORD colour)
+    {
+    if (x >= 0 && y >= 0 && x < xdots && y < ydots)				// allow underflow testing
+	PlotPoint(x, y, colour);
+    }
+*/
+void	DisplayCircle(int centrex, int centrey, int radius, int colour)
+
+    {
+    int	x, y, d, i;
+
+    i = x = 0;
+    y = radius;
+    d = 3 - 2 * radius;
+
+    while (x <= y)							// draw 8 points per iteration...uses best symmetry
+	    {
+        g_plot(centrex + x, centrey + y, colour);
+        g_plot(centrex - x, centrey + y, colour);
+        g_plot(centrex + x, centrey - y, colour);
+        g_plot(centrex - x, centrey - y, colour);
+        g_plot(centrex + y, centrey + x, colour);
+        g_plot(centrex - y, centrey + x, colour);
+        g_plot(centrex + y, centrey - x, colour);
+        g_plot(centrex - y, centrey - x, colour);
+	    if (d < 0)
+	        d = d + 4 * x + 6;					// update error term
+	    else
+	        {
+	        d = d + 4 * (x - y) + 10;
+	        y--;
+	        }
+	    x++;
+	    }
+    }
 
 /**************************************************************************
 	Plot Harmonics
@@ -75,15 +122,17 @@ extern int      driver_key_pressed();
 int	Harmonics(bool clear, int TotalFrames)
 
     {
-    int	i, x1, y1, x2, y2, centrex, centrey;
+    int	    i, x1, y1, x2, y2, centrex, centrey;
     double	xold, yold;
     double	xnew, ynew;
-    int	test;
+    int     test, radius;
+    bool    PlotCircles = false;
+
+    PlotCircles = (g_params[5] == 1.0);
 
     xnew = ynew = xold = yold = 0.0;
     centrey = g_screen_y_dots / 2;
     centrex = g_screen_x_dots / 4;
-
     for (i = 0; i < NumHarmonics; ++i)
 	    {
 	    if (FourierArray[i].magsin == 0.0 && FourierArray[i].magcos == 0.0)		// nothing to do
@@ -114,6 +163,11 @@ int	Harmonics(bool clear, int TotalFrames)
 	        y1 = 0;
 	    if (y2 < 0)
 	        y2 = 0;
+	    if (PlotCircles)
+	        {
+	        radius = (int)sqrt(((double)sqr(x2 - x1) + (double)sqr(y2 - y1)));
+	        DisplayCircle(x1, (WORD)(g_screen_y_dots - y1), radius, clear ? 0 : FourierArray[i].c);
+	        }
 	    driver_draw_line(x1, (WORD)(g_screen_y_dots - y1), x2, (WORD)(g_screen_y_dots - y2), clear ? 0 : FourierArray[i].c);
 	    xold = xnew;
 	    yold = ynew;
