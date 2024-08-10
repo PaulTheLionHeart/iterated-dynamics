@@ -22,9 +22,12 @@
 #include <stdexcept>
 #include <string>
 
-#define FRAME_TIMER_ID 2
+enum
+{
+    FRAME_TIMER_ID = 2
+};
 
-Frame g_frame = { 0 };
+Frame g_frame{};
 
 constexpr const TCHAR *const LEFT_POS{_T("Left")};
 constexpr const TCHAR *const TOP_POS{_T("Top")};

@@ -42,20 +42,19 @@
 
 HINSTANCE g_instance{};
 
-static void (*dotwrite)(int, int, int) = nullptr;
-static int (*dotread)(int, int) = nullptr;
-static void (*linewrite)(int, int, int, BYTE const *) = nullptr;
-static void (*lineread)(int, int, int, BYTE *) = nullptr;
+static void (*dotwrite)(int, int, int){};
+static int (*dotread)(int, int){};
+static void (*linewrite)(int, int, int, BYTE const *){};
+static void (*lineread)(int, int, int, BYTE *){};
 
 // Global variables (yuck!)
-int dacnorm = 0;
-int g_row_count = 0;
-int g_vesa_detect = 0;
-int g_vesa_x_res = 0;
-int g_vesa_y_res = 0;
-int g_video_start_x = 0;
-int g_video_start_y = 0;
-char *s_tos{};
+int g_row_count{};
+int g_vesa_detect{};
+int g_vesa_x_res{};
+int g_vesa_y_res{};
+int g_video_start_x{};
+int g_video_start_y{};
+char *g_top_of_stack{};
 
 /* Global functions
  *
@@ -91,24 +90,23 @@ void restart_uclock()
 **  number which a usec_clock() reading must be divided by to yield
 **  a number of seconds.
 */
-typedef unsigned long uclock_t;
+using uclock_t = unsigned long;
 uclock_t usec_clock()
 {
-    uclock_t result = 0;
+    uclock_t result{};
     // TODO
     _ASSERTE(FALSE);
 
     return result;
 }
 
-typedef BOOL MiniDumpWriteDumpProc(HANDLE process, DWORD pid, HANDLE file, MINIDUMP_TYPE dumpType,
-                                   PMINIDUMP_EXCEPTION_INFORMATION exceptions,
-                                   PMINIDUMP_USER_STREAM_INFORMATION user,
-                                   PMINIDUMP_CALLBACK_INFORMATION callback);
+using MiniDumpWriteDumpProc = BOOL(HANDLE process, DWORD pid, HANDLE file, MINIDUMP_TYPE dumpType,
+    PMINIDUMP_EXCEPTION_INFORMATION exceptions, PMINIDUMP_USER_STREAM_INFORMATION user,
+    PMINIDUMP_CALLBACK_INFORMATION callback);
 
 void CreateMiniDump(EXCEPTION_POINTERS *ep)
 {
-    MiniDumpWriteDumpProc *dumper = nullptr;
+    MiniDumpWriteDumpProc *dumper{};
     HMODULE debughlp = LoadLibrary("dbghelp.dll");
     char minidump[MAX_PATH] = "id-" ID_GIT_HASH ".dmp";
     MINIDUMP_EXCEPTION_INFORMATION mdei =
@@ -343,6 +341,6 @@ void init_failure(char const *message)
 // Return available stack space ... shouldn't be needed in Win32, should it?
 long stackavail()
 {
-    char junk = 0;
-    return WIN32_STACK_SIZE - (long)(((char *) s_tos) - &junk);
+    char junk{};
+    return WIN32_STACK_SIZE - (long)(((char *) g_top_of_stack) - &junk);
 }
