@@ -58,8 +58,6 @@
 #include <filesystem>
 #include <string>
 
-namespace fs = std::filesystem;
-
 static void area();
 
 // Wrapping version of putstring for long numbers
@@ -75,12 +73,12 @@ static bool putstringwrap(int *row, int col1, int col2, int color, char *str, in
     char save2;
     int length;
     int decpt;
-    int padding;
+    int g_padding;
     int startrow;
     bool done = false;
     startrow = *row;
     length = (int) std::strlen(str);
-    padding = 3; // space between col1 and decimal.
+    g_padding = 3; // space between col1 and decimal.
     // find decimal point
     for (decpt = 0; decpt < length; decpt++)
     {
@@ -93,15 +91,15 @@ static bool putstringwrap(int *row, int col1, int col2, int color, char *str, in
     {
         decpt = 0;
     }
-    if (decpt < padding)
+    if (decpt < g_padding)
     {
-        padding -= decpt;
+        g_padding -= decpt;
     }
     else
     {
-        padding = 0;
+        g_padding = 0;
     }
-    col1 += padding;
+    col1 += g_padding;
     decpt += col1+1; // column just past where decimal is
     while (length > 0)
     {
@@ -140,8 +138,6 @@ static bool putstringwrap(int *row, int col1, int col2, int color, char *str, in
     return done;
 }
 
-static char spressanykey[] = {"Press any key to continue, F6 for area, Ctrl+Tab for next page"};
-
 static void show_str_var(char const *name, char const *var, int *row, char *msg)
 {
     if (var == nullptr)
@@ -167,9 +163,6 @@ static void write_row(int row, char const *format, ...)
     driver_put_string(row, 2, C_GENERAL_HI, text);
 }
 
-extern long maxstack;
-extern long startstack;
-
 bool tab_display_2(char *msg)
 {
     int row;
@@ -182,13 +175,14 @@ bool tab_display_2(char *msg)
     putstringcenter(row++, 0, 80, C_PROMPT_HI, "Top Secret Developer's Screen");
 
     write_row(++row, "Version %d patch %d", g_release, g_patch_level);
-    write_row(++row, "%ld of %ld bignum memory used", g_bignum_max_stack_addr, maxstack);
-    write_row(++row, "   %ld used for bignum globals", startstack);
-    write_row(++row, "   %ld stack used == %ld variables of length %d",
-              g_bignum_max_stack_addr-startstack, (long)((g_bignum_max_stack_addr-startstack)/(rbflength+2)), rbflength+2);
-    if (bf_math != bf_math_type::NONE)
+    write_row(++row, "%ld of %ld bignum memory used", g_bignum_max_stack_addr, g_max_stack);
+    write_row(++row, "   %ld used for bignum globals", g_start_stack);
+    write_row(++row, "   %ld stack used == %ld variables of length %d", //
+        g_bignum_max_stack_addr - g_start_stack,                           //
+        (g_bignum_max_stack_addr - g_start_stack) / (g_r_bf_length + 2), g_r_bf_length + 2);
+    if (g_bf_math != bf_math_type::NONE)
     {
-        write_row(++row, "intlength %-d bflength %-d ", intlength, bflength);
+        write_row(++row, "g_int_length %-d g_bf_length %-d ", g_int_length, g_bf_length);
     }
     row++;
     show_str_var("tempdir",     g_temp_dir.c_str(),      &row, msg);
@@ -278,11 +272,11 @@ int tab_display()       // display the status of the current image
         g_calc_time += (std::clock() - g_timer_start) / (CLOCKS_PER_SEC/100);
     }
     driver_stack_screen();
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         saved = save_stack();
-        bfXctr = alloc_stack(bflength+2);
-        bfYctr = alloc_stack(bflength+2);
+        bfXctr = alloc_stack(g_bf_length+2);
+        bfYctr = alloc_stack(g_bf_length+2);
     }
     if (g_fractal_type == fractal_type::FORMULA || g_fractal_type == fractal_type::FFORMULA)
     {
@@ -377,7 +371,7 @@ top:
         driver_put_string(s_row+1, 45, C_GENERAL_HI, "You are in color-cycling mode");
     }
     ++s_row;
-    // if (bf_math == bf_math_type::NONE)
+    // if (g_bf_math == bf_math_type::NONE)
     ++s_row;
 
     int j = 0;
@@ -393,7 +387,7 @@ top:
         j = g_user_float_flag ? 1 : 2;
     }
 
-    if (bf_math == bf_math_type::NONE)
+    if (g_bf_math == bf_math_type::NONE)
     {
         if (j)
         {
@@ -428,11 +422,12 @@ top:
 
     ++s_row;
 
-    if (g_got_status >= 0 && (g_calc_status == calc_status_value::IN_PROGRESS || g_calc_status == calc_status_value::RESUMABLE))
+    if (g_got_status >= status_values::ONE_OR_TWO_PASS &&
+        (g_calc_status == calc_status_value::IN_PROGRESS || g_calc_status == calc_status_value::RESUMABLE))
     {
         switch (g_got_status)
         {
-        case 0:
+        case status_values::ONE_OR_TWO_PASS:
             std::sprintf(msg, "%d Pass Mode", g_total_passes);
             driver_put_string(s_row, 2, C_GENERAL_HI, msg);
             if (g_user_std_calc_mode == '3')
@@ -440,32 +435,34 @@ top:
                 driver_put_string(s_row, -1, C_GENERAL_HI, " (threepass)");
             }
             break;
-        case 1:
+        case status_values::SOLID_GUESS:
             driver_put_string(s_row, 2, C_GENERAL_HI, "Solid Guessing");
             if (g_user_std_calc_mode == '3')
             {
                 driver_put_string(s_row, -1, C_GENERAL_HI, " (threepass)");
             }
             break;
-        case 2:
+        case status_values::BOUNDARY_TRACE:
             driver_put_string(s_row, 2, C_GENERAL_HI, "Boundary Tracing");
             break;
-        case 3:
+        case status_values::THREE_D:
             std::sprintf(msg, "Processing row %d (of %d) of input image", g_current_row, g_file_y_dots);
             driver_put_string(s_row, 2, C_GENERAL_HI, msg);
             break;
-        case 4:
+        case status_values::TESSERAL:
             driver_put_string(s_row, 2, C_GENERAL_HI, "Tesseral");
             break;
-        case 5:
+        case status_values::DIFFUSION:
             driver_put_string(s_row, 2, C_GENERAL_HI, "Diffusion");
             break;
-        case 6:
+        case status_values::ORBITS:
             driver_put_string(s_row, 2, C_GENERAL_HI, "Orbits");
+            break;
+        case status_values::NONE:
             break;
         }
         ++s_row;
-        if (g_got_status == 5)
+        if (g_got_status == status_values::DIFFUSION)
         {
             std::sprintf(msg, "%2.2f%% done, counter at %lu of %lu (%u bits)",
                     (100.0 * g_diffusion_counter)/g_diffusion_limit,
@@ -473,12 +470,12 @@ top:
             driver_put_string(s_row, 2, C_GENERAL_MED, msg);
             ++s_row;
         }
-        else if (g_got_status != 3)
+        else if (g_got_status != status_values::THREE_D)
         {
             std::sprintf(msg, "Working on block (y, x) [%d, %d]...[%d, %d], ",
                     g_yy_start, g_xx_start, g_yy_stop, g_xx_stop);
             driver_put_string(s_row, 2, C_GENERAL_MED, msg);
-            if (g_got_status == 2 || g_got_status == 4)  // btm or tesseral
+            if (g_got_status == status_values::BOUNDARY_TRACE || g_got_status == status_values::TESSERAL)
             {
                 driver_put_string(-1, -1, C_GENERAL_MED, "at ");
                 std::sprintf(msg, "[%d, %d]", g_current_row, g_current_column);
@@ -509,10 +506,13 @@ top:
     driver_put_string(s_row, 2, C_GENERAL_MED, "Calculation time:");
     strncpy(msg, get_calculation_time(g_calc_time).c_str(), std::size(msg));
     driver_put_string(-1, -1, C_GENERAL_HI, msg);
-    if ((g_got_status == 5) && (g_calc_status == calc_status_value::IN_PROGRESS))  // estimate total time
+    if (g_got_status == status_values::DIFFUSION &&
+        g_calc_status == calc_status_value::IN_PROGRESS) // estimate total time
     {
         driver_put_string(-1, -1, C_GENERAL_MED, " estimated total time: ");
-        get_calculation_time((long) (g_calc_time * ((g_diffusion_limit * 1.0) / g_diffusion_counter)));
+        const std::string time{get_calculation_time(
+            (long) (g_calc_time * (static_cast<double>(g_diffusion_limit) / g_diffusion_counter)))};
+        strncpy(msg, time.c_str(),std::size(msg));
         driver_put_string(-1, -1, C_GENERAL_HI, msg);
     }
 
@@ -524,14 +524,14 @@ top:
     }
 
     ++s_row;
-    if (bf_math == bf_math_type::NONE)
+    if (g_bf_math == bf_math_type::NONE)
     {
         ++s_row;
     }
     std::snprintf(
         msg, std::size(msg), "Driver: %s, %s", g_driver->get_name().c_str(), g_driver->get_description().c_str());
     driver_put_string(s_row++, 2, C_GENERAL_MED, msg);
-    if (g_video_entry.xdots && bf_math == bf_math_type::NONE)
+    if (g_video_entry.xdots && g_bf_math == bf_math_type::NONE)
     {
         std::sprintf(msg, "Video: %dx%dx%d %s",
                 g_video_entry.xdots, g_video_entry.ydots, g_video_entry.colors,
@@ -541,7 +541,7 @@ top:
     if (bit_clear(g_cur_fractal_specific->flags, fractal_flags::NOZOOM))
     {
         adjust_corner(); // make bottom left exact if very near exact
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             int truncaterow;
             int dec = std::min(320, g_decimals);
@@ -687,8 +687,8 @@ top:
     {
         ++s_row;
     }
-    //waitforkey:
-    putstringcenter(/*s_row*/24, 0, 80, C_GENERAL_LO, spressanykey);
+    putstringcenter(
+        24, 0, 80, C_GENERAL_LO, "Press any key to continue, F6 for area, Ctrl+Tab for next page");
     driver_hide_text_cursor();
 #ifdef XFRACT
     while (driver_key_pressed())
@@ -713,7 +713,7 @@ top:
     }
     driver_unstack_screen();
     g_timer_start = std::clock(); // tab display was "time out"
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         restore_stack(saved);
     }

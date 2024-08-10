@@ -77,29 +77,29 @@ static void setup_save_info(FRACTAL_INFO *save_info);
 //
 //
 
-static int numsaves = 0;        // For adjusting 'save-to-disk' filenames
-static std::FILE *g_outfile;
-static int last_colorbar;
-static bool save16bit;
-static int outcolor1s;
-static int outcolor2s;
-static int startbits;
+static int s_num_saves{}; // For adjusting 'save-to-disk' filenames
+static std::FILE *g_outfile{};
+static int s_last_color_bar{};
+static bool s_save_16bit{};
+static int s_out_color_1s{};
+static int s_out_color_2s{};
+static int s_start_bits{};
 
-static BYTE paletteBW[] =
+static BYTE s_palette_bw[] =
 {
     // B&W palette
     0, 0, 0, 63, 63, 63,
 };
 
 #ifndef XFRACT
-static BYTE paletteCGA[] =
+static BYTE s_palette_cga[] =
 {
     // 4-color (CGA) palette
     0, 0, 0, 21, 63, 63, 63, 21, 63, 63, 63, 63,
 };
 #endif
 
-static BYTE paletteEGA[] =
+static BYTE s_palette_ega[] =
 {
     // 16-color (EGA/CGA) pal
     0, 0, 0, 0, 0, 42, 0, 42, 0, 0, 42, 42,
@@ -117,10 +117,10 @@ static int gif_savetodisk(char *filename)      // save-to-disk routine
     int interrupted;
 
 restart:
-    save16bit = g_disk_16_bit;
+    s_save_16bit = g_disk_16_bit;
     open_file = filename;                  // decode and open the filename
     open_file_ext = DEFAULT_FRACTAL_TYPE; // determine the file extension
-    if (save16bit)
+    if (s_save_16bit)
     {
         open_file_ext = ".pot";
     }
@@ -240,9 +240,9 @@ restart:
     if (!driver_diskp())
     {
         // supress this on disk-video
-        int outcolor1 = outcolor1s;
-        int outcolor2 = outcolor2s;
-        for (int j = 0; j <= last_colorbar; j++)
+        int outcolor1 = s_out_color_1s;
+        int outcolor2 = s_out_color_2s;
+        for (int j = 0; j <= s_last_color_bar; j++)
         {
             if ((j & 4) == 0)
             {
@@ -293,32 +293,11 @@ restart:
     return 0;
 }
 
-enum e_save_format
-{
-    SAVEFORMAT_GIF = 0,
-    SAVEFORMAT_PNG,
-    SAVEFORMAT_JPEG
-};
-
-static int savetodisk(char *filename)
-{
-    e_save_format format = SAVEFORMAT_GIF;
-
-    switch (format)
-    {
-    case SAVEFORMAT_GIF:
-        return gif_savetodisk(filename);
-
-    default:
-        return -1;
-    }
-}
-
 int savetodisk(std::string &filename)
 {
     char buff[FILE_MAX_PATH];
     std::strncpy(buff, filename.c_str(), FILE_MAX_PATH);
-    int const result = savetodisk(buff);
+    int const result = gif_savetodisk(buff);
     filename = buff;
     return result;
 }
@@ -349,21 +328,21 @@ bool encoder()
         bitsperpixel++;
     }
 
-    startbits = bitsperpixel + 1;// start coding with this many bits
+    s_start_bits = bitsperpixel + 1;// start coding with this many bits
     if (g_colors == 2)
     {
-        startbits++;    // B&W Klooge
+        s_start_bits++;    // B&W Klooge
     }
 #else
     if (g_colors == 2)
     {
         bitsperpixel = 1;
-        startbits = 3;
+        s_start_bits = 3;
     }
     else
     {
         bitsperpixel = 8;
-        startbits = 9;
+        s_start_bits = 9;
     }
 #endif
 
@@ -375,7 +354,7 @@ bool encoder()
 
     width = g_logical_screen_x_dots;
     rowlimit = g_logical_screen_y_dots;
-    if (save16bit)
+    if (s_save_16bit)
     {
         // pot16bit info is stored as: file:    double width rows, right side
         // of row is low 8 bits diskvid: ydots rows of colors followed by ydots
@@ -453,7 +432,7 @@ bool encoder()
             // uh oh - better fake it
             for (int j = 0; j < 256; j += 16)
             {
-                if (!shftwrite((BYTE *)paletteEGA, 16))
+                if (!shftwrite((BYTE *)s_palette_ega, 16))
                 {
                     goto oops;
                 }
@@ -463,7 +442,7 @@ bool encoder()
     if (g_colors == 2)
     {
         // write out the B&W palette
-        if (!shftwrite((BYTE *)paletteBW, g_colors))
+        if (!shftwrite((BYTE *)s_palette_bw, g_colors))
         {
             goto oops;
         }
@@ -472,7 +451,7 @@ bool encoder()
     if (g_colors == 4)
     {
         // write out the CGA palette
-        if (!shftwrite((BYTE *)paletteCGA, g_colors))
+        if (!shftwrite((BYTE *)s_palette_cga, g_colors))
         {
             goto oops;
         }
@@ -490,7 +469,7 @@ bool encoder()
         else
         {
             // no DAC - must be an EGA
-            if (!shftwrite((BYTE *)paletteEGA, g_colors))
+            if (!shftwrite((BYTE *)s_palette_ega, g_colors))
             {
                 goto oops;
             }
@@ -524,7 +503,7 @@ bool encoder()
         goto oops;
     }
 
-    bitsperpixel = (BYTE)(startbits - 1);
+    bitsperpixel = (BYTE)(s_start_bits - 1);
 
     if (write1(&bitsperpixel, 1, 1, g_outfile) != 1)
     {
@@ -595,19 +574,19 @@ bool encoder()
 
     }
     // Extended parameters block 005
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
-        save_info.tot_extend_len += extend_blk_len(22 * (bflength + 2));
+        save_info.tot_extend_len += extend_blk_len(22 * (g_bf_length + 2));
         // note: this assumes variables allocated in order starting with
         // g_bf_x_min in init_bf_2() in BIGNUM.C
-        if (!put_extend_blk(5, 22 * (bflength + 2), (char *) g_bf_x_min))
+        if (!put_extend_blk(5, 22 * (g_bf_length + 2), (char *) g_bf_x_min))
         {
             goto oops;
         }
     }
 
     // Extended parameters block 006
-    if (g_evolving & FIELDMAP)
+    if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
     {
         EVOLUTION_INFO esave_info;
         if (!g_have_evolve_info || g_calc_status == calc_status_value::COMPLETED)
@@ -625,7 +604,7 @@ bool encoder()
             esave_info.xdots           = (short)g_logical_screen_x_dots;
             esave_info.ydots           = (short)g_logical_screen_y_dots;
             esave_info.image_grid_size = (short) g_evolve_image_grid_size;
-            esave_info.evolving        = (short)g_evolving;
+            esave_info.evolving        = (short) +g_evolving;
             esave_info.this_generation_random_seed = (unsigned short) g_evolve_this_generation_random_seed;
             esave_info.max_random_mutation = g_evolve_max_random_mutation;
             esave_info.ecount          = (short)(g_evolve_image_grid_size * g_evolve_image_grid_size); // flag for done
@@ -868,10 +847,27 @@ static void setup_save_info(FRACTAL_INFO *save_info)
     save_info->decomp[0] = (short) g_decomp[0];
     save_info->biomorph = (short) g_user_biomorph_value;
     save_info->symmetry = (short) g_force_symmetry;
-    for (int i = 0; i < 16; i++)
-    {
-        save_info->init3d[i] = (short) g_init_3d[i];
-    }
+    save_info->init3d[0] = (std::int16_t) g_sphere ? 1 : 0;   // sphere? 1 = yes, 0 = no
+    save_info->init3d[1] = (std::int16_t) g_x_rot;            // rotate x-axis 60 degrees
+    save_info->init3d[2] = (std::int16_t) g_y_rot;            // rotate y-axis 90 degrees
+    save_info->init3d[3] = (std::int16_t) g_z_rot;            // rotate x-axis  0 degrees
+    save_info->init3d[4] = (std::int16_t) g_x_scale;          // scale x-axis, 90 percent
+    save_info->init3d[5] = (std::int16_t) g_y_scale;          // scale y-axis, 90 percent
+    save_info->init3d[1] = (std::int16_t) g_sphere_phi_min;   // longitude start, 180
+    save_info->init3d[2] = (std::int16_t) g_sphere_phi_max;   // longitude end ,   0
+    save_info->init3d[3] = (std::int16_t) g_sphere_theta_min; // latitude start,-90 degrees
+    save_info->init3d[4] = (std::int16_t) g_sphere_theta_max; // latitude stop,  90 degrees
+    save_info->init3d[5] = (std::int16_t) g_sphere_radius;    // should be user input
+    save_info->init3d[6] = (std::int16_t) g_rough;            // scale z-axis, 30 percent
+    save_info->init3d[7] = (std::int16_t) g_water_line;       // water level
+    save_info->init3d[8] = (std::int16_t) g_fill_type;        // fill type
+    save_info->init3d[9] = (std::int16_t) g_viewer_z;         // perspective view point
+    save_info->init3d[10] = (std::int16_t) g_shift_x;         // x shift
+    save_info->init3d[11] = (std::int16_t) g_shift_y;         // y shift
+    save_info->init3d[12] = (std::int16_t) g_light_x;         // x light vector coordinate
+    save_info->init3d[13] = (std::int16_t) g_light_y;         // y light vector coordinate
+    save_info->init3d[14] = (std::int16_t) g_light_z;         // z light vector coordinate
+    save_info->init3d[15] = (std::int16_t) g_light_avg;       // number of points to average
     save_info->previewfactor = (short) g_preview_factor;
     save_info->xtrans = (short) g_adjust_3d_x;
     save_info->ytrans = (short) g_adjust_3d_y;
@@ -949,8 +945,8 @@ static void setup_save_info(FRACTAL_INFO *save_info)
     save_info->bailout = g_bail_out;
     save_info->bailoutest = (short) g_bail_out_test;
     save_info->iterations = g_max_iterations;
-    save_info->bflength = (short) bnlength;
-    save_info->bf_math = (short) bf_math;
+    save_info->g_bf_length = (short) g_bn_length;
+    save_info->bf_math = (short) g_bf_math;
     save_info->old_demm_colors = (short) (g_old_demm_colors ? 1 : 0);
     save_info->logmap = g_log_map_flag;
     save_info->distest = g_distance_estimator;
@@ -982,8 +978,11 @@ static void setup_save_info(FRACTAL_INFO *save_info)
 //
 //
 
-#define BITSF   12
-#define HSIZE  5003            // 80% occupancy
+enum
+{
+    BITSF = 12,
+    HSIZE = 5003            // 80% occupancy
+};
 
 // GIF Image compression - modified 'compress'
 //
@@ -1004,33 +1003,26 @@ static void char_out(int c);
 static void flush_char();
 static void cl_block();
 
-static int n_bits;                        // number of bits/code
-static int maxbits = BITSF;                // user settable max # bits/code
-static int maxcode;                  // maximum code, given n_bits
-static int maxmaxcode = (int)1 << BITSF; // should NEVER generate this code
-# define MAXCODE(n_bits)        (((int) 1 << (n_bits)) - 1)
+static int s_n_bits{};                     // number of bits/code
+static int s_max_bits{BITSF};               // user settable max # bits/code
+static int s_max_code{};                    // maximum code, given n_bits
+static int s_max_max_cde{(int) 1 << BITSF}; // should NEVER generate this code
 
-BYTE g_block[4096] = { 0 };
+constexpr int max_code(int n_bits)
+{
+    return (1 << n_bits) - 1;
+}
 
-static long htab[HSIZE];
-static unsigned short codetab[10240] = { 0 };
+BYTE g_block[4096]{};
 
-// To save much memory, we overlay the table used by compress() with those
-// used by decompress().  The tab_prefix table is the same size and type
-// as the codetab.  The tab_suffix table needs 2**BITSF characters.  We
-// get this from the beginning of htab.  The output stack uses the rest
-// of htab, and contains characters.  There is plenty of room for any
-// possible stack (stack used to be 8000 characters).
+static long s_h_tab[HSIZE]{};
+static unsigned short s_code_tab[10240]{};
 
-#define tab_prefixof(i)   codetab[i]
-#define tab_suffixof(i)   ((char_type *)(htab))[i]
-#define de_stack          ((char_type *)&tab_suffixof((int)1 << BITSF))
-
-static int free_ent;                  // first unused entry
+static int s_free_ent{};                  // first unused entry
 
 // block compression parameters -- after all codes are used up,
 // and compression rate changes, start over.
-static bool clear_flg = false;
+static bool s_clear_flag{};
 
 //
 // compress stdin to stdout
@@ -1048,16 +1040,16 @@ static bool clear_flg = false;
 // questions about this implementation to ames!jaw.
 //
 
-static int ClearCode;
-static int EOFCode;
-static int a_count; // Number of characters so far in this 'packet'
-static unsigned long cur_accum = 0;
-static int  cur_bits = 0;
+static int s_clear_code{};
+static int s_eof_code{};
+static int s_a_count{}; // Number of characters so far in this 'packet'
+static unsigned long s_cur_accum{};
+static int s_cur_bits{};
 
 //
 // Define the storage for the packet accumulator
 //
-static char accum[256];
+static char s_accum[256]{};
 
 static bool compress(int rowlimit)
 {
@@ -1080,29 +1072,29 @@ static bool compress(int rowlimit)
         outcolor1 = 2;
         outcolor2 = 3;
     }
-    if (((++numsaves) & 1) == 0)
+    if (((++s_num_saves) & 1) == 0)
     {
         // reverse the colors on alt saves
         int i = outcolor1;
         outcolor1 = outcolor2;
         outcolor2 = i;
     }
-    outcolor1s = outcolor1;
-    outcolor2s = outcolor2;
+    s_out_color_1s = outcolor1;
+    s_out_color_2s = outcolor2;
 
     // Set up the necessary values
-    cur_accum = 0;
-    cur_bits = 0;
-    clear_flg = false;
+    s_cur_accum = 0;
+    s_cur_bits = 0;
+    s_clear_flag = false;
     ent = 0;
-    n_bits = startbits;
-    maxcode = MAXCODE(n_bits);
+    s_n_bits = s_start_bits;
+    s_max_code = max_code(s_n_bits);
 
-    ClearCode = (1 << (startbits - 1));
-    EOFCode = ClearCode + 1;
-    free_ent = ClearCode + 2;
+    s_clear_code = (1 << (s_start_bits - 1));
+    s_eof_code = s_clear_code + 1;
+    s_free_ent = s_clear_code + 2;
 
-    a_count = 0;
+    s_a_count = 0;
     hshift = 0;
     for (long fcode = (long) HSIZE;  fcode < 65536L; fcode *= 2L)
     {
@@ -1110,10 +1102,10 @@ static bool compress(int rowlimit)
     }
     hshift = 8 - hshift;                // set hash code range bound
 
-    std::memset(htab, 0xff, (unsigned)HSIZE*sizeof(long));
+    std::memset(s_h_tab, 0xff, (unsigned)HSIZE*sizeof(long));
     hsize_reg = HSIZE;
 
-    output((int)ClearCode);
+    output((int)s_clear_code);
 
     for (int rownum = 0; rownum < g_logical_screen_y_dots; rownum++)
     {
@@ -1122,7 +1114,7 @@ static bool compress(int rowlimit)
         {
             for (int xdot = 0; xdot < g_logical_screen_x_dots; xdot++)
             {
-                if (save16bit == 0 || ydot < g_logical_screen_y_dots)
+                if (s_save_16bit == 0 || ydot < g_logical_screen_y_dots)
                 {
                     color = getcolor(xdot, ydot);
                 }
@@ -1136,15 +1128,15 @@ static bool compress(int rowlimit)
                     ent = color;
                     continue;
                 }
-                long fcode = (long)(((long) color << maxbits) + ent);
+                long fcode = (long)(((long) color << s_max_bits) + ent);
                 int i = (((int)color << hshift) ^ ent);    // xor hashing
 
-                if (htab[i] == fcode)
+                if (s_h_tab[i] == fcode)
                 {
-                    ent = codetab[i];
+                    ent = s_code_tab[i];
                     continue;
                 }
-                else if ((long)htab[i] < 0)        // empty slot
+                else if ((long)s_h_tab[i] < 0)        // empty slot
                 {
                     goto nomatch;
                 }
@@ -1159,23 +1151,23 @@ probe:
                     i += hsize_reg;
                 }
 
-                if (htab[i] == fcode)
+                if (s_h_tab[i] == fcode)
                 {
-                    ent = codetab[i];
+                    ent = s_code_tab[i];
                     continue;
                 }
-                if ((long)htab[i] > 0)
+                if ((long)s_h_tab[i] > 0)
                 {
                     goto probe;
                 }
 nomatch:
                 output((int) ent);
                 ent = color;
-                if (free_ent < maxmaxcode)
+                if (s_free_ent < s_max_max_cde)
                 {
                     // code -> hashtable
-                    codetab[i] = (unsigned short)free_ent++;
-                    htab[i] = fcode;
+                    s_code_tab[i] = (unsigned short)s_free_ent++;
+                    s_h_tab[i] = fcode;
                 }
                 else
                 {
@@ -1204,7 +1196,7 @@ nomatch:
                     g_put_color(g_logical_screen_x_dots - 1 - i, ydot,
                              getcolor(g_logical_screen_x_dots - 1 - i, ydot) ^ outcolor2);
                 }
-                last_colorbar = ydot;
+                s_last_color_bar = ydot;
             } // end if !driver_diskp()
             tempkey = driver_key_pressed();
             if (tempkey && (tempkey != 's'))  // keyboard hit - bail out
@@ -1222,7 +1214,7 @@ nomatch:
 
     // Put out the final code.
     output((int)ent);
-    output((int) EOFCode);
+    output((int) s_eof_code);
     return interrupted;
 }
 
@@ -1254,58 +1246,58 @@ static void output(int code)
         0x1FFF, 0x3FFF, 0x7FFF, 0xFFFF
     };
 
-    cur_accum &= masks[ cur_bits ];
+    s_cur_accum &= masks[ s_cur_bits ];
 
-    if (cur_bits > 0)
+    if (s_cur_bits > 0)
     {
-        cur_accum |= ((long)code << cur_bits);
+        s_cur_accum |= ((long)code << s_cur_bits);
     }
     else
     {
-        cur_accum = code;
+        s_cur_accum = code;
     }
 
-    cur_bits += n_bits;
+    s_cur_bits += s_n_bits;
 
-    while (cur_bits >= 8)
+    while (s_cur_bits >= 8)
     {
-        char_out((unsigned int)(cur_accum & 0xff));
-        cur_accum >>= 8;
-        cur_bits -= 8;
+        char_out((unsigned int)(s_cur_accum & 0xff));
+        s_cur_accum >>= 8;
+        s_cur_bits -= 8;
     }
 
     // If the next entry is going to be too big for the code size,
     // then increase it, if possible.
-    if (free_ent > maxcode || clear_flg)
+    if (s_free_ent > s_max_code || s_clear_flag)
     {
-        if (clear_flg)
+        if (s_clear_flag)
         {
-            n_bits = startbits;
-            maxcode = MAXCODE(n_bits);
-            clear_flg = false;
+            s_n_bits = s_start_bits;
+            s_max_code = max_code(s_n_bits);
+            s_clear_flag = false;
         }
         else
         {
-            n_bits++;
-            if (n_bits == maxbits)
+            s_n_bits++;
+            if (s_n_bits == s_max_bits)
             {
-                maxcode = maxmaxcode;
+                s_max_code = s_max_max_cde;
             }
             else
             {
-                maxcode = MAXCODE(n_bits);
+                s_max_code = max_code(s_n_bits);
             }
         }
     }
 
-    if (code == EOFCode)
+    if (code == s_eof_code)
     {
         // At EOF, write the rest of the buffer.
-        while (cur_bits > 0)
+        while (s_cur_bits > 0)
         {
-            char_out((unsigned int)(cur_accum & 0xff));
-            cur_accum >>= 8;
-            cur_bits -= 8;
+            char_out((unsigned int)(s_cur_accum & 0xff));
+            s_cur_accum >>= 8;
+            s_cur_bits -= 8;
         }
 
         flush_char();
@@ -1319,10 +1311,10 @@ static void output(int code)
 //
 static void cl_block()             // table clear for block compress
 {
-    std::memset(htab, 0xff, (unsigned)HSIZE*sizeof(long));
-    free_ent = ClearCode + 2;
-    clear_flg = true;
-    output((int)ClearCode);
+    std::memset(s_h_tab, 0xff, (unsigned)HSIZE*sizeof(long));
+    s_free_ent = s_clear_code + 2;
+    s_clear_flag = true;
+    output((int)s_clear_code);
 }
 
 //
@@ -1331,8 +1323,8 @@ static void cl_block()             // table clear for block compress
 //
 static void char_out(int c)
 {
-    accum[ a_count++ ] = (char)c;
-    if (a_count >= 254)
+    s_accum[ s_a_count++ ] = (char)c;
+    if (s_a_count >= 254)
     {
         flush_char();
     }
@@ -1343,10 +1335,10 @@ static void char_out(int c)
 //
 static void flush_char()
 {
-    if (a_count > 0)
+    if (s_a_count > 0)
     {
-        std::fputc(a_count, g_outfile);
-        std::fwrite(accum, 1, a_count, g_outfile);
-        a_count = 0;
+        std::fputc(s_a_count, g_outfile);
+        std::fwrite(s_accum, 1, s_a_count, g_outfile);
+        s_a_count = 0;
     }
 }

@@ -125,10 +125,10 @@ static bool long3dviewtransf(long3dvtinf *inf);
 static bool float3dviewtransf(float3dvtinf *inf);
 static std::FILE *open_orbitsave();
 static void plothist(int x, int y, int color);
-static bool s_real_time{};
 
-long g_max_count;
+static bool s_real_time{};
 static int s_t{};
+
 static long s_l_dx{};
 static long s_l_dy{};
 static long s_l_dz{};
@@ -163,8 +163,6 @@ static double s_init_orbit_fp[3]{};
 // The following declarations used for Inverse Julia.
 static int      s_max_hits{};
 static int      s_run_length{};
-Major           g_major_method;
-Minor           g_inverse_julia_minor_method;
 static affine   s_cvt{};
 static l_affine s_l_cvt{};
 
@@ -182,6 +180,10 @@ static bool s_connect{true}; // flag to connect points with a line
 static bool s_euler{};       // use implicit euler approximation for dynamic system
 static int s_waste{100};     // waste this many points before plotting
 static int s_projection{2};  // projection plane - default is to plot x-y
+
+long g_max_count;
+Major g_major_method;
+Minor g_inverse_julia_minor_method;
 
 static void fallback_to_random_walk()
 {
@@ -2864,12 +2866,12 @@ static void setupmatrix(MATRIX doublemat)
     identity(doublemat);
 
     // apply rotations - uses the same rotation variables as line3d.c
-    xrot((double)XROT / 57.29577, doublemat);
-    yrot((double)YROT / 57.29577, doublemat);
-    zrot((double)ZROT / 57.29577, doublemat);
+    xrot((double)g_x_rot / 57.29577, doublemat);
+    yrot((double)g_y_rot / 57.29577, doublemat);
+    zrot((double)g_z_rot / 57.29577, doublemat);
 
     // apply scale
-    //   scale((double)XSCALE/100.0,(double)YSCALE/100.0,(double)ROUGH/100.0,doublemat);
+    //   scale((double)g_x_scale/100.0,(double)g_y_scale/100.0,(double)ROUGH/100.0,doublemat);
 }
 
 int orbit3dfloat()
@@ -2959,7 +2961,7 @@ static bool long3dviewtransf(long3dvtinf *inf)
 
             /* z value of user's eye - should be more negative than extreme
                            negative part of image */
-            inf->iview[2] = (long)((inf->minvals[2]-inf->maxvals[2])*(double)ZVIEWER/100.0);
+            inf->iview[2] = (long)((inf->minvals[2]-inf->maxvals[2])*(double)g_viewer_z/100.0);
 
             // center image on origin
             double tmpx = (-inf->minvals[0]-inf->maxvals[0])/(2.0*g_fudge_factor); // center x
@@ -3004,9 +3006,9 @@ static bool long3dviewtransf(long3dvtinf *inf)
     }
 
     // apply perspective if requested
-    if (ZVIEWER)
+    if (g_viewer_z)
     {
-        if (g_debug_flag == debug_flags::force_float_perspective || ZVIEWER < 100) // use float for small persp
+        if (g_debug_flag == debug_flags::force_float_perspective || g_viewer_z < 100) // use float for small persp
         {
             // use float perspective calc
             VECTOR tmpv;
@@ -3135,7 +3137,7 @@ static bool float3dviewtransf(float3dvtinf *inf)
             g_view[1] = 0;
             /* z value of user's eye - should be more negative than extreme
                               negative part of image */
-            g_view[2] = (inf->minvals[2]-inf->maxvals[2])*(double)ZVIEWER/100.0;
+            g_view[2] = (inf->minvals[2]-inf->maxvals[2])*(double)g_viewer_z/100.0;
 
             // center image on origin
             double tmpx = (-inf->minvals[0]-inf->maxvals[0])/(2.0); // center x
@@ -3163,7 +3165,7 @@ static bool float3dviewtransf(float3dvtinf *inf)
     }
 
     // apply perspective if requested
-    if (ZVIEWER)
+    if (g_viewer_z)
     {
         perspective(inf->viewvect);
         if (s_real_time)

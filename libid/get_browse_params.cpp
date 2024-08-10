@@ -9,6 +9,7 @@
 #include "helpdefs.h"
 #include "id_data.h"
 #include "id_keys.h"
+#include "value_saver.h"
 
 #include <cstring>
 #include <string>
@@ -40,10 +41,10 @@ get_brws_restart:
         .comment("")
         .comment("Press F4 to reset browse parameters to defaults.");
 
-    help_labels const old_help_mode = g_help_mode;     // this prevents HELP from activating
-    g_help_mode = help_labels::HELP_BROWSE_PARAMETERS;
-    i = choices.prompt("Browse ('L'ook) Mode Options", 16);
-    g_help_mode = old_help_mode;     // re-enable HELP
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_BROWSE_PARAMETERS};
+        i = choices.prompt("Browse ('L'ook) Mode Options", 16);
+    }
     if (i < 0)
     {
         return 0;
@@ -96,7 +97,7 @@ get_brws_restart:
         i = -3;
     }
 
-    if (g_evolving)
+    if (g_evolving != evolution_mode_flags::NONE)
     {
         // can't browse
         g_auto_browse = false;

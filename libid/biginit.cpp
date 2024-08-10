@@ -20,317 +20,251 @@ The biggest difference is in the allocations of memory for the big numbers.
 #include <string>
 
 // globals
-int bnstep = 0;
-int bnlength = 0;
-int intlength = 0;
-int rlength = 0;
-int padding = 0;
-int shiftfactor = 0;
-int g_decimals = 0;
-int bflength = 0;
-int rbflength = 0;
-int bfdecimals = 0;
+int g_bn_step{};
+int g_bn_length{};
+int g_int_length{};
+int g_r_length{};
+int g_padding{};
+int g_shift_factor{};
+int g_decimals{};
+int g_bf_length{};
+int g_r_bf_length{};
+int g_bf_decimals{};
+bn_t g_bn_tmp1{};
+bn_t g_bn_tmp2{};
+bn_t g_bn_tmp3{};
+bn_t g_bn_tmp4{};
+bn_t g_bn_tmp5{};
+bn_t g_bn_tmp6{};
+bn_t g_bn_tmp_copy1{};
+bn_t g_bn_tmp_copy2{};
+// used by other routines, g_bn_length
+bn_t g_x_min_bn{};
+bn_t g_x_max_bn{};
+bn_t g_y_min_bn{};
+bn_t g_y_max_bn{};
+bn_t g_x_3rd_bn{};
+bn_t g_y_3rd_bn{};
+// g_bn_length
+bn_t g_delta_x_bn{};
+bn_t g_delta_y_bn{};
+bn_t g_delta2_x_bn{};
+bn_t g_delta2_y_bn{};
+bn_t g_close_enough_bn{};
+// g_r_length
+bn_t g_tmp_sqr_x_bn{};
+bn_t g_tmp_sqr_y_bn{};
+bn_t g_bn_tmp{};
+// g_bn_length
+BNComplex g_old_z_bn{};
+BNComplex g_param_z_bn{};
+BNComplex g_saved_z_bn{};
+BNComplex g_new_z_bn{};   // g_r_length
+bn_t g_bn_pi{};                      // TAKES NO SPACE
+// g_r_bf_length+2
+bf_t g_bf_tmp1{};
+bf_t g_bf_tmp2{};
+bf_t g_bf_tmp3{};
+bf_t g_bf_tmp4{};
+bf_t g_bf_tmp5{};
+bf_t g_bf_tmp6{};
+bf_t g_bf_tmp_copy1{};
+bf_t g_bf_tmp_copy2{};
+bf_t g_delta_x_bf{};
+bf_t g_delta_y_bf{};
+bf_t g_delta2_x_bf{};
+bf_t g_delta2_y_bf{};
+bf_t g_close_enough_bf{};
+bf_t g_tmp_sqr_x_bf{};
+bf_t g_tmp_sqr_y_bf{};
+// g_bf_length+2
+BFComplex g_parm_z_bf{};
+BFComplex g_saved_z_bf{};
+// g_r_bf_length+2
+BFComplex g_old_z_bf{};
+BFComplex g_new_z_bf{};
+bf_t g_bf_pi{};      // TAKES NO SPACE
+bf_t g_big_pi{};     // g_bf_length+2
+// g_bf_length+2
+bf_t g_bf_x_min{};
+bf_t g_bf_x_max{};
+bf_t g_bf_y_min{};
+bf_t g_bf_y_max{};
+bf_t g_bf_x_3rd{};
+bf_t g_bf_y_3rd{};
+bf_t g_bf_save_x_min{};
+bf_t g_bf_save_x_max{};
+bf_t g_bf_save_y_min{};
+bf_t g_bf_save_y_max{};
+bf_t g_bf_save_x_3rd{};
+bf_t g_bf_save_y_3rd{};
+bf_t g_bf_parms[10]{}; // (g_bf_length + 2)*10
+bf_t g_bf_tmp{};
+bf_t g_bf10_tmp{}; // g_bf_decimals + 4
 
-// used internally by bignum.c routines
 static char s_storage[4096];
-static bn_t bnroot = nullptr;
-static bn_t stack_ptr = nullptr; // memory allocator base after global variables
-bn_t bntmp1 = nullptr;
-bn_t bntmp2 = nullptr;
-bn_t bntmp3 = nullptr;
-bn_t bntmp4 = nullptr;
-bn_t bntmp5 = nullptr;
-bn_t bntmp6 = nullptr;
-bn_t bntmpcpy1 = nullptr;
-bn_t bntmpcpy2 = nullptr;
-
-// used by other routines, bnlength
-bn_t bnxmin = nullptr;
-bn_t bnxmax = nullptr;
-bn_t bnymin = nullptr;
-bn_t bnymax = nullptr;
-bn_t bnx3rd = nullptr;
-bn_t bny3rd = nullptr;
-
-// bnlength
-bn_t bnxdel = nullptr;
-bn_t bnydel = nullptr;
-bn_t bnxdel2 = nullptr;
-bn_t bnydel2 = nullptr;
-bn_t bnclosenuff = nullptr;
-
-// rlength
-bn_t bntmpsqrx = nullptr;
-bn_t bntmpsqry = nullptr;
-bn_t bntmp = nullptr;
-
-// bnlength
-BNComplex bnold = { nullptr, nullptr };
-BNComplex bnparm = { nullptr, nullptr };
-BNComplex bnsaved = { nullptr, nullptr };
-BNComplex bnnew = { nullptr, nullptr };   // rlength
-bn_t bn_pi = nullptr;                      // TAKES NO SPACE
-
-// // rbflength+2
-bf_t bftmp1 = nullptr;
-bf_t bftmp2 = nullptr;
-bf_t bftmp3 = nullptr;
-bf_t bftmp4 = nullptr;
-bf_t bftmp5 = nullptr;
-bf_t bftmp6 = nullptr;
-bf_t bftmpcpy1 = nullptr;
-bf_t bftmpcpy2 = nullptr;
-bf_t bfxdel = nullptr;
-bf_t bfydel = nullptr;
-bf_t bfxdel2 = nullptr;
-bf_t bfydel2 = nullptr;
-bf_t bfclosenuff = nullptr;
-bf_t bftmpsqrx = nullptr;
-bf_t bftmpsqry = nullptr;
-
-// bflength+2
-BFComplex bfparm = { nullptr, nullptr };
-BFComplex bfsaved = { nullptr, nullptr };
-
-// rbflength+2
-BFComplex bfold = { nullptr, nullptr };
-BFComplex bfnew = { nullptr, nullptr };
-
-bf_t bf_pi = nullptr;      // TAKES NO SPACE
-bf_t big_pi = nullptr;     // bflength+2
-
-// for testing only
-
-// used by other routines
-// bflength+2
-bf_t g_bf_x_min = nullptr;
-bf_t g_bf_x_max = nullptr;
-bf_t g_bf_y_min = nullptr;
-bf_t g_bf_y_max = nullptr;
-bf_t g_bf_x_3rd = nullptr;
-bf_t g_bf_y_3rd = nullptr;
-bf_t g_bf_save_x_min = nullptr;
-bf_t g_bf_save_x_max = nullptr;
-bf_t g_bf_save_y_min = nullptr;
-bf_t g_bf_save_y_max = nullptr;
-bf_t g_bf_save_x_3rd = nullptr;
-bf_t g_bf_save_y_3rd = nullptr;
-bf_t bfparms[10];                                    // (bflength+2)*10
-bf_t bftmp = nullptr;
-
-bf_t bf10tmp = nullptr;                                              // dec+4
-
-#define LOG10_256 2.4082399653118
-#define LOG_256   5.5451774444795
+static bn_t s_bn_root{};
+static bn_t s_stack_ptr{}; // memory allocator base after global variables
 
 static int save_bf_vars();
 static int restore_bf_vars();
 
 /*********************************************************************/
-// given bnlength, calc_lengths will calculate all the other lengths
+// given g_bn_length, calc_lengths will calculate all the other lengths
 void calc_lengths()
 {
-    bnstep = 4;  // use 4 in all cases
+    g_bn_step = 4;  // use 4 in all cases
 
-    if (bnlength % bnstep != 0)
+    if (g_bn_length % g_bn_step != 0)
     {
-        bnlength = (bnlength / bnstep + 1) * bnstep;
+        g_bn_length = (g_bn_length / g_bn_step + 1) * g_bn_step;
     }
-    if (bnlength == bnstep)
+    if (g_bn_length == g_bn_step)
     {
-        padding = bnlength;
+        g_padding = g_bn_length;
     }
     else
     {
-        padding = 2*bnstep;
+        g_padding = 2*g_bn_step;
     }
-    rlength = bnlength + padding;
+    g_r_length = g_bn_length + g_padding;
 
-    // This shiftfactor assumes non-full multiplications will be performed.
-    // Change to bnlength-intlength for full multiplications.
-    shiftfactor = padding - intlength;
+    // This shift factor assumes non-full multiplications will be performed.
+    // Change to g_bn_length-g_int_length for full multiplications.
+    g_shift_factor = g_padding - g_int_length;
 
-    bflength = bnlength+bnstep; // one extra step for added precision
-    rbflength = bflength + padding;
-    bfdecimals = (int)((bflength-2)*LOG10_256);
+    g_bf_length = g_bn_length+g_bn_step; // one extra step for added precision
+    g_r_bf_length = g_bf_length + g_padding;
+    g_bf_decimals = (int)((g_bf_length-2)*LOG10_256);
 }
 
 /************************************************************************/
 // intended only to be called from init_bf_dec() or init_bf_length().
 // initialize bignumber global variables
 
-long g_bignum_max_stack_addr = 0;
-long startstack = 0;
-long maxstack = 0;
-int g_bf_save_len = 0;
+long g_bignum_max_stack_addr{};
+long g_start_stack{};
+long g_max_stack{};
+int g_bf_save_len{};
 
 static void init_bf_2()
 {
-    int i;
     long ptr;
     save_bf_vars(); // copy corners values for conversion
 
     calc_lengths();
 
-    bnroot = (bf_t) &s_storage[0];
+    s_bn_root = (bf_t) &s_storage[0];
 
     /* at present time one call would suffice, but this logic allows
        multiple kinds of alternate math eg long double */
-    i = find_alternate_math(g_fractal_type, bf_math_type::BIGNUM);
-    if (i > -1)
+    if (int i = find_alternate_math(g_fractal_type, bf_math_type::BIGNUM); i > -1)
     {
-        bf_math = g_alternate_math[i].math;
-    }
-    else if ((i = find_alternate_math(g_fractal_type, bf_math_type::BIGFLT)) > -1)
-    {
-        bf_math = g_alternate_math[i].math;
+        g_bf_math = g_alternate_math[i].math;
     }
     else
     {
-        bf_math = bf_math_type::BIGNUM; // maybe called from cmdfiles.c and g_fractal_type not set
+        i = find_alternate_math(g_fractal_type, bf_math_type::BIGFLT);
+        if (i > -1)
+        {
+            g_bf_math = g_alternate_math[i].math;
+        }
+        else
+        {
+            g_bf_math = bf_math_type::BIGNUM; // maybe called from cmdfiles.c and g_fractal_type not set
+        }
     }
 
     g_float_flag = true;
 
     // Now split up the memory among the pointers
-    // internal pointers
+    const auto alloc_size = [&ptr](int size)
+    {
+        bn_t result = s_bn_root + ptr;
+        ptr += size;
+        return result;
+    };
     ptr        = 0;
-    bntmp1     = bnroot+ptr;
-    ptr += rlength;
-    bntmp2     = bnroot+ptr;
-    ptr += rlength;
-    bntmp3     = bnroot+ptr;
-    ptr += rlength;
-    bntmp4     = bnroot+ptr;
-    ptr += rlength;
-    bntmp5     = bnroot+ptr;
-    ptr += rlength;
-    bntmp6     = bnroot+ptr;
-    ptr += rlength;
+    g_bn_tmp1 = alloc_size(g_r_length);
+    g_bn_tmp2 = alloc_size(g_r_length);
+    g_bn_tmp3 = alloc_size(g_r_length);
+    g_bn_tmp4 = alloc_size(g_r_length);
+    g_bn_tmp5 = alloc_size(g_r_length);
+    g_bn_tmp6 = alloc_size(g_r_length);
 
-    bftmp1     = bnroot+ptr;
-    ptr += rbflength+2;
-    bftmp2     = bnroot+ptr;
-    ptr += rbflength+2;
-    bftmp3     = bnroot+ptr;
-    ptr += rbflength+2;
-    bftmp4     = bnroot+ptr;
-    ptr += rbflength+2;
-    bftmp5     = bnroot+ptr;
-    ptr += rbflength+2;
-    bftmp6     = bnroot+ptr;
-    ptr += rbflength+2;
+    g_bf_tmp1 = alloc_size(g_r_bf_length+2);
+    g_bf_tmp2 = alloc_size(g_r_bf_length+2);
+    g_bf_tmp3 = alloc_size(g_r_bf_length+2);
+    g_bf_tmp4 = alloc_size(g_r_bf_length+2);
+    g_bf_tmp5 = alloc_size(g_r_bf_length+2);
+    g_bf_tmp6 = alloc_size(g_r_bf_length+2);
 
-    bftmpcpy1  = bnroot+ptr;
-    ptr += (rbflength+2)*2;
-    bftmpcpy2  = bnroot+ptr;
-    ptr += (rbflength+2)*2;
+    g_bf_tmp_copy1 = alloc_size((g_r_bf_length+2)*2);
+    g_bf_tmp_copy2 = alloc_size((g_r_bf_length+2)*2);
 
-    bntmpcpy1  = bnroot+ptr;
-    ptr += (rlength*2);
-    bntmpcpy2  = bnroot+ptr;
-    ptr += (rlength*2);
+    g_bn_tmp_copy1 = alloc_size((g_r_length*2));
+    g_bn_tmp_copy2 = alloc_size((g_r_length*2));
 
-    if (bf_math == bf_math_type::BIGNUM)
+    if (g_bf_math == bf_math_type::BIGNUM)
     {
-        bnxmin     = bnroot+ptr;
-        ptr += bnlength;
-        bnxmax     = bnroot+ptr;
-        ptr += bnlength;
-        bnymin     = bnroot+ptr;
-        ptr += bnlength;
-        bnymax     = bnroot+ptr;
-        ptr += bnlength;
-        bnx3rd     = bnroot+ptr;
-        ptr += bnlength;
-        bny3rd     = bnroot+ptr;
-        ptr += bnlength;
-        bnxdel     = bnroot+ptr;
-        ptr += bnlength;
-        bnydel     = bnroot+ptr;
-        ptr += bnlength;
-        bnxdel2    = bnroot+ptr;
-        ptr += bnlength;
-        bnydel2    = bnroot+ptr;
-        ptr += bnlength;
-        bnold.x    = bnroot+ptr;
-        ptr += rlength;
-        bnold.y    = bnroot+ptr;
-        ptr += rlength;
-        bnnew.x    = bnroot+ptr;
-        ptr += rlength;
-        bnnew.y    = bnroot+ptr;
-        ptr += rlength;
-        bnsaved.x  = bnroot+ptr;
-        ptr += bnlength;
-        bnsaved.y  = bnroot+ptr;
-        ptr += bnlength;
-        bnclosenuff = bnroot+ptr;
-        ptr += bnlength;
-        bnparm.x   = bnroot+ptr;
-        ptr += bnlength;
-        bnparm.y   = bnroot+ptr;
-        ptr += bnlength;
-        bntmpsqrx  = bnroot+ptr;
-        ptr += rlength;
-        bntmpsqry  = bnroot+ptr;
-        ptr += rlength;
-        bntmp      = bnroot+ptr;
-        ptr += rlength;
+        g_x_min_bn = alloc_size(g_bn_length);
+        g_x_max_bn = alloc_size(g_bn_length);
+        g_y_min_bn = alloc_size(g_bn_length);
+        g_y_max_bn = alloc_size(g_bn_length);
+        g_x_3rd_bn = alloc_size(g_bn_length);
+        g_y_3rd_bn = alloc_size(g_bn_length);
+        g_delta_x_bn = alloc_size(g_bn_length);
+        g_delta_y_bn = alloc_size(g_bn_length);
+        g_delta2_x_bn = alloc_size(g_bn_length);
+        g_delta2_y_bn = alloc_size(g_bn_length);
+        g_old_z_bn.x = alloc_size(g_r_length);
+        g_old_z_bn.y = alloc_size(g_r_length);
+        g_new_z_bn.x = alloc_size(g_r_length);
+        g_new_z_bn.y = alloc_size(g_r_length);
+        g_saved_z_bn.x = alloc_size(g_bn_length);
+        g_saved_z_bn.y = alloc_size(g_bn_length);
+        g_close_enough_bn = alloc_size(g_bn_length);
+        g_param_z_bn.x = alloc_size(g_bn_length);
+        g_param_z_bn.y = alloc_size(g_bn_length);
+        g_tmp_sqr_x_bn = alloc_size(g_r_length);
+        g_tmp_sqr_y_bn = alloc_size(g_r_length);
+        g_bn_tmp = alloc_size(g_r_length);
     }
-    if (bf_math == bf_math_type::BIGFLT)
+    else if (g_bf_math == bf_math_type::BIGFLT)
     {
-        bfxdel     = bnroot+ptr;
-        ptr += bflength+2;
-        bfydel     = bnroot+ptr;
-        ptr += bflength+2;
-        bfxdel2    = bnroot+ptr;
-        ptr += bflength+2;
-        bfydel2    = bnroot+ptr;
-        ptr += bflength+2;
-        bfold.x    = bnroot+ptr;
-        ptr += rbflength+2;
-        bfold.y    = bnroot+ptr;
-        ptr += rbflength+2;
-        bfnew.x    = bnroot+ptr;
-        ptr += rbflength+2;
-        bfnew.y    = bnroot+ptr;
-        ptr += rbflength+2;
-        bfsaved.x  = bnroot+ptr;
-        ptr += bflength+2;
-        bfsaved.y  = bnroot+ptr;
-        ptr += bflength+2;
-        bfclosenuff = bnroot+ptr;
-        ptr += bflength+2;
-        bfparm.x   = bnroot+ptr;
-        ptr += bflength+2;
-        bfparm.y   = bnroot+ptr;
-        ptr += bflength+2;
-        bftmpsqrx  = bnroot+ptr;
-        ptr += rbflength+2;
-        bftmpsqry  = bnroot+ptr;
-        ptr += rbflength+2;
-        big_pi     = bnroot+ptr;
-        ptr += bflength+2;
-        bftmp      = bnroot+ptr;
-        ptr += rbflength+2;
+        g_delta_x_bf = alloc_size(g_bf_length+2);
+        g_delta_y_bf = alloc_size(g_bf_length+2);
+        g_delta2_x_bf = alloc_size(g_bf_length+2);
+        g_delta2_y_bf = alloc_size(g_bf_length+2);
+        g_old_z_bf.x = alloc_size(g_r_bf_length+2);
+        g_old_z_bf.y = alloc_size(g_r_bf_length+2);
+        g_new_z_bf.x = alloc_size(g_r_bf_length+2);
+        g_new_z_bf.y = alloc_size(g_r_bf_length+2);
+        g_saved_z_bf.x = alloc_size(g_bf_length+2);
+        g_saved_z_bf.y = alloc_size(g_bf_length+2);
+        g_close_enough_bf = alloc_size(g_bf_length+2);
+        g_parm_z_bf.x = alloc_size(g_bf_length+2);
+        g_parm_z_bf.y = alloc_size(g_bf_length+2);
+        g_tmp_sqr_x_bf = alloc_size(g_r_bf_length+2);
+        g_tmp_sqr_y_bf = alloc_size(g_r_bf_length+2);
+        g_big_pi = alloc_size(g_bf_length+2);
+        g_bf_tmp = alloc_size(g_r_bf_length+2);
     }
-    bf10tmp    = bnroot+ptr;
-    ptr += bfdecimals+4;
+    g_bf10_tmp = alloc_size(g_bf_decimals+4);
 
     // ptr needs to be 16-bit aligned on some systems
     ptr = (ptr+1)&~1;
 
-    stack_ptr  = bnroot + ptr;
-    startstack = ptr;
+    s_stack_ptr  = s_bn_root + ptr;
+    g_start_stack = ptr;
 
-    // max stack offset from bnroot
-    maxstack = (long)0x10000L-(bflength+2)*22;
+    // max stack offset from s_bn_root
+    g_max_stack = (long)0x10000L-(g_bf_length+2)*22;
 
     // sanity check
     // leave room for NUMVARS variables allocated from stack
     // also leave room for the safe area at top of segment
-    if (ptr + NUMVARS*(bflength+2) > maxstack)
+    if (ptr + NUMVARS*(g_bf_length+2) > g_max_stack)
     {
         stopmsg("Requested precision of " + std::to_string(g_decimals) + " too high, aborting");
         goodbye();
@@ -339,48 +273,37 @@ static void init_bf_2()
     // room for 6 corners + 6 save corners + 10 params at top of extraseg
     // this area is safe - use for variables that are used outside fractal
     // generation - e.g. zoom box variables
-    ptr  = maxstack;
-    g_bf_x_min     = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_x_max     = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_y_min     = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_y_max     = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_x_3rd     = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_y_3rd     = bnroot+ptr;
-    ptr += bflength+2;
-    for (auto &param : bfparms)
+    ptr  = g_max_stack;
+    g_bf_x_min = alloc_size(g_bf_length+2);
+    g_bf_x_max = alloc_size(g_bf_length+2);
+    g_bf_y_min = alloc_size(g_bf_length+2);
+    g_bf_y_max = alloc_size(g_bf_length+2);
+    g_bf_x_3rd = alloc_size(g_bf_length+2);
+    g_bf_y_3rd = alloc_size(g_bf_length+2);
+    for (bf_t &param : g_bf_parms)
     {
-        param = bnroot + ptr;
-        ptr += bflength + 2;
+        param = s_bn_root + ptr;
+        ptr += g_bf_length + 2;
     }
-    g_bf_save_x_min    = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_save_x_max    = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_save_y_min    = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_save_y_max    = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_save_x_3rd    = bnroot+ptr;
-    ptr += bflength+2;
-    g_bf_save_y_3rd    = bnroot+ptr;
+    g_bf_save_x_min = alloc_size(g_bf_length+2);
+    g_bf_save_x_max = alloc_size(g_bf_length+2);
+    g_bf_save_y_min = alloc_size(g_bf_length+2);
+    g_bf_save_y_max = alloc_size(g_bf_length+2);
+    g_bf_save_x_3rd = alloc_size(g_bf_length+2);
+    g_bf_save_y_3rd    = s_bn_root+ptr;
     // end safe vars
 
     // good citizens initialize variables
     if (g_bf_save_len > 0)    // leave save area
     {
-        std::memset(bnroot+(g_bf_save_len+2)*22, 0, (unsigned)(startstack-(g_bf_save_len+2)*22));
+        std::memset(s_bn_root+(g_bf_save_len+2)*22, 0, (unsigned)(g_start_stack-(g_bf_save_len+2)*22));
     }
     else   // first time through - nothing saved
     {
         // high variables
-        std::memset(bnroot+maxstack, 0, (bflength+2)*22);
+        std::memset(s_bn_root+g_max_stack, 0, (g_bf_length+2)*22);
         // low variables
-        std::memset(bnroot, 0, (unsigned)startstack);
+        std::memset(s_bn_root, 0, (unsigned)g_start_stack);
     }
 
     restore_bf_vars();
@@ -388,16 +311,16 @@ static void init_bf_2()
 
 
 /**********************************************************/
-// save current corners and parameters to start of bnroot
+// save current corners and parameters to start of s_bn_root
 // to preserve values across calls to init_bf()
 static int save_bf_vars()
 {
     int ret;
-    if (bnroot != nullptr)
+    if (s_bn_root != nullptr)
     {
-        unsigned int mem = (bflength+2)*22;  // 6 corners + 6 save corners + 10 params
-        g_bf_save_len = bflength;
-        std::memcpy(bnroot, g_bf_x_min, mem);
+        unsigned int mem = (g_bf_length+2)*22;  // 6 corners + 6 save corners + 10 params
+        g_bf_save_len = g_bf_length;
+        std::memcpy(s_bn_root, g_bf_x_min, mem);
         // scrub old high area
         std::memset(g_bf_x_min, 0, mem);
         ret = 0;
@@ -419,38 +342,38 @@ static int restore_bf_vars()
     {
         return -1;
     }
-    ptr  = bnroot;
-    convert_bf(g_bf_x_min, ptr, bflength, g_bf_save_len);
+    ptr  = s_bn_root;
+    convert_bf(g_bf_x_min, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_x_max, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_x_max, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_y_min, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_y_min, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_y_max, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_y_max, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_x_3rd, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_x_3rd, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_y_3rd, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_y_3rd, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    for (auto &param : bfparms)
+    for (bf_t &param : g_bf_parms)
     {
-        convert_bf(param, ptr, bflength, g_bf_save_len);
+        convert_bf(param, ptr, g_bf_length, g_bf_save_len);
         ptr += g_bf_save_len + 2;
     }
-    convert_bf(g_bf_save_x_min, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_x_min, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_save_x_max, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_x_max, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_save_y_min, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_y_min, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_save_y_max, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_y_max, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_save_x_3rd, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_x_3rd, ptr, g_bf_length, g_bf_save_len);
     ptr += g_bf_save_len+2;
-    convert_bf(g_bf_save_y_3rd, ptr, bflength, g_bf_save_len);
+    convert_bf(g_bf_save_y_3rd, ptr, g_bf_length, g_bf_save_len);
 
     // scrub save area
-    std::memset(bnroot, 0, (g_bf_save_len+2)*22);
+    std::memset(s_bn_root, 0, (g_bf_save_len+2)*22);
     return 0;
 }
 
@@ -459,9 +382,17 @@ static int restore_bf_vars()
 void free_bf_vars()
 {
     g_bf_save_len = 0;
-    bf_math = bf_math_type::NONE;
-    bnstep = bnlength = intlength = rlength = padding = shiftfactor = g_decimals = 0;
-    bflength = rbflength = bfdecimals = 0;
+    g_bf_math = bf_math_type::NONE;
+    g_bn_step = 0;
+    g_bn_length = 0;
+    g_int_length = 0;
+    g_r_length = 0;
+    g_padding = 0;
+    g_shift_factor = 0;
+    g_decimals = 0;
+    g_bf_length = 0;
+    g_r_bf_length = 0;
+    g_bf_decimals = 0;
 }
 
 /************************************************************************/
@@ -470,14 +401,14 @@ void free_bf_vars()
 // Allocates a bn_t variable on stack
 bn_t alloc_stack(size_t size)
 {
-    if (bf_math == bf_math_type::NONE)
+    if (g_bf_math == bf_math_type::NONE)
     {
-        stopmsg("alloc_stack called with bf_math==0");
+        stopmsg("alloc_stack called with g_bf_math==0");
         return nullptr;
     }
-    const long stack_addr = (long)((stack_ptr-bnroot)+size); // part of bnroot
+    const long stack_addr = (long)((s_stack_ptr-s_bn_root)+size); // part of s_bn_root
 
-    if (stack_addr > maxstack)
+    if (stack_addr > g_max_stack)
     {
         stopmsg("Aborting, Out of Bignum Stack Space");
         goodbye();
@@ -487,15 +418,15 @@ bn_t alloc_stack(size_t size)
     {
         g_bignum_max_stack_addr = stack_addr;
     }
-    stack_ptr += size;   // increment stack pointer
-    return stack_ptr - size;
+    s_stack_ptr += size;   // increment stack pointer
+    return s_stack_ptr - size;
 }
 
 /************************************************************************/
 // Returns stack pointer offset so it can be saved.
 int save_stack()
 {
-    return (int)(stack_ptr - bnroot);
+    return (int)(s_stack_ptr - s_bn_root);
 }
 
 /************************************************************************/
@@ -503,7 +434,7 @@ int save_stack()
 //    allocated since save_stack()
 void restore_stack(int old_offset)
 {
-    stack_ptr  = bnroot+old_offset;
+    s_stack_ptr  = s_bn_root+old_offset;
 }
 
 /************************************************************************/
@@ -528,13 +459,13 @@ void init_bf_dec(int dec)
     if (g_bail_out > 10)      // arbitrary value
     {
         // using 2 doesn't gain much and requires another test
-        intlength = 4;
+        g_int_length = 4;
     }
     else if (g_fractal_type == fractal_type::FPMANDELZPOWER //
         || g_fractal_type == fractal_type::FPJULIAZPOWER    //
         || g_fractal_type == fractal_type::DIVIDE_BROT5)
     {
-        intlength = 4; // 2 leaves artifacts in the center of the lakes
+        g_int_length = 4; // 2 leaves artifacts in the center of the lakes
     }
     // the bailout tests need greater dynamic range
     else if (g_bail_out_test == bailouts::Real //
@@ -542,14 +473,14 @@ void init_bf_dec(int dec)
         || g_bail_out_test == bailouts::And    //
         || g_bail_out_test == bailouts::Manr)
     {
-        intlength = 2;
+        g_int_length = 2;
     }
     else
     {
-        intlength = 1;
+        g_int_length = 1;
     }
     // conservative estimate
-    bnlength = intlength + (int)(g_decimals/LOG10_256) + 1; // round up
+    g_bn_length = g_int_length + (int)(g_decimals/LOG10_256) + 1; // round up
     init_bf_2();
 }
 
@@ -559,18 +490,18 @@ void init_bf_dec(int dec)
 //   intl = bytes for integer part (1, 2, or 4)
 void init_bf_length(int bnl)
 {
-    bnlength = bnl;
+    g_bn_length = bnl;
 
     if (g_bail_out > 10)      // arbitrary value
     {
         // using 2 doesn't gain much and requires another test
-        intlength = 4;
+        g_int_length = 4;
     }
     else if (g_fractal_type == fractal_type::FPMANDELZPOWER //
         || g_fractal_type == fractal_type::FPJULIAZPOWER    //
         || g_fractal_type == fractal_type::DIVIDE_BROT5)
     {
-        intlength = 4; // 2 leaves artifacts in the center of the lakes
+        g_int_length = 4; // 2 leaves artifacts in the center of the lakes
     }
     // the bailout tests need greater dynamic range
     else if (g_bail_out_test == bailouts::Real //
@@ -578,14 +509,14 @@ void init_bf_length(int bnl)
         || g_bail_out_test == bailouts::And    //
         || g_bail_out_test == bailouts::Manr)
     {
-        intlength = 2;
+        g_int_length = 2;
     }
     else
     {
-        intlength = 1;
+        g_int_length = 1;
     }
     // conservative estimate
-    g_decimals = (int)((bnlength-intlength)*LOG10_256);
+    g_decimals = (int)((g_bn_length-g_int_length)*LOG10_256);
     init_bf_2();
 }
 
@@ -669,15 +600,15 @@ void init_big_pi()
         0x09, 0xA4, 0x44, 0x73, 0x70, 0x03, 0x2E, 0x8A, 0x19, 0x13,
         0xD3, 0x08, 0xA3, 0x85, 0x88, 0x6A, 0x3F, 0x24,
         /* . */  0x03, 0x00, 0x00, 0x00
-        //  <- up to intlength 4 ->
+        //  <- up to g_int_length 4 ->
         // or bf_t int length of 2 + 2 byte exp
     };
 
-    length = bflength+2; // 2 byte exp
+    length = g_bf_length+2; // 2 byte exp
     pi_offset = sizeof pi_table - length;
-    std::memcpy(big_pi, pi_table + pi_offset, length);
+    std::memcpy(g_big_pi, pi_table + pi_offset, length);
 
-    // notice that bf_pi and bn_pi can share the same memory space
-    bf_pi = big_pi;
-    bn_pi = big_pi + (bflength-2) - (bnlength-intlength);
+    // notice that g_bf_pi and g_bn_pi can share the same memory space
+    g_bf_pi = g_big_pi;
+    g_bn_pi = g_big_pi + (g_bf_length-2) - (g_bn_length-g_int_length);
 }

@@ -31,7 +31,7 @@
 #include <cmath>
 #include <vector>
 
-#define PIXELROUND 0.00001
+constexpr double PIXELROUND{0.00001};
 
 enum
 {
@@ -42,6 +42,7 @@ int g_box_x[NUM_BOX_POINTS]{};
 int g_box_y[NUM_BOX_POINTS]{};
 int g_box_values[NUM_BOX_POINTS]{};
 bool g_video_scroll{};
+int g_box_color{}; // Zoom-Box color
 
 static void zmo_calc(double, double, double *, double *, double);
 static void zmo_calcbf(bf_t, bf_t, bf_t, bf_t, bf_t, bf_t, bf_t, bf_t, bf_t);
@@ -55,9 +56,9 @@ void calc_corner(bf_t target, bf_t p1, double p2, bf_t p3, double p4, bf_t p5)
     bf_t btmp1, btmp2 , btmp3;
     int saved;
     saved = save_stack();
-    btmp1 = alloc_stack(rbflength+2);
-    btmp2 = alloc_stack(rbflength+2);
-    btmp3 = alloc_stack(rbflength+2);
+    btmp1 = alloc_stack(g_r_bf_length+2);
+    btmp2 = alloc_stack(g_r_bf_length+2);
+    btmp3 = alloc_stack(g_r_bf_length+2);
 
     // use target as temporary variable
     floattobf(btmp3, p2);
@@ -67,9 +68,6 @@ void calc_corner(bf_t target, bf_t p1, double p2, bf_t p3, double p4, bf_t p5)
     add_a_bf(target, p1);
     restore_stack(saved);
 }
-
-// Zoom-Box color
-int g_box_color = 0;
 
 void dispbox()
 {
@@ -137,14 +135,14 @@ void drawbox(bool drawit)
         reset_zoom_corners();
         return;
     }
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         saved = save_stack();
-        bffxwidth = alloc_stack(rbflength+2);
-        bffxskew  = alloc_stack(rbflength+2);
-        bffydepth = alloc_stack(rbflength+2);
-        bffyskew  = alloc_stack(rbflength+2);
-        bffxadj   = alloc_stack(rbflength+2);
+        bffxwidth = alloc_stack(g_r_bf_length+2);
+        bffxskew  = alloc_stack(g_r_bf_length+2);
+        bffydepth = alloc_stack(g_r_bf_length+2);
+        bffyskew  = alloc_stack(g_r_bf_length+2);
+        bffxadj   = alloc_stack(g_r_bf_length+2);
     }
     ftemp1 = PI*g_zoom_box_rotation/72; // convert to radians
     rotcos = std::cos(ftemp1);   // sin & cos of rotation
@@ -157,7 +155,7 @@ void drawbox(bool drawit)
     fyskew  = g_save_y_min-g_save_y_3rd;
     fxadj   = g_zoom_box_width*g_zoom_box_skew;
 
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         // do some calcs just once here to reduce fp work a bit
         sub_bf(bffxwidth, g_bf_save_x_max, g_bf_save_x_3rd);
@@ -181,7 +179,7 @@ void drawbox(bool drawit)
     tl.y   = (int)(ftemp2*(g_logical_screen_y_size_dots+PIXELROUND));
     g_x_min  = g_save_x_min + ftemp1*fxwidth + ftemp2*fxskew; // real co-ords
     g_y_max  = g_save_y_max + ftemp2*fydepth + ftemp1*fyskew;
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         calc_corner(g_bf_x_min, g_bf_save_x_min, ftemp1, bffxwidth, ftemp2, bffxskew);
         calc_corner(g_bf_y_max, g_bf_save_y_max, ftemp2, bffydepth, ftemp1, bffyskew);
@@ -194,7 +192,7 @@ void drawbox(bool drawit)
     br.y   = (int)(ftemp2*(g_logical_screen_y_size_dots+PIXELROUND));
     g_x_max  = g_save_x_min + ftemp1*fxwidth + ftemp2*fxskew;
     g_y_min  = g_save_y_max + ftemp2*fydepth + ftemp1*fyskew;
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         calc_corner(g_bf_x_max, g_bf_save_x_min, ftemp1, bffxwidth, ftemp2, bffxskew);
         calc_corner(g_bf_y_min, g_bf_save_y_max, ftemp2, bffydepth, ftemp1, bffyskew);
@@ -210,7 +208,7 @@ void drawbox(bool drawit)
     bl.y   = (int)(ftemp2*(g_logical_screen_y_size_dots+PIXELROUND));
     g_x_3rd  = g_save_x_min + ftemp1*fxwidth + ftemp2*fxskew;
     g_y_3rd  = g_save_y_max + ftemp2*fydepth + ftemp1*fyskew;
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         calc_corner(g_bf_x_3rd, g_bf_save_x_min, ftemp1, bffxwidth, ftemp2, bffxskew);
         calc_corner(g_bf_y_3rd, g_bf_save_y_max, ftemp2, bffydepth, ftemp1, bffyskew);
@@ -528,14 +526,14 @@ static void zmo_calcbf(bf_t bfdx, bf_t bfdy,
     int saved;
     saved = save_stack();
 
-    btmp1  = alloc_stack(rbflength+2);
-    btmp2  = alloc_stack(rbflength+2);
-    btmp3  = alloc_stack(rbflength+2);
-    btmp4  = alloc_stack(rbflength+2);
-    btmp2a = alloc_stack(rbflength+2);
-    btmp4a = alloc_stack(rbflength+2);
-    btempx = alloc_stack(rbflength+2);
-    btempy = alloc_stack(rbflength+2);
+    btmp1  = alloc_stack(g_r_bf_length+2);
+    btmp2  = alloc_stack(g_r_bf_length+2);
+    btmp3  = alloc_stack(g_r_bf_length+2);
+    btmp4  = alloc_stack(g_r_bf_length+2);
+    btmp2a = alloc_stack(g_r_bf_length+2);
+    btmp4a = alloc_stack(g_r_bf_length+2);
+    btempx = alloc_stack(g_r_bf_length+2);
+    btempy = alloc_stack(g_r_bf_length+2);
 
     /* calc cur screen corner relative to zoombox, when zoombox co-ords
        are taken as (0,0) topleft thru (1,1) bottom right */
@@ -603,19 +601,19 @@ void zoomoutbf() // for ctl-enter, calc corners for zooming out
     bf_t tmp1, tmp2, tmp3, tmp4, tmp5, tmp6, bfplotmx1, bfplotmx2, bfplotmy1, bfplotmy2;
     int saved;
     saved = save_stack();
-    savbfxmin = alloc_stack(rbflength+2);
-    savbfymax = alloc_stack(rbflength+2);
-    bfftemp   = alloc_stack(rbflength+2);
-    tmp1      = alloc_stack(rbflength+2);
-    tmp2      = alloc_stack(rbflength+2);
-    tmp3      = alloc_stack(rbflength+2);
-    tmp4      = alloc_stack(rbflength+2);
-    tmp5      = alloc_stack(rbflength+2);
-    tmp6      = alloc_stack(rbflength+2);
-    bfplotmx1 = alloc_stack(rbflength+2);
-    bfplotmx2 = alloc_stack(rbflength+2);
-    bfplotmy1 = alloc_stack(rbflength+2);
-    bfplotmy2 = alloc_stack(rbflength+2);
+    savbfxmin = alloc_stack(g_r_bf_length+2);
+    savbfymax = alloc_stack(g_r_bf_length+2);
+    bfftemp   = alloc_stack(g_r_bf_length+2);
+    tmp1      = alloc_stack(g_r_bf_length+2);
+    tmp2      = alloc_stack(g_r_bf_length+2);
+    tmp3      = alloc_stack(g_r_bf_length+2);
+    tmp4      = alloc_stack(g_r_bf_length+2);
+    tmp5      = alloc_stack(g_r_bf_length+2);
+    tmp6      = alloc_stack(g_r_bf_length+2);
+    bfplotmx1 = alloc_stack(g_r_bf_length+2);
+    bfplotmx2 = alloc_stack(g_r_bf_length+2);
+    bfplotmy1 = alloc_stack(g_r_bf_length+2);
+    bfplotmy2 = alloc_stack(g_r_bf_length+2);
     // ftemp = (yymin-yy3rd)*(xx3rd-xxmin) - (xxmax-xx3rd)*(yy3rd-yymax);
     sub_bf(tmp1, g_bf_y_min, g_bf_y_3rd);
     sub_bf(tmp2, g_bf_x_3rd, g_bf_x_min);
@@ -678,7 +676,7 @@ void zoomoutdbl() // for ctl-enter, calc corners for zooming out
 
 void zoomout() // for ctl-enter, calc corners for zooming out
 {
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         zoomoutbf();
     }
@@ -717,7 +715,8 @@ void aspectratio_crop(float oldaspect, float newaspect)
 
 static int check_pan() // return 0 if can't, alignment requirement if can
 {
-    if ((g_calc_status != calc_status_value::RESUMABLE && g_calc_status != calc_status_value::COMPLETED) || g_evolving)
+    if ((g_calc_status != calc_status_value::RESUMABLE && g_calc_status != calc_status_value::COMPLETED) ||
+        g_evolving != evolution_mode_flags::NONE)
     {
         return 0; // not resumable, not complete
     }
@@ -824,7 +823,7 @@ int init_pan_or_recalc(bool do_zoomout) // decide to recalc, or to chg worklist 
     }
     // got a zoombox
     alignmask = check_pan()-1;
-    if (alignmask < 0 || g_evolving)
+    if (alignmask < 0 || g_evolving != evolution_mode_flags::NONE)
     {
         g_calc_status = calc_status_value::PARAMS_CHANGED; // can't pan, trigger recalc
         return 0;

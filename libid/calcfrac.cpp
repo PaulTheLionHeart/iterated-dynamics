@@ -80,16 +80,17 @@ static void put_truecolor_disk(int, int, int);
 // added for testing autologmap()
 static long autologmap();
 
-static DComplex s_saved{};
-static double rqlim_save = 0.0;
-static int (*calctypetmp)() = nullptr;
-static unsigned long lm = 0;                   // magnitude limit (CALCMAND)
-int g_xx_begin = 0;                        // these are same as worklist,
-int g_yy_begin = 0;                        // declared as separate items
-static double dem_delta = 0.0;
-static double dem_width = 0.0;          // distance estimator variables
-static double dem_toobig = 0.0;
-static bool dem_mandel = false;
+static DComplex s_saved{};     //
+static double rqlim_save{};    //
+static int (*calctypetmp)(){}; //
+static unsigned long lm{};     // magnitude limit (CALCMAND)
+int g_xx_begin{};              // these are same as worklist,
+int g_yy_begin{};              // declared as separate items
+static double dem_delta{};     //
+static double dem_width{};     // distance estimator variables
+static double dem_toobig{};    //
+static bool dem_mandel{};      //
+
 #define DEM_BAILOUT 535.5
 // next has a skip bit for each maxblock unit;
 //   1st pass sets bit  [1]... off only if block's contents guessed;
@@ -98,107 +99,91 @@ static bool dem_mandel = false;
 // size of next puts a limit of MAX_PIXELS pixels across on solid guessing logic
 
 // variables exported from this file
-long            g_l_at_rad;                     // finite attractor radius
-double          g_f_at_rad;                     // finite attractor radius
-LComplex g_l_init_orbit = { 0 };
-long g_l_magnitude = 0;
-long g_l_magnitude_limit = 0;
-long g_l_magnitude_limit2 = 0;
-long g_l_close_enough = 0;
-long g_l_init_x{};
-long g_l_init_y{};
-DComplex g_init = { 0.0 };
-DComplex g_tmp_z = { 0.0 };
-DComplex g_old_z = { 0.0 };
-DComplex g_new_z = { 0.0 };
-int g_color = 0;
-long g_color_iter = 0;
-long g_old_color_iter = 0;
-long g_real_color_iter = 0;
-int g_row = 0;
-int g_col = 0;
-int g_invert = 0;
-double g_f_radius = 0.0;
-double g_f_x_center = 0.0;
-double g_f_y_center = 0.0;                 // for inversion
-void (*g_put_color)(int, int, int) = putcolor_a;
-void (*g_plot)(int, int, int) = putcolor_a;
+long g_l_at_rad{};                              // finite attractor radius
+double g_f_at_rad{};                            // finite attractor radius
+LComplex g_l_init_orbit{};                      //
+long g_l_magnitude{};                           //
+long g_l_magnitude_limit{};                     //
+long g_l_magnitude_limit2{};                    //
+long g_l_close_enough{};                        //
+long g_l_init_x{};                              //
+long g_l_init_y{};                              //
+DComplex g_init{};                              //
+DComplex g_tmp_z{};                             //
+DComplex g_old_z{};                             //
+DComplex g_new_z{};                             //
+int g_color{};                                  //
+long g_color_iter{};                            //
+long g_old_color_iter{};                        //
+long g_real_color_iter{};                       //
+int g_row{};                                    //
+int g_col{};                                    //
+int g_invert{};                                 //
+double g_f_radius{};                            //
+double g_f_x_center{};                          //
+double g_f_y_center{};                          // for inversion
+void (*g_put_color)(int, int, int){putcolor_a}; //
+void (*g_plot)(int, int, int){putcolor_a};      //
+double g_magnitude{};                           //
+double g_magnitude_limit{};                     //
+double g_magnitude_limit2{};                    //
+bool g_magnitude_calc{true};                    //
+bool g_use_old_periodicity{};                   //
+bool g_use_old_distance_estimator{};            //
+bool g_old_demm_colors{};                       //
+int (*g_calc_type)(){};                         //
+bool g_quick_calc{};                            //
+double g_close_proximity{0.01};                 //
+double g_close_enough{};                        //
+int g_pi_in_pixels{};                           // value of pi in pixels
+                                                // ORBIT variables
+bool g_show_orbit{};                            // flag to turn on and off
+int g_orbit_save_index{};                       // index into save_orbit array
+int g_orbit_color{15};                          // XOR color
+int g_i_x_start{};                              //
+int g_i_x_stop{};                               //
+int g_i_y_start{};                              //
+int g_i_y_stop{};                               // start, stop here
+symmetry_type g_symmetry{};                     // symmetry flag
+symmetry_type g_force_symmetry{};               // force symmetry
+bool g_reset_periodicity{};                     // true if escape time pixel rtn to reset
+int g_keyboard_check_interval{};                //
+int g_max_keyboard_check_interval{};            // avoids checking keyboard too often
+int g_xx_start{};                               //
+int g_xx_stop{};                                //
+int g_yy_start{};                               //
+int g_yy_stop{};                                //
+int g_work_pass{};                              //
+int g_work_symmetry{};                          // for the sake of calcmand
+status_values g_got_status{status_values::NONE}; // variables which must be visible for tab_display
+int g_current_pass{};                            //
+int g_total_passes{};                            //
+int g_current_row{};                             //
+int g_current_column{};                          //
+bool g_three_pass{};                             // for solid_guess & its subroutines
+int g_attractors{};                              // number of finite attractors
+DComplex g_attractor[MAX_NUM_ATTRACTORS]{};      // finite attractor vals (f.p)
+LComplex g_l_attractor[MAX_NUM_ATTRACTORS]{};    // finite attractor vals (int)
+int g_attractor_period[MAX_NUM_ATTRACTORS]{};    // period of the finite attractor
+int g_inside_color{};                            // inside color: 1=blue
+int g_outside_color{};                           // outside color
 
-double g_magnitude = 0.0;
-double g_magnitude_limit = 0.0;
-double g_magnitude_limit2 = 0.0;
-bool g_magnitude_calc = true;
-bool g_use_old_periodicity = false;
-bool g_use_old_distance_estimator = false;
-bool g_old_demm_colors = false;
-int (*g_calc_type)() = nullptr;
-bool g_quick_calc = false;
-double g_close_proximity = 0.01;
+extern unsigned char g_phaseflag;               // used for phase colours in Art Matrix fractals    // PHD 240711
 
-double g_close_enough = 0.0;
-int g_pi_in_pixels = 0;                        // value of pi in pixels
-
-// ORBIT variables
-bool g_show_orbit = false;                // flag to turn on and off
-int g_orbit_save_index = 0;             // index into save_orbit array
-int g_orbit_color = 15;                 // XOR color
-
-int g_i_x_start = 0;
-int g_i_x_stop = 0;
-int g_i_y_start = 0;
-int g_i_y_stop = 0;                         // start, stop here
-symmetry_type g_symmetry = symmetry_type::NONE; // symmetry flag
-symmetry_type g_force_symmetry = symmetry_type::NONE;      // force symmetry
-bool g_reset_periodicity = false;         // true if escape time pixel rtn to reset
-int g_keyboard_check_interval = 0;
-int g_max_keyboard_check_interval = 0;                   // avoids checking keyboard too often
-
-int g_xx_start = 0;
-int g_xx_stop = 0;
-int g_yy_start = 0;
-int g_yy_stop = 0;
-int g_work_pass = 0;
-int g_work_symmetry = 0;                        // for the sake of calcmand
-
-// variables which must be visible for tab_display
-int g_got_status = -1;                    // -1 if not, 0 for 1or2pass, 1 for ssg,
-                                        // 2 for btm, 3 for 3d, 4 for tesseral, 5 for diffusion_scan
-                                        // 6 for orbits
-int g_current_pass = 0;
-int g_total_passes = 0;
-int g_current_row = 0;
-int g_current_column = 0;
-
-// static vars for solid_guess & its subroutines
-bool g_three_pass = false;
-
-int g_attractors = 0;                     // number of finite attractors
-DComplex g_attractor[MAX_NUM_ATTRACTORS] = { 0.0 };        // finite attractor vals (f.p)
-LComplex g_l_attractor[MAX_NUM_ATTRACTORS] = { 0 };         // finite attractor vals (int)
-int g_attractor_period[MAX_NUM_ATTRACTORS] = { 0 };         // period of the finite attractor
-
-int     g_inside_color = 0;             // inside color: 1=blue
-int     g_outside_color = COLOR_BLACK;  // outside color
-
-extern unsigned char g_phaseflag;       // used for phase colours in Art Matrix fractals    // PHD 240711
-
-    // --------------------------------------------------------------------
+// --------------------------------------------------------------------
 //              These variables are external for speed's sake only
 // --------------------------------------------------------------------
 
-int g_periodicity_check = 0;
+int g_periodicity_check{};           //
+int g_periodicity_next_saved_incr{}; // For periodicity testing, only in standard_fractal()
+long g_first_saved_and{};            //
+int g_atan_colors{180};              //
 
-// For periodicity testing, only in standard_fractal()
-int g_periodicity_next_saved_incr = 0;
-long g_first_saved_and = 0;
-
-static std::vector<BYTE> savedots;
-static BYTE *fillbuff = nullptr;
-static int savedotslen = 0;
-static int showdotcolor = 0;
-int g_atan_colors = 180;
-
-static int showdot_width = 0;
+static std::vector<BYTE> s_save_dots;
+static BYTE *s_fill_buff{};
+static int s_save_dots_len{};
+static int s_show_dot_color{};
+static int s_show_dot_width{};
 
 enum class show_dot_action
 {
@@ -215,7 +200,7 @@ enum class show_dot_direction
     UPPER_LEFT = 4
 };
 
-int g_and_color = 0;        // "and" value used for color selection
+int g_and_color {};        // "and" value used for color selection
 
 double fmodtest_bailout_or()
 {
@@ -394,12 +379,12 @@ void showdotsaverestore(
     int ct = 0;
     if (direction != show_dot_direction::JUST_A_POINT)
     {
-        if (savedots.empty())
+        if (s_save_dots.empty())
         {
             stopmsg("savedots empty");
             exit(0);
         }
-        if (fillbuff == nullptr)
+        if (s_fill_buff == nullptr)
         {
             stopmsg("fillbuff NULL");
             exit(0);
@@ -412,12 +397,12 @@ void showdotsaverestore(
         {
             if (action == show_dot_action::SAVE)
             {
-                get_line(j, startx, stopx, &savedots[0] + ct);
-                sym_fill_line(j, startx, stopx, fillbuff);
+                get_line(j, startx, stopx, &s_save_dots[0] + ct);
+                sym_fill_line(j, startx, stopx, s_fill_buff);
             }
             else
             {
-                sym_put_line(j, startx, stopx, &savedots[0] + ct);
+                sym_put_line(j, startx, stopx, &s_save_dots[0] + ct);
             }
             ct += stopx-startx+1;
         }
@@ -427,12 +412,12 @@ void showdotsaverestore(
         {
             if (action == show_dot_action::SAVE)
             {
-                get_line(j, startx, stopx, &savedots[0] + ct);
-                sym_fill_line(j, startx, stopx, fillbuff);
+                get_line(j, startx, stopx, &s_save_dots[0] + ct);
+                sym_fill_line(j, startx, stopx, s_fill_buff);
             }
             else
             {
-                sym_put_line(j, startx, stopx, &savedots[0] + ct);
+                sym_put_line(j, startx, stopx, &s_save_dots[0] + ct);
             }
             ct += stopx-startx+1;
         }
@@ -442,12 +427,12 @@ void showdotsaverestore(
         {
             if (action == show_dot_action::SAVE)
             {
-                get_line(j, startx, stopx, &savedots[0] + ct);
-                sym_fill_line(j, startx, stopx, fillbuff);
+                get_line(j, startx, stopx, &s_save_dots[0] + ct);
+                sym_fill_line(j, startx, stopx, s_fill_buff);
             }
             else
             {
-                sym_put_line(j, startx, stopx, &savedots[0] + ct);
+                sym_put_line(j, startx, stopx, &s_save_dots[0] + ct);
             }
             ct += stopx-startx+1;
         }
@@ -457,12 +442,12 @@ void showdotsaverestore(
         {
             if (action == show_dot_action::SAVE)
             {
-                get_line(j, startx, stopx, &savedots[0] + ct);
-                sym_fill_line(j, startx, stopx, fillbuff);
+                get_line(j, startx, stopx, &s_save_dots[0] + ct);
+                sym_fill_line(j, startx, stopx, s_fill_buff);
             }
             else
             {
-                sym_put_line(j, startx, stopx, &savedots[0] + ct);
+                sym_put_line(j, startx, stopx, &s_save_dots[0] + ct);
             }
             ct += stopx-startx+1;
         }
@@ -472,7 +457,7 @@ void showdotsaverestore(
     }
     if (action == show_dot_action::SAVE)
     {
-        (*g_plot)(g_col, g_row, showdotcolor);
+        (*g_plot)(g_col, g_row, s_show_dot_color);
     }
 }
 
@@ -489,7 +474,7 @@ int calctypeshowdot()
     startx = g_col;
     stopy = g_row;
     starty = g_row;
-    width = showdot_width+1;
+    width = s_show_dot_width+1;
     if (width > 0)
     {
         if (g_col+width <= g_i_x_stop && g_row+width <= g_i_y_stop)
@@ -843,8 +828,7 @@ int calcfract()
     {
         if (g_std_calc_mode == '3')  // convoluted 'g' + '2' hybrid
         {
-            int oldcalcmode;
-            oldcalcmode = g_std_calc_mode;
+            const int old_calc_mode = g_std_calc_mode;
             if (!g_resuming || g_three_pass)
             {
                 g_std_calc_mode = 'g';
@@ -879,7 +863,7 @@ int calcfract()
                 }
                 timer(timer_type::ENGINE, (int(*)())perform_worklist);
             }
-            g_std_calc_mode = (char)oldcalcmode;
+            g_std_calc_mode = (char)old_calc_mode;
         }
         else // main case, much nicer!
         {
@@ -936,7 +920,7 @@ static void perform_worklist()
     int (*sv_orbitcalc)() = nullptr;  // function that calculates one orbit
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
-    int alt = find_alternate_math(g_fractal_type, bf_math);
+    int alt = find_alternate_math(g_fractal_type, g_bf_math);
 
     if (alt > -1)
     {
@@ -949,7 +933,7 @@ static void perform_worklist()
     }
     else
     {
-        bf_math = bf_math_type::NONE;
+        g_bf_math = bf_math_type::NONE;
     }
 
     if (g_potential_flag && g_potential_16bit)
@@ -1113,22 +1097,22 @@ static void perform_worklist()
             switch (g_auto_show_dot)
             {
             case 'd':
-                showdotcolor = g_color_dark % g_colors;
+                s_show_dot_color = g_color_dark % g_colors;
                 break;
             case 'm':
-                showdotcolor = g_color_medium % g_colors;
+                s_show_dot_color = g_color_medium % g_colors;
                 break;
             case 'b':
             case 'a':
-                showdotcolor = g_color_bright % g_colors;
+                s_show_dot_color = g_color_bright % g_colors;
                 break;
             default:
-                showdotcolor = g_show_dot % g_colors;
+                s_show_dot_color = g_show_dot % g_colors;
                 break;
             }
             if (g_size_dot <= 0)
             {
-                showdot_width = -1;
+                s_show_dot_width = -1;
             }
             else
             {
@@ -1139,32 +1123,32 @@ static void perform_worklist()
                 // overflow if dshowdot width gets near 256.
                 if (dshowdot_width > 150.0)
                 {
-                    showdot_width = 150;
+                    s_show_dot_width = 150;
                 }
                 else if (dshowdot_width > 0.0)
                 {
-                    showdot_width = (int)dshowdot_width;
+                    s_show_dot_width = (int)dshowdot_width;
                 }
                 else
                 {
-                    showdot_width = -1;
+                    s_show_dot_width = -1;
                 }
             }
-            while (showdot_width >= 0)
+            while (s_show_dot_width >= 0)
             {
                 // We're using near memory, so get the amount down
                 // to something reasonable. The polynomial used to
                 // calculate savedotslen is exactly right for the
                 // triangular-shaped shotdot cursor. The that cursor
                 // is changed, this formula must match.
-                while ((savedotslen = sqr(showdot_width) + 5*showdot_width + 4) > 1000)
+                while ((s_save_dots_len = sqr(s_show_dot_width) + 5*s_show_dot_width + 4) > 1000)
                 {
-                    showdot_width--;
+                    s_show_dot_width--;
                 }
                 bool resized = false;
                 try
                 {
-                    savedots.resize(savedotslen);
+                    s_save_dots.resize(s_save_dots_len);
                     resized = true;
                 }
                 catch (std::bad_alloc const&)
@@ -1173,18 +1157,18 @@ static void perform_worklist()
 
                 if (resized)
                 {
-                    savedotslen /= 2;
-                    fillbuff = &savedots[0] + savedotslen;
-                    std::memset(fillbuff, showdotcolor, savedotslen);
+                    s_save_dots_len /= 2;
+                    s_fill_buff = &s_save_dots[0] + s_save_dots_len;
+                    std::memset(s_fill_buff, s_show_dot_color, s_save_dots_len);
                     break;
                 }
                 // There's even less free memory than we thought, so reduce
                 // showdot_width still more
-                showdot_width--;
+                s_show_dot_width--;
             }
-            if (savedots.empty())
+            if (s_save_dots.empty())
             {
-                showdot_width = -1;
+                s_show_dot_width = -1;
             }
             calctypetmp = g_calc_type;
             g_calc_type    = calctypeshowdot;
@@ -1214,7 +1198,7 @@ static void perform_worklist()
             tesseral();
             break;
         case 'b':
-            bound_trace_main();
+            boundary_trace();
             break;
         case 'g':
             solid_guess();
@@ -1228,10 +1212,10 @@ static void perform_worklist()
         default:
             one_or_two_pass();
         }
-        if (!savedots.empty())
+        if (!s_save_dots.empty())
         {
-            savedots.clear();
-            fillbuff = nullptr;
+            s_save_dots.clear();
+            s_fill_buff = nullptr;
         }
         if (check_key())   // interrupted?
         {
@@ -1383,7 +1367,8 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     double totaldist = 0.0;
     DComplex lastz = { 0.0 };
 
-    bool IsInside = false;              // used to process Art Matrix Newton and separate phases without currupting inside  // PHD 240712
+    bool IsInside = false; // used to process Art Matrix Newton and separate phases without currupting inside
+                           // // PHD 240712
 
     lcloseprox = (long)(g_close_proximity*g_fudge_factor);
     savemaxit = g_max_iterations;
@@ -1429,21 +1414,21 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             s_saved.x = 0;
             s_saved.y = 0;
         }
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             if (g_decimals > 200)
             {
                 g_keyboard_check_interval = -1;
             }
-            if (bf_math == bf_math_type::BIGNUM)
+            if (g_bf_math == bf_math_type::BIGNUM)
             {
-                clear_bn(bnsaved.x);
-                clear_bn(bnsaved.y);
+                clear_bn(g_saved_z_bn.x);
+                clear_bn(g_saved_z_bn.y);
             }
-            else if (bf_math == bf_math_type::BIGFLT)
+            else if (g_bf_math == bf_math_type::BIGFLT)
             {
-                clear_bf(bfsaved.x);
-                clear_bf(bfsaved.y);
+                clear_bf(g_saved_z_bf.x);
+                clear_bf(g_saved_z_bf.y);
             }
         }
         g_init.y = g_dy_pixel();
@@ -1519,13 +1504,13 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             g_old_z.x = ((double)g_l_old_z.x) / g_fudge_factor;
             g_old_z.y = ((double)g_l_old_z.y) / g_fudge_factor;
         }
-        else if (bf_math == bf_math_type::BIGNUM)
+        else if (g_bf_math == bf_math_type::BIGNUM)
         {
-            g_old_z = cmplxbntofloat(&bnold);
+            g_old_z = cmplxbntofloat(&g_old_z_bn);
         }
-        else if (bf_math == bf_math_type::BIGFLT)
+        else if (g_bf_math == bf_math_type::BIGFLT)
         {
-            g_old_z = cmplxbftofloat(&bfold);
+            g_old_z = cmplxbftofloat(&g_old_z_bf);
         }
         lastz.x = g_old_z.x;
         lastz.y = g_old_z.y;
@@ -1548,7 +1533,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     {
         // calculation of one orbit goes here
         // input in "old" -- output in "new"
-        IsInside = false;                   // PHD 240712
+        IsInside = false; // PHD 240712
         if (g_color_iter % check_freq == 0)
         {
             if (check_key())
@@ -1576,7 +1561,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             {
                 if (sqr(deriv.x)+sqr(deriv.y) > dem_toobig)
                 {
-                    break;      
+                    break;
                 }
             }
             else
@@ -1622,13 +1607,13 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         {
             if (!g_integer_fractal)
             {
-                if (bf_math == bf_math_type::BIGNUM)
+                if (g_bf_math == bf_math_type::BIGNUM)
                 {
-                    g_new_z = cmplxbntofloat(&bnnew);
+                    g_new_z = cmplxbntofloat(&g_new_z_bn);
                 }
-                else if (bf_math == bf_math_type::BIGFLT)
+                else if (g_bf_math == bf_math_type::BIGFLT)
                 {
-                    g_new_z = cmplxbftofloat(&bfnew);
+                    g_new_z = cmplxbftofloat(&g_new_z_bf);
                 }
                 plot_orbit(g_new_z.x, g_new_z.y, -1);
             }
@@ -1639,13 +1624,13 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         }
         if (g_inside_color < ITER)
         {
-            if (bf_math == bf_math_type::BIGNUM)
+            if (g_bf_math == bf_math_type::BIGNUM)
             {
-                g_new_z = cmplxbntofloat(&bnnew);
+                g_new_z = cmplxbntofloat(&g_new_z_bn);
             }
-            else if (bf_math == bf_math_type::BIGFLT)
+            else if (g_bf_math == bf_math_type::BIGFLT)
             {
-                g_new_z = cmplxbftofloat(&bfnew);
+                g_new_z = cmplxbftofloat(&g_new_z_bf);
             }
             if (g_inside_color == STARTRAIL)
             {
@@ -1755,13 +1740,13 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
 
         if (g_outside_color == TDIS || g_outside_color == FMOD)
         {
-            if (bf_math == bf_math_type::BIGNUM)
+            if (g_bf_math == bf_math_type::BIGNUM)
             {
-                g_new_z = cmplxbntofloat(&bnnew);
+                g_new_z = cmplxbntofloat(&g_new_z_bn);
             }
-            else if (bf_math == bf_math_type::BIGFLT)
+            else if (g_bf_math == bf_math_type::BIGFLT)
             {
-                g_new_z = cmplxbftofloat(&bfnew);
+                g_new_z = cmplxbftofloat(&g_new_z_bf);
             }
             if (g_outside_color == TDIS)
             {
@@ -1858,15 +1843,15 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
                 {
                     lsaved = g_l_new_z;// integer fractals
                 }
-                else if (bf_math == bf_math_type::BIGNUM)
+                else if (g_bf_math == bf_math_type::BIGNUM)
                 {
-                    copy_bn(bnsaved.x, bnnew.x);
-                    copy_bn(bnsaved.y, bnnew.y);
+                    copy_bn(g_saved_z_bn.x, g_new_z_bn.x);
+                    copy_bn(g_saved_z_bn.y, g_new_z_bn.y);
                 }
-                else if (bf_math == bf_math_type::BIGFLT)
+                else if (g_bf_math == bf_math_type::BIGFLT)
                 {
-                    copy_bf(bfsaved.x, bfnew.x);
-                    copy_bf(bfsaved.y, bfnew.y);
+                    copy_bf(g_saved_z_bf.x, g_new_z_bf.x);
+                    copy_bf(g_saved_z_bf.y, g_new_z_bf.y);
                 }
                 else
                 {
@@ -1890,21 +1875,21 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
                         }
                     }
                 }
-                else if (bf_math == bf_math_type::BIGNUM)
+                else if (g_bf_math == bf_math_type::BIGNUM)
                 {
-                    if (cmp_bn(abs_a_bn(sub_bn(bntmp, bnsaved.x, bnnew.x)), bnclosenuff) < 0)
+                    if (cmp_bn(abs_a_bn(sub_bn(g_bn_tmp, g_saved_z_bn.x, g_new_z_bn.x)), g_close_enough_bn) < 0)
                     {
-                        if (cmp_bn(abs_a_bn(sub_bn(bntmp, bnsaved.y, bnnew.y)), bnclosenuff) < 0)
+                        if (cmp_bn(abs_a_bn(sub_bn(g_bn_tmp, g_saved_z_bn.y, g_new_z_bn.y)), g_close_enough_bn) < 0)
                         {
                             caught_a_cycle = true;
                         }
                     }
                 }
-                else if (bf_math == bf_math_type::BIGFLT)
+                else if (g_bf_math == bf_math_type::BIGFLT)
                 {
-                    if (cmp_bf(abs_a_bf(sub_bf(bftmp, bfsaved.x, bfnew.x)), bfclosenuff) < 0)
+                    if (cmp_bf(abs_a_bf(sub_bf(g_bf_tmp, g_saved_z_bf.x, g_new_z_bf.x)), g_close_enough_bf) < 0)
                     {
-                        if (cmp_bf(abs_a_bf(sub_bf(bftmp, bfsaved.y, bfnew.y)), bfclosenuff) < 0)
+                        if (cmp_bf(abs_a_bf(sub_bf(g_bf_tmp, g_saved_z_bf.y, g_new_z_bf.y)), g_close_enough_bf) < 0)
                         {
                             caught_a_cycle = true;
                         }
@@ -1956,15 +1941,15 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             g_new_z.x = ((double)g_l_new_z.x) / g_fudge_factor;
             g_new_z.y = ((double)g_l_new_z.y) / g_fudge_factor;
         }
-        else if (bf_math == bf_math_type::BIGNUM)
+        else if (g_bf_math == bf_math_type::BIGNUM)
         {
-            g_new_z.x = (double)bntofloat(bnnew.x);
-            g_new_z.y = (double)bntofloat(bnnew.y);
+            g_new_z.x = (double)bntofloat(g_new_z_bn.x);
+            g_new_z.y = (double)bntofloat(g_new_z_bn.y);
         }
-        else if (bf_math == bf_math_type::BIGFLT)
+        else if (g_bf_math == bf_math_type::BIGFLT)
         {
-            g_new_z.x = (double)bftofloat(bfnew.x);
-            g_new_z.y = (double)bftofloat(bfnew.y);
+            g_new_z.x = (double)bftofloat(g_new_z_bf.x);
+            g_new_z.y = (double)bftofloat(g_new_z_bf.y);
         }
         g_magnitude = sqr(g_new_z.x) + sqr(g_new_z.y);
         g_color_iter = potential(g_magnitude, g_color_iter);
@@ -1988,10 +1973,10 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             g_new_z.x = ((double)g_l_new_z.x) / g_fudge_factor;
             g_new_z.y = ((double)g_l_new_z.y) / g_fudge_factor;
         }
-        else if (bf_math ==  bf_math_type::BIGNUM)
+        else if (g_bf_math ==  bf_math_type::BIGNUM)
         {
-            g_new_z.x = (double)bntofloat(bnnew.x);
-            g_new_z.y = (double)bntofloat(bnnew.y);
+            g_new_z.x = (double)bntofloat(g_new_z_bn.x);
+            g_new_z.y = (double)bntofloat(g_new_z_bn.y);
         }
         // Add 7 to overcome negative values on the MANDEL
         if (g_outside_color == REAL)                 // "real"
@@ -2114,7 +2099,6 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     goto plot_pixel;
 
 plot_inside: // we're "inside"
-    IsInside = true;
     if (g_periodicity_check < 0 && caught_a_cycle)
     {
         g_color_iter = 7;           // show periodicity
@@ -2237,6 +2221,7 @@ plot_pixel:
             g_color = 1;
         }
     }
+
     if (g_fractal_type == fractal_type::ARTMATRIX && (g_params[0] == 1.0 || g_params[0] == 2.0))            // PHD 240711
         {
         if (!IsInside)
@@ -2781,7 +2766,7 @@ static void setsymmetry(symmetry_type sym, bool uselist) // set up proper symmet
     // NOTE: 16-bit potential disables symmetry
     // also any decomp= option and any inversion not about the origin
     // also any rotation other than 180deg and any off-axis stretch
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         if (cmp_bf(g_bf_x_min, g_bf_x_3rd) || cmp_bf(g_bf_y_min, g_bf_y_3rd))
         {
@@ -2856,10 +2841,10 @@ static void setsymmetry(symmetry_type sym, bool uselist) // set up proper symmet
     }
     yaxis_col = -1;
     xaxis_row = -1;
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         saved = save_stack();
-        bft1    = alloc_stack(rbflength+2);
+        bft1    = alloc_stack(g_r_bf_length+2);
         xaxis_on_screen = (sign_bf(g_bf_y_min) != sign_bf(g_bf_y_max));
         yaxis_on_screen = (sign_bf(g_bf_x_min) != sign_bf(g_bf_x_max));
     }
@@ -2870,7 +2855,7 @@ static void setsymmetry(symmetry_type sym, bool uselist) // set up proper symmet
     }
     if (xaxis_on_screen) // axis is on screen
     {
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             sub_bf(bft1, g_bf_y_min, g_bf_y_max);
             div_bf(bft1, g_bf_y_max, bft1);
@@ -2892,7 +2877,7 @@ static void setsymmetry(symmetry_type sym, bool uselist) // set up proper symmet
     }
     if (yaxis_on_screen) // axis is on screen
     {
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             sub_bf(bft1, g_bf_x_max, g_bf_x_min);
             div_bf(bft1, g_bf_x_min, bft1);
@@ -3024,7 +3009,7 @@ originsym:
             break;
         }
     case symmetry_type::PI_SYM:                      // PI symmetry
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             if ((double)bftofloat(abs_a_bf(sub_bf(bft1, g_bf_x_max, g_bf_x_min))) < PI/4)
             {
@@ -3061,7 +3046,7 @@ originsym:
             g_i_y_stop = g_yy_stop; // in case first split worked
             g_work_symmetry = 0x30;  // don't mark pisym as ysym, just do it unmarked
         }
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             sub_bf(bft1, g_bf_x_max, g_bf_x_min);
             abs_a_bf(bft1);
@@ -3086,7 +3071,7 @@ originsym:
     default:                  // no symmetry
         break;
     }
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         restore_stack(saved);
     }

@@ -28,6 +28,7 @@
 #include "select_video_mode.h"
 #include "spindac.h"
 #include "update_save_name.h"
+#include "value_saver.h"
 #include "video_mode.h"
 #include "zoom.h"
 
@@ -115,7 +116,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
             i = get_cmd_string();
         }
         driver_unstack_screen();
-        if (g_evolving && g_truecolor)
+        if (g_evolving != evolution_mode_flags::NONE && g_truecolor)
         {
             g_truecolor = false;          // truecolor doesn't play well with the evolver
         }
@@ -128,7 +129,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
         }
         break;
     case 'b': // quick exit from evolve mode
-        g_evolving = 0;
+        g_evolving = evolution_mode_flags::NONE;
         g_view_window = false;
         save_param_history();
         *kbdmore = false;
@@ -150,23 +151,23 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
     case ID_KEY_CTL_BACKSLASH:
     case 'h':
     case ID_KEY_BACKSPACE:
-        if (g_max_image_history > 0 && bf_math == bf_math_type::NONE)
+        if (g_max_image_history > 0 && g_bf_math == bf_math_type::NONE)
         {
             if (*kbdchar == '\\' || *kbdchar == 'h')
             {
-                if (--historyptr < 0)
+                if (--g_history_ptr < 0)
                 {
-                    historyptr = g_max_image_history - 1;
+                    g_history_ptr = g_max_image_history - 1;
                 }
             }
             if (*kbdchar == ID_KEY_CTL_BACKSLASH || *kbdchar == 8)
             {
-                if (++historyptr >= g_max_image_history)
+                if (++g_history_ptr >= g_max_image_history)
                 {
-                    historyptr = 0;
+                    g_history_ptr = 0;
                 }
             }
-            restore_history_info(historyptr);
+            restore_history_info(g_history_ptr);
             g_zoom_off = true;
             g_init_mode = g_adapter;
             if (g_cur_fractal_specific->isinteger != 0
@@ -179,7 +180,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
             {
                 g_user_float_flag = true;
             }
-            historyflag = true;         // avoid re-store parms due to rounding errs
+            g_history_flag = true;         // avoid re-store parms due to rounding errs
             return main_state::IMAGE_START;
         }
         break;
@@ -213,11 +214,9 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
         clear_zoombox();
         if (g_dac_box[0][0] != 255 && g_colors >= 16 && !driver_diskp())
         {
-            help_labels const old_help_mode = g_help_mode;
+            ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_PALETTE_EDITOR};
             std::memcpy(g_old_dac_box, g_dac_box, 256 * 3);
-            g_help_mode = help_labels::HELP_PALETTE_EDITOR;
             EditPalette();
-            g_help_mode = old_help_mode;
             if (std::memcmp(g_old_dac_box, g_dac_box, 256 * 3))
             {
                 g_color_state = color_state::UNKNOWN;
@@ -232,38 +231,24 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
             return main_state::CONTINUE;  // disk video and targa, nothing to save
         }
 
-        int oldsxoffs;
-        int oldsyoffs;
-        int oldxdots;
-        int oldydots;
-        int oldpx;
-        int oldpy;
         GENEBASE gene[NUM_GENES];
         copy_genes_from_bank(gene);
-        oldsxoffs = g_logical_screen_x_offset;
-        oldsyoffs = g_logical_screen_y_offset;
-        oldxdots = g_logical_screen_x_dots;
-        oldydots = g_logical_screen_y_dots;
-        oldpx = g_evolve_param_grid_x;
-        oldpy = g_evolve_param_grid_y;
-        g_logical_screen_y_offset = 0;
-        g_logical_screen_x_offset = g_logical_screen_y_offset;
-        g_logical_screen_x_dots = g_screen_x_dots;
-        g_logical_screen_y_dots = g_screen_y_dots; // for full screen save and pointer move stuff
-        g_evolve_param_grid_y = g_evolve_image_grid_size / 2;
-        g_evolve_param_grid_x = g_evolve_param_grid_y;
-        restore_param_history();
-        fiddleparms(gene, 0);
-        drawparmbox(1);
-        savetodisk(g_save_filename);
-        g_evolve_param_grid_x = oldpx;
-        g_evolve_param_grid_y = oldpy;
-        restore_param_history();
-        fiddleparms(gene, unspiralmap());
-        g_logical_screen_x_offset = oldsxoffs;
-        g_logical_screen_y_offset = oldsyoffs;
-        g_logical_screen_x_dots = oldxdots;
-        g_logical_screen_y_dots = oldydots;
+        {
+            ValueSaver saved_logical_screen_x_offset{g_logical_screen_x_offset, 0};
+            ValueSaver saved_logical_screen_y_offset{g_logical_screen_y_offset, 0};
+            ValueSaver saved_logical_screen_x_dots{g_logical_screen_x_dots, g_screen_x_dots};
+            ValueSaver saved_logical_screen_y_dots{g_logical_screen_y_dots, g_screen_y_dots};
+            {
+                ValueSaver saved_evolve_param_grid_x{g_evolve_param_grid_x, g_evolve_image_grid_size / 2};
+                ValueSaver saved_evolve_param_grid_y{g_evolve_param_grid_y, g_evolve_image_grid_size / 2};
+                restore_param_history();
+                fiddleparms(gene, 0);
+                drawparmbox(1);
+                savetodisk(g_save_filename);
+            }
+            restore_param_history();
+            fiddleparms(gene, unspiralmap());
+        }
         copy_genes_to_bank(gene);
         return main_state::CONTINUE;
     }
@@ -348,7 +333,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
         {
             GENEBASE gene[NUM_GENES];
             copy_genes_from_bank(gene);
-            if (g_evolving & FIELDMAP)
+            if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
             {
                 if (*kbdchar == ID_KEY_CTL_LEFT_ARROW)
                 {
@@ -382,7 +367,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
                 {
                     g_evolve_param_grid_y = 0;
                 }
-                int grout = !((g_evolving & NOGROUT)/NOGROUT);
+                const int grout = bit_set(g_evolving, evolution_mode_flags::NOGROUT) ? 0 : 1;
                 g_logical_screen_x_offset = g_evolve_param_grid_x * (int)(g_logical_screen_x_size_dots+1+grout);
                 g_logical_screen_y_offset = g_evolve_param_grid_y * (int)(g_logical_screen_y_size_dots+1+grout);
 
@@ -459,10 +444,10 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
                 g_zoom_box_y = 0;
                 find_special_colors();
                 g_box_color = g_color_bright;
-                if (g_evolving & FIELDMAP)
+                if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
                 {
                     // set screen view params back (previously changed to allow full screen saves in viewwindow mode)
-                    int grout = !((g_evolving & NOGROUT) / NOGROUT);
+                    const int grout = bit_set(g_evolving, evolution_mode_flags::NOGROUT) ? 0 : 1;
                     g_logical_screen_x_offset = g_evolve_param_grid_x * (int)(g_logical_screen_x_size_dots+1+grout);
                     g_logical_screen_y_offset = g_evolve_param_grid_y * (int)(g_logical_screen_y_size_dots+1+grout);
                     SetupParamBox();
@@ -483,7 +468,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
             {
                 // end zoombox
                 g_zoom_box_width = 0;
-                if (g_evolving & FIELDMAP)
+                if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
                 {
                     drawparmbox(1); // clear boxes off screen
                     ReleaseParamBox();
@@ -605,7 +590,7 @@ main_state evolver_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bo
         break;
 
     case '0': // mutation level 0 == turn off evolving
-        g_evolving = 0;
+        g_evolving = evolution_mode_flags::NONE;
         g_view_window = false;
         *kbdmore = false;
         g_calc_status = calc_status_value::PARAMS_CHANGED;

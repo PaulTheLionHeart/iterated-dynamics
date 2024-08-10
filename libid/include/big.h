@@ -6,21 +6,21 @@
 // Number of bytes to use for integer part for fixed decimal math,
 // does not effect floating point math at all.
 #define BN_INT_LENGTH 4
-/* #define CALCULATING_BIG_PI */ /* define for generating big_pi[] table */
+/* #define CALCULATING_BIG_PI */ /* define for generating g_big_pi[] table */
 /****************************************************************
  The rest is handled by the compiler
 ****************************************************************/
 #define LOG10_256 2.4082399653118
 #define LOG_256   5.5451774444795
-// values that bf_math can hold,
-// 0 = bf_math is not being used
-// 1 = bf_math is being used
+// values that g_bf_math can hold,
+// 0 = g_bf_math is not being used
+// 1 = g_bf_math is being used
 enum class bf_math_type
 {
     // cppcheck-suppress variableHidingEnum
     NONE = 0,
-    BIGNUM = 1,         // bf_math is being used with bn_t numbers
-    BIGFLT = 2          // bf_math is being used with bf_t numbers
+    BIGNUM = 1,         // g_bf_math is being used with bn_t numbers
+    BIGFLT = 2          // g_bf_math is being used with bf_t numbers
 };
 
 using big_t = unsigned char *;
@@ -32,46 +32,39 @@ using BFComplex = id::Complex<bf_t>;
 using BNComplex = id::Complex<bn_t>;
 
 // globals
-extern bf_math_type bf_math;
-extern int bnstep;
-extern int intlength;
-extern int bnlength;
-extern int rlength;
-extern int padding;
+extern bf_math_type g_bf_math;
+extern int g_bn_step;
+extern int g_int_length;
+extern int g_bn_length;
+extern int g_r_length;
+extern int g_padding;
 extern int g_decimals;
-extern int shiftfactor;
-extern int bflength;
-extern int rbflength;
-extern int bfpadding;
-extern int bfdecimals;
-extern bn_t bntmp1;    // rlength
-extern bn_t bntmp2;    // rlength
-extern bn_t bntmp3;    // rlength
-extern bn_t bntmp4;    // rlength
-extern bn_t bntmp5;    // rlength
-extern bn_t bntmp6;    // rlength
-extern bn_t bntest1;   // rlength
-extern bn_t bntest2;   // rlength
-extern bn_t bntest3;   // rlength
-extern bn_t bntmpcpy1; // bnlength
-extern bn_t bntmpcpy2; // bnlength
-extern bn_t bn_pi;
-extern bn_t bntmp;     // rlength
-extern bf_t bftmp1;    // rbflength+2
-extern bf_t bftmp2;    // rbflength+2
-extern bf_t bftmp3;    // rbflength+2
-extern bf_t bftmp4;    // rbflength+2
-extern bf_t bftmp5;    // rbflength+2
-extern bf_t bftmp6;    // rbflength+2
-extern bf_t bftest1;   // rbflength+2
-extern bf_t bftest2;   // rbflength+2
-extern bf_t bftest3;   // rbflength+2
-extern bf_t bftmpcpy1; // rbflength+2
-extern bf_t bftmpcpy2; // rbflength+2
-extern bf_t bf_pi;
-extern bf_t bftmp;     // rbflength
-extern bf10_t bf10tmp; // dec+4
-extern big_t big_pi;
+extern int g_shift_factor;
+extern int g_bf_length;
+extern int g_r_bf_length;
+extern int g_bf_decimals;
+extern bn_t g_bn_tmp1;    // g_r_length
+extern bn_t g_bn_tmp2;    // g_r_length
+extern bn_t g_bn_tmp3;    // g_r_length
+extern bn_t g_bn_tmp4;    // g_r_length
+extern bn_t g_bn_tmp5;    // g_r_length
+extern bn_t g_bn_tmp6;    // g_r_length
+extern bn_t g_bn_tmp_copy1; // g_bn_length
+extern bn_t g_bn_tmp_copy2; // g_bn_length
+extern bn_t g_bn_pi;
+extern bn_t g_bn_tmp;     // g_r_length
+extern bf_t g_bf_tmp1;    // g_r_bf_length+2
+extern bf_t g_bf_tmp2;    // g_r_bf_length+2
+extern bf_t g_bf_tmp3;    // g_r_bf_length+2
+extern bf_t g_bf_tmp4;    // g_r_bf_length+2
+extern bf_t g_bf_tmp5;    // g_r_bf_length+2
+extern bf_t g_bf_tmp6;    // g_r_bf_length+2
+extern bf_t g_bf_tmp_copy1; // g_r_bf_length+2
+extern bf_t g_bf_tmp_copy2; // g_r_bf_length+2
+extern bf_t g_bf_pi;
+extern bf_t g_bf_tmp;     // g_r_bf_length
+extern bf10_t g_bf10_tmp; // dec+4
+extern big_t g_big_pi;
 
 void calc_lengths();
 void init_big_dec(int dec);
@@ -248,42 +241,42 @@ bf_t div_a_bf_int(bf_t r, U16 u);
 #define MAXREZ        0
 
 // used by other routines
-// bnlength
-extern bn_t bnxmin;
-extern bn_t bnxmax;
-extern bn_t bnymin;
-extern bn_t bnymax;
-extern bn_t bnx3rd;
-extern bn_t bny3rd;
-extern bn_t bnxdel;
-extern bn_t bnydel;
-extern bn_t bnxdel2;
-extern bn_t bnydel2;
-extern bn_t bnclosenuff;
-// rlength
-extern bn_t bntmpsqrx;
-extern bn_t bntmpsqry;
-// bnlength
-extern BNComplex bnold;
-extern BNComplex bnparm;
-extern BNComplex bnsaved;
-extern BNComplex bnnew;                                         // rlength
-// rbflength+2
-extern bf_t bfxdel;
-extern bf_t bfydel;
-extern bf_t bfxdel2;
-extern bf_t bfydel2;
-extern bf_t bfclosenuff;
-extern bf_t bftmpsqrx;
-extern bf_t bftmpsqry;
-extern BFComplex bfparm;
-extern BFComplex bfsaved;
-extern BFComplex bfold;
-extern BFComplex bfnew;
+// g_bn_length
+extern bn_t g_x_min_bn;
+extern bn_t g_x_max_bn;
+extern bn_t g_y_min_bn;
+extern bn_t g_y_max_bn;
+extern bn_t g_x_3rd_bn;
+extern bn_t g_y_3rd_bn;
+extern bn_t g_delta_x_bn;
+extern bn_t g_delta_y_bn;
+extern bn_t g_delta2_x_bn;
+extern bn_t g_delta2_y_bn;
+extern bn_t g_close_enough_bn;
+// g_r_length
+extern bn_t g_tmp_sqr_x_bn;
+extern bn_t g_tmp_sqr_y_bn;
+// g_bn_length
+extern BNComplex g_old_z_bn;
+extern BNComplex g_param_z_bn;
+extern BNComplex g_saved_z_bn;
+extern BNComplex g_new_z_bn; // g_r_length
+// g_r_bf_length+2
+extern bf_t g_delta_x_bf;
+extern bf_t g_delta_y_bf;
+extern bf_t g_delta2_x_bf;
+extern bf_t g_delta2_y_bf;
+extern bf_t g_close_enough_bf;
+extern bf_t g_tmp_sqr_x_bf;
+extern bf_t g_tmp_sqr_y_bf;
+extern BFComplex g_parm_z_bf;
+extern BFComplex g_saved_z_bf;
+extern BFComplex g_old_z_bf;
+extern BFComplex g_new_z_bf;
 
 // for testing only
 // used by other routines
-// bflength+2
+// g_bf_length+2
 extern bf_t g_bf_x_min;
 extern bf_t g_bf_x_max;
 extern bf_t g_bf_y_min;
@@ -296,4 +289,4 @@ extern bf_t g_bf_save_y_min;
 extern bf_t g_bf_save_y_max;
 extern bf_t g_bf_save_x_3rd;
 extern bf_t g_bf_save_y_3rd;
-extern bf_t bfparms[10];                                 // (bflength+2)*10
+extern bf_t g_bf_parms[10];                                 // (g_bf_length+2)*10

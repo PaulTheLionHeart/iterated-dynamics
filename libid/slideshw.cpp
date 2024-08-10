@@ -40,8 +40,16 @@
 #undef max
 #endif
 
-slides_mode g_slides{slides_mode::OFF}; // PLAY autokey=play, RECORD autokey=record
-std::string g_auto_name{"auto.key"};    // record auto keystrokes here
+enum
+{
+    MAX_MNEMONIC = 20   // max size of any mnemonic string
+};
+
+struct key_mnemonic
+{
+    int code;
+    char const *mnemonic;
+};
 
 static void sleep_secs(int);
 static int showtempmsg_txt(int row, int col, int attr, int secs, const char *txt);
@@ -50,15 +58,11 @@ static void slideshowerr(char const *msg);
 static int  get_scancode(char const *mn);
 static void get_mnemonic(int code, char *mnemonic);
 
-#define MAX_MNEMONIC    20   // max size of any mnemonic string
+slides_mode g_slides{slides_mode::OFF}; // PLAY autokey=play, RECORD autokey=record
+std::string g_auto_name{"auto.key"};    // record auto keystrokes here
+bool g_busy{};
 
-struct key_mnemonic
-{
-    int code;
-    char const *mnemonic;
-};
-
-static key_mnemonic scancodes[] =
+static key_mnemonic s_key_mnemonics[] =
 {
     { ID_KEY_ENTER,            "ENTER"     },
     { ID_KEY_INSERT,           "INSERT"    },
@@ -81,10 +85,18 @@ static key_mnemonic scancodes[] =
     { ID_KEY_CTL_END,          "CTRL_END"  },
     { ID_KEY_CTL_HOME,         "CTRL_HOME" }
 };
+static std::FILE *s_slide_show_file{};
+static long s_start_tick{};
+static long s_ticks{};
+static int s_slow_count{};
+static bool s_quotes{};
+static bool s_calc_wait{};
+static int s_repeats{};
+static int s_last1{};
 
 static int get_scancode(char const *mn)
 {
-    for (key_mnemonic const &it : scancodes)
+    for (key_mnemonic const &it : s_key_mnemonics)
     {
         if (std::strcmp(mn, it.mnemonic) == 0)
         {
@@ -98,7 +110,7 @@ static int get_scancode(char const *mn)
 static void get_mnemonic(int code, char *mnemonic)
 {
     *mnemonic = 0;
-    for (key_mnemonic const &it : scancodes)
+    for (key_mnemonic const &it : s_key_mnemonics)
     {
         if (code == it.code)
         {
@@ -107,16 +119,6 @@ static void get_mnemonic(int code, char *mnemonic)
         }
     }
 }
-
-bool g_busy{};
-static std::FILE *s_slide_show_file{};
-static long s_start_tick{};
-static long s_ticks{};
-static int s_slow_count{};
-static bool s_quotes{};
-static bool s_calc_wait{};
-static int s_repeats{};
-static int s_last1{};
 
 // places a temporary message on the screen in text mode
 static int showtempmsg_txt(int row, int col, int attr, int secs, const char *txt)
@@ -506,7 +508,7 @@ int handle_special_keys(int ch)
     if (ID_KEY_F1 == ch && g_help_mode != help_labels::HELP_INDEX && !inside_help)
     {
         inside_help = true;
-        help(0);
+        help();
         inside_help = false;
         ch = 0;
     }

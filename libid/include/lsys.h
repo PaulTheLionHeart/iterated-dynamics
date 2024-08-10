@@ -52,7 +52,8 @@ struct lsys_turtlestatef
         LDBL nf;
     } parm;
 };
-extern char maxangle;
+
+extern char g_max_angle;
 
 struct lsysf_cmd;
 lsysf_cmd *drawLSysF(lsysf_cmd *command, lsys_turtlestatef *ts, lsysf_cmd **rules, int depth);

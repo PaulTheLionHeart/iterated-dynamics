@@ -24,7 +24,7 @@
 #define MINSIZE 1.0e-6
 
 extern  double  g_params[];
-extern  BFComplex bfparm, bfnew, bfold;
+extern  BFComplex g_new_z_bf, g_old_z_bf;
 extern  int     g_row;
 extern  int     g_col;
 extern  double  g_magnitude_limit;
@@ -2378,16 +2378,16 @@ int init_big_tierazon()
     {
     BigDouble BigDelx, BigDely, BigXMin, BigYMax;
 
-    bf2BigNum(&BigDelx, bfxdel);
-    bf2BigNum(&BigDely, bfydel);
+    bf2BigNum(&BigDelx, g_delta_x_bf);
+    bf2BigNum(&BigDely, g_delta_y_bf);
     bf2BigNum(&BigXMin, g_bf_x_min);
     bf2BigNum(&BigYMax, g_bf_y_max);
 
     qBig.y = BigYMax - BigDely * (double) g_row;
     qBig.x = BigDelx * (double) g_col + BigXMin;
 
-    bf2BigNum(&zBig.x, bfold.x);
-    bf2BigNum(&zBig.y, bfold.y);
+    bf2BigNum(&zBig.x, g_old_z_bf.x);
+    bf2BigNum(&zBig.y, g_old_z_bf.y);
     subtype = (int) g_params[0];
     degree = (int) g_params[1];
     //    g_bail_out_test = (bailouts) g_params[4];
@@ -2405,7 +2405,7 @@ int run_big_tierazon()
     {
     int ReturnMode;
     ReturnMode = BigRunTierazonFunctions(subtype, &zBig, &qBig);
-    BigNum2bf(&bfnew.x, zBig.x);
-    BigNum2bf(&bfnew.y, zBig.y);
+    BigNum2bf(&g_new_z_bf.x, zBig.x);
+    BigNum2bf(&g_new_z_bf.y, zBig.y);
     return ReturnMode;
     }

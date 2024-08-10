@@ -1,9 +1,6 @@
 #include "get_3d_params.h"
 
 #include "check_write_file.h"
-#include "port.h"
-#include "prototyp.h"
-
 #include "choice_builder.h"
 #include "cmdfiles.h"
 #include "drivers.h"
@@ -17,9 +14,11 @@
 #include "loadmap.h"
 #include "merge_path_names.h"
 #include "plot3d.h"
+#include "prototyp.h"
 #include "rotate.h"
 #include "stereo.h"
 #include "stop_msg.h"
+#include "value_saver.h"
 
 #include <cstring>
 #include <string>
@@ -30,7 +29,7 @@ static  bool get_funny_glasses_params();
 
 static std::string g_funny_glasses_map_name;
 
-std::string const g_glasses1_map = "glasses1.map";
+std::string const g_glasses1_map{"glasses1.map"};
 
 int get_3d_params()     // prompt for 3D parameters
 {
@@ -64,7 +63,7 @@ restart_1:
 
     prompts3d[++k] = "Spherical projection?";
     uvalues[k].type = 'y';
-    sphere = SPHERE;
+    sphere = g_sphere ? 1 : 0;
     uvalues[k].uval.ch.val = sphere;
 
     prompts3d[++k] = "Stereo (R/B 3D)? (0=no,1=alternate,2=superimpose,";
@@ -98,11 +97,10 @@ restart_1:
     uvalues[k].type = 'y';
     uvalues[k].uval.ch.val = g_gray_flag ? 1 : 0;
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_3D_MODE;
-
-    k = fullscreen_prompt("3D Mode Selection", k+1, prompts3d, uvalues, 0, nullptr);
-    g_help_mode = old_help_mode;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_MODE};
+        k = fullscreen_prompt("3D Mode Selection", k+1, prompts3d, uvalues, 0, nullptr);
+    }
     if (k < 0)
     {
         return -1;
@@ -141,14 +139,14 @@ restart_1:
         g_preview_factor = 2000;
     }
 
-    if (sphere && !SPHERE)
+    if (sphere && !g_sphere)
     {
-        SPHERE = TRUE;
+        g_sphere = true;
         set_3d_defaults();
     }
-    else if (!sphere && SPHERE)
+    else if (!sphere && g_sphere)
     {
-        SPHERE = FALSE;
+        g_sphere = false;
         set_3d_defaults();
     }
 
@@ -183,7 +181,7 @@ restart_1:
         choices[k++] = "surface fill (colors interpolated)";
         choices[k++] = "surface fill (colors not interpolated)";
         choices[k++] = "solid fill (bars up from \"ground\")";
-        if (SPHERE)
+        if (g_sphere)
         {
             choices[k++] = "light source";
         }
@@ -196,15 +194,17 @@ restart_1:
         {
             attributes[i] = 1;
         }
-        g_help_mode = help_labels::HELP_3D_FILL;
-        int i = fullscreen_choice(CHOICE_HELP, "Select 3D Fill Type", nullptr, nullptr, k, choices,
-            attributes, 0, 0, 0, FILLTYPE + 1, nullptr, nullptr, nullptr, nullptr);
-        g_help_mode = old_help_mode;
+        int i;
+        {
+            ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_FILL};
+            i = fullscreen_choice(CHOICE_HELP, "Select 3D Fill Type", nullptr, nullptr, k, choices,
+                attributes, 0, 0, 0, +g_fill_type + 1, nullptr, nullptr, nullptr, nullptr);
+        }
         if (i < 0)
         {
             goto restart_1;
         }
-        FILLTYPE = i-1;
+        g_fill_type = static_cast<fill_type>(i - 1);
 
         if (g_glasses_type)
         {
@@ -220,7 +220,7 @@ restart_1:
     }
 restart_3:
 
-    if (SPHERE)
+    if (g_sphere)
     {
         k = -1;
         prompts3d[++k] = "Longitude start (degrees)";
@@ -242,42 +242,42 @@ restart_3:
         prompts3d[++k] = "Y-axis scaling factor in pct";
     }
     k = -1;
-    if (!(g_raytrace_format != raytrace_formats::none && !SPHERE))
+    if (!(g_raytrace_format != raytrace_formats::none && !g_sphere))
     {
-        uvalues[++k].uval.ival   = XROT    ;
+        uvalues[++k].uval.ival   = g_x_rot    ;
         uvalues[k].type = 'i';
-        uvalues[++k].uval.ival   = YROT    ;
+        uvalues[++k].uval.ival   = g_y_rot    ;
         uvalues[k].type = 'i';
-        uvalues[++k].uval.ival   = ZROT    ;
+        uvalues[++k].uval.ival   = g_z_rot    ;
         uvalues[k].type = 'i';
     }
-    uvalues[++k].uval.ival   = XSCALE    ;
+    uvalues[++k].uval.ival   = g_x_scale    ;
     uvalues[k].type = 'i';
 
-    uvalues[++k].uval.ival   = YSCALE    ;
+    uvalues[++k].uval.ival   = g_y_scale    ;
     uvalues[k].type = 'i';
 
     prompts3d[++k] = "Surface Roughness scaling factor in pct";
     uvalues[k].type = 'i';
-    uvalues[k].uval.ival = ROUGH     ;
+    uvalues[k].uval.ival = g_rough     ;
 
     prompts3d[++k] = "'Water Level' (minimum color value)";
     uvalues[k].type = 'i';
-    uvalues[k].uval.ival = WATERLINE ;
+    uvalues[k].uval.ival = g_water_line ;
 
     if (g_raytrace_format == raytrace_formats::none)
     {
         prompts3d[++k] = "Perspective distance [1 - 999, 0 for no persp])";
         uvalues[k].type = 'i';
-        uvalues[k].uval.ival = ZVIEWER     ;
+        uvalues[k].uval.ival = g_viewer_z     ;
 
         prompts3d[++k] = "X shift with perspective (positive = right)";
         uvalues[k].type = 'i';
-        uvalues[k].uval.ival = XSHIFT    ;
+        uvalues[k].uval.ival = g_shift_x    ;
 
         prompts3d[++k] = "Y shift with perspective (positive = up   )";
         uvalues[k].type = 'i';
-        uvalues[k].uval.ival = YSHIFT    ;
+        uvalues[k].uval.ival = g_shift_y    ;
 
         prompts3d[++k] = "Image non-perspective X adjust (positive = right)";
         uvalues[k].type = 'i';
@@ -300,7 +300,7 @@ restart_3:
     uvalues[k].type = 'i';
     uvalues[k++].uval.ival = g_randomize_3d;
 
-    if (SPHERE)
+    if (g_sphere)
     {
         s = "Sphere 3D Parameters\n"
             "Sphere is on its side; North pole to right\n"
@@ -314,30 +314,31 @@ restart_3:
 
 
     }
-    g_help_mode = help_labels::HELP_3D_PARAMETERS;
-    k = fullscreen_prompt(s, k, prompts3d, uvalues, 0, nullptr);
-    g_help_mode = old_help_mode;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_PARAMETERS};
+        k = fullscreen_prompt(s, k, prompts3d, uvalues, 0, nullptr);
+    }
     if (k < 0)
     {
         goto restart_1;
     }
 
     k = 0;
-    if (!(g_raytrace_format != raytrace_formats::none && !SPHERE))
+    if (!(g_raytrace_format != raytrace_formats::none && !g_sphere))
     {
-        XROT    = uvalues[k++].uval.ival;
-        YROT    = uvalues[k++].uval.ival;
-        ZROT    = uvalues[k++].uval.ival;
+        g_x_rot    = uvalues[k++].uval.ival;
+        g_y_rot    = uvalues[k++].uval.ival;
+        g_z_rot    = uvalues[k++].uval.ival;
     }
-    XSCALE     = uvalues[k++].uval.ival;
-    YSCALE     = uvalues[k++].uval.ival;
-    ROUGH      = uvalues[k++].uval.ival;
-    WATERLINE  = uvalues[k++].uval.ival;
+    g_x_scale     = uvalues[k++].uval.ival;
+    g_y_scale     = uvalues[k++].uval.ival;
+    g_rough      = uvalues[k++].uval.ival;
+    g_water_line  = uvalues[k++].uval.ival;
     if (g_raytrace_format == raytrace_formats::none)
     {
-        ZVIEWER = uvalues[k++].uval.ival;
-        XSHIFT     = uvalues[k++].uval.ival;
-        YSHIFT     = uvalues[k++].uval.ival;
+        g_viewer_z = uvalues[k++].uval.ival;
+        g_shift_x     = uvalues[k++].uval.ival;
+        g_shift_y     = uvalues[k++].uval.ival;
         g_adjust_3d_x     = uvalues[k++].uval.ival;
         g_adjust_3d_y     = uvalues[k++].uval.ival;
         g_transparent_color_3d[0] = uvalues[k++].uval.ival;
@@ -353,7 +354,7 @@ restart_3:
         g_randomize_3d = 0;
     }
 
-    if (g_targa_out || ILLUMINE || g_raytrace_format != raytrace_formats::none)
+    if (g_targa_out || illumine() || g_raytrace_format != raytrace_formats::none)
     {
         if (get_light_params())
         {
@@ -374,15 +375,15 @@ static bool get_light_params()
 
     k = -1;
 
-    if (ILLUMINE || g_raytrace_format != raytrace_formats::none)
+    if (illumine() || g_raytrace_format != raytrace_formats::none)
     {
-        builder.int_number("X value light vector", XLIGHT)
-            .int_number("Y value light vector", YLIGHT)
-            .int_number("Z value light vector", ZLIGHT);
+        builder.int_number("X value light vector", g_light_x)
+            .int_number("Y value light vector", g_light_y)
+            .int_number("Z value light vector", g_light_z);
 
         if (g_raytrace_format == raytrace_formats::none)
         {
-            builder.int_number("Light Source Smoothing Factor", LIGHTAVG);
+            builder.int_number("Light Source Smoothing Factor", g_light_avg);
             builder.int_number("Ambient", g_ambient);
         }
     }
@@ -404,24 +405,24 @@ static bool get_light_params()
     }
     builder.comment("");
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_3D_LIGHT;
-    k = builder.prompt("Light Source Parameters");
-    g_help_mode = old_help_mode;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_LIGHT};
+        k = builder.prompt("Light Source Parameters");
+    }
     if (k < 0)
     {
         return true;
     }
 
     k = 0;
-    if (ILLUMINE)
+    if (illumine())
     {
-        XLIGHT   = builder.read_int_number();
-        YLIGHT   = builder.read_int_number();
-        ZLIGHT   = builder.read_int_number();
+        g_light_x   = builder.read_int_number();
+        g_light_y   = builder.read_int_number();
+        g_light_z   = builder.read_int_number();
         if (g_raytrace_format == raytrace_formats::none)
         {
-            LIGHTAVG = builder.read_int_number();
+            g_light_avg = builder.read_int_number();
             g_ambient  = builder.read_int_number();
             if (g_ambient >= 100)
             {
@@ -485,12 +486,10 @@ static bool check_mapfile()
     {
         if (askflag)
         {
-            help_labels const old_help_mode = g_help_mode;
-            g_help_mode = help_labels::NONE;
+            ValueSaver saved_help_mode{g_help_mode, help_labels::NONE};
             i = field_prompt("Enter name of .map file to use,\n"
                              "or '*' to use palette from the image to be loaded.",
-                             nullptr, buff, 60, nullptr);
-            g_help_mode = old_help_mode;
+                nullptr, buff, 60, nullptr);
             if (i < 0)
             {
                 return true;
@@ -519,9 +518,9 @@ static bool check_mapfile()
 static bool get_funny_glasses_params()
 {
     // defaults
-    if (ZVIEWER == 0)
+    if (g_viewer_z == 0)
     {
-        ZVIEWER = 150;
+        g_viewer_z = 150;
     }
     if (g_eye_separation == 0)
     {
@@ -543,7 +542,7 @@ static bool get_funny_glasses_params()
     }
     else if (g_glasses_type == 2)
     {
-        if (FILLTYPE == -1)
+        if (g_fill_type == fill_type::SURFACE_GRID)
         {
             g_funny_glasses_map_name = "grid.map";
         }
@@ -569,10 +568,8 @@ static bool get_funny_glasses_params()
         builder.string("Map file name", g_funny_glasses_map_name.c_str());
     }
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_3D_GLASSES;
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_GLASSES};
     int k = builder.prompt("Funny Glasses Parameters");
-    g_help_mode = old_help_mode;
     if (k < 0)
     {
         return true;
@@ -599,18 +596,19 @@ int get_fract3d_params() // prompt for 3D fractal parameters
 {
     driver_stack_screen();
     ChoiceBuilder<7> builder;
-    builder.int_number("X-axis rotation in degrees", XROT)
-        .int_number("Y-axis rotation in degrees", YROT)
-        .int_number("Z-axis rotation in degrees", ZROT)
-        .int_number("Perspective distance [1 - 999, 0 for no persp]", ZVIEWER)
-        .int_number("X shift with perspective (positive = right)", XSHIFT)
-        .int_number("Y shift with perspective (positive = up   )", YSHIFT)
+    builder.int_number("X-axis rotation in degrees", g_x_rot)
+        .int_number("Y-axis rotation in degrees", g_y_rot)
+        .int_number("Z-axis rotation in degrees", g_z_rot)
+        .int_number("Perspective distance [1 - 999, 0 for no persp]", g_viewer_z)
+        .int_number("X shift with perspective (positive = right)", g_shift_x)
+        .int_number("Y shift with perspective (positive = up   )", g_shift_y)
         .int_number("Stereo (R/B 3D)? (0=no,1=alternate,2=superimpose,3=photo,4=stereo pair)", g_glasses_type);
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_3D_FRACT;
-    int i = builder.prompt("3D Parameters");
-    g_help_mode = old_help_mode;
+    int i;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_3D_FRACT};
+        i = builder.prompt("3D Parameters");
+    }
 
     int ret{};
     if (i < 0)
@@ -619,12 +617,12 @@ int get_fract3d_params() // prompt for 3D fractal parameters
         goto get_f3d_exit;
     }
 
-    XROT    = builder.read_int_number();
-    YROT    = builder.read_int_number();
-    ZROT    = builder.read_int_number();
-    ZVIEWER = builder.read_int_number();
-    XSHIFT  = builder.read_int_number();
-    YSHIFT  = builder.read_int_number();
+    g_x_rot    = builder.read_int_number();
+    g_y_rot    = builder.read_int_number();
+    g_z_rot    = builder.read_int_number();
+    g_viewer_z = builder.read_int_number();
+    g_shift_x  = builder.read_int_number();
+    g_shift_y  = builder.read_int_number();
     g_glasses_type = builder.read_int_number();
     if (g_glasses_type < 0 || g_glasses_type > 4)
     {

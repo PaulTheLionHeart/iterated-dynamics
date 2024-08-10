@@ -15,15 +15,16 @@
 #include "slideshw.h"
 #include "spindac.h"
 #include "stop_msg.h"
+#include "value_saver.h"
 
 #include <cstdlib>
 
-std::string const g_altern_map_file{"altern.map"};
+const std::string_view g_altern_map_file{"altern.map"};
 
 static int s_distribution{30};
 static int s_slope{25};
 static long s_concentration{};
-static int s_offset = 0;
+static int s_offset{};
 static double s_starfield_values[4]{30.0, 100.0, 5.0, 0.0};
 
 //
@@ -96,7 +97,7 @@ int starfield()
     s_concentration  = (long)(((s_starfield_values[1]) / 100.0) * (1L << 16));
     s_slope = (int)(s_starfield_values[2]);
 
-    if (ValidateLuts(g_altern_map_file.c_str()))
+    if (ValidateLuts(g_altern_map_file.data()))
     {
         stopmsg("Unable to load ALTERN.MAP");
         g_busy = false;
@@ -139,10 +140,8 @@ int get_starfield_params()
         .float_number("Percent Clumpiness", s_starfield_values[1])
         .float_number("Ratio of Dim stars to Bright", s_starfield_values[2]);
     driver_stack_screen();
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_STARFIELD;
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_STARFIELD};
     int const choice = builder.prompt("Starfield Parameters");
-    g_help_mode = old_help_mode;
     driver_unstack_screen();
     if (choice < 0)
     {

@@ -256,7 +256,7 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
             i = get_cmd_string();
         }
         driver_unstack_screen();
-        if (g_evolving && g_truecolor)
+        if (g_evolving != evolution_mode_flags::NONE && g_truecolor)
         {
             g_truecolor = false;          // truecolor doesn't play well with the evolver
         }
@@ -420,7 +420,7 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
                 || g_fractal_specific[+g_fractal_type].calctype == calcfroth)
             && (g_fractal_specific[+g_fractal_type].isinteger == 0 ||
                  g_fractal_specific[+g_fractal_type].tofloat != fractal_type::NOFRACTAL)
-            && (bf_math == bf_math_type::NONE) // for now no arbitrary precision support
+            && (g_bf_math == bf_math_type::NONE) // for now no arbitrary precision support
             && !(g_is_true_color && g_true_mode != true_color_mode::default_color))
         {
             clear_zoombox();
@@ -428,7 +428,7 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
         }
         break;
     case ID_KEY_SPACE:                  // spacebar, toggle mand/julia
-        if (bf_math != bf_math_type::NONE || g_evolving)
+        if (g_bf_math != bf_math_type::NONE || g_evolving != evolution_mode_flags::NONE)
         {
             break;
         }
@@ -461,7 +461,7 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
             {
                 // switch to corresponding Julia set
                 int key;
-                g_has_inverse = (g_fractal_type == fractal_type::MANDEL || g_fractal_type == fractal_type::MANDELFP) && bf_math == bf_math_type::NONE;
+                g_has_inverse = (g_fractal_type == fractal_type::MANDEL || g_fractal_type == fractal_type::MANDELFP) && g_bf_math == bf_math_type::NONE;
                 clear_zoombox();
                 Jiim(jiim_types::JIIM);
                 key = driver_get_key();    // flush keyboard buffer
@@ -607,23 +607,23 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
             }
             return main_state::RESTORE_START;
         }
-        else if (g_max_image_history > 0 && bf_math == bf_math_type::NONE)
+        else if (g_max_image_history > 0 && g_bf_math == bf_math_type::NONE)
         {
             if (*kbdchar == '\\' || *kbdchar == 'h')
             {
-                if (--historyptr < 0)
+                if (--g_history_ptr < 0)
                 {
-                    historyptr = g_max_image_history - 1;
+                    g_history_ptr = g_max_image_history - 1;
                 }
             }
             if (*kbdchar == ID_KEY_CTL_BACKSLASH || *kbdchar == ID_KEY_BACKSPACE)
             {
-                if (++historyptr >= g_max_image_history)
+                if (++g_history_ptr >= g_max_image_history)
                 {
-                    historyptr = 0;
+                    g_history_ptr = 0;
                 }
             }
-            restore_history_info(historyptr);
+            restore_history_info(g_history_ptr);
             g_zoom_off = true;
             g_init_mode = g_adapter;
             if (g_cur_fractal_specific->isinteger != 0
@@ -636,7 +636,7 @@ main_state main_menu_switch(int *kbdchar, bool *frommandel, bool *kbdmore, bool 
             {
                 g_user_float_flag = true;
             }
-            historyflag = true;         // avoid re-store parms due to rounding errs
+            g_history_flag = true;         // avoid re-store parms due to rounding errs
             return main_state::IMAGE_START;
         }
         break;
@@ -895,7 +895,7 @@ do_3d_transform:
     case ID_KEY_ALT_5:
     case ID_KEY_ALT_6:
     case ID_KEY_ALT_7:
-        g_evolving = FIELDMAP;
+        g_evolving = evolution_mode_flags::FIELDMAP;
         g_view_window = true;
         set_mutation_level(*kbdchar - ID_KEY_ALT_1 + 1);
         save_param_history();

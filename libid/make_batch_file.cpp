@@ -40,6 +40,7 @@
 #include "stop_msg.h"
 #include "trig_fns.h"
 #include "type_has_param.h"
+#include "value_saver.h"
 #include "version.h"
 #include "video_mode.h"
 
@@ -57,6 +58,18 @@
 
 namespace fs = std::filesystem;
 
+struct write_batch_data // buffer for parms to break lines nicely
+{
+    int len;
+    char buf[10000];
+};
+
+bool g_make_parameter_file{};
+bool g_make_parameter_file_map{};
+int g_max_line_length{72};
+
+static std::FILE *s_parm_file{};
+
 static void put_parm(char const *parm, ...);
 static void put_parm_line();
 static void put_float(int, double, int);
@@ -64,12 +77,6 @@ static void put_bf(int slash, bf_t r, int prec);
 static void put_filename(char const *keyword, char const *fname);
 static void strip_zeros(char *buf);
 static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolor, int ii, int jj);
-
-bool g_make_parameter_file = false;
-bool g_make_parameter_file_map = false;
-int g_max_line_length = 72;
-
-static std::FILE *parmfile;
 
 inline char par_key(int x)
 {
@@ -123,8 +130,7 @@ void make_batch_file()
     }
 
     driver_stack_screen();
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_PARMFILE;
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_PARMFILE};
 
     maxcolor = g_colors;
     std::strcpy(colorspec, "y");
@@ -404,8 +410,8 @@ skip_UI:
             out_name.replace_filename("id.tmp");
             infile = std::fopen(g_command_file.c_str(), "rt");
         }
-        parmfile = std::fopen(out_name.string().c_str(), "wt");
-        if (parmfile == nullptr)
+        s_parm_file = std::fopen(out_name.string().c_str(), "wt");
+        if (s_parm_file == nullptr)
         {
             stopmsg("Can't create " + out_name.string());
             if (gotinfile)
@@ -431,7 +437,7 @@ skip_UI:
                     {
                         // cancel
                         std::fclose(infile);
-                        std::fclose(parmfile);
+                        std::fclose(s_parm_file);
                         remove(out_name);
                         goto prompt_user;
                     }
@@ -442,8 +448,8 @@ skip_UI:
                     }
                     break;
                 }
-                std::fputs(buf, parmfile);
-                std::fputc('\n', parmfile);
+                std::fputs(buf, s_parm_file);
+                std::fputc('\n', s_parm_file);
             }
         }
         //**** start here
@@ -491,7 +497,7 @@ skip_UI:
                         std::snprintf(tmpbuff, std::size(tmpbuff), "_%c%c", par_key(i), par_key(j));
                         std::strcat(PCommandName, tmpbuff);
                     }
-                    std::fprintf(parmfile, "%-19s{", PCommandName);
+                    std::fprintf(s_parm_file, "%-19s{", PCommandName);
                     g_x_min = pxxmin + pdelx*(i*pxdots) + pdelx2*(j*pydots);
                     g_x_max = pxxmin + pdelx*((i+1)*pxdots - 1) + pdelx2*((j+1)*pydots - 1);
                     g_y_min = pyymax - pdely*((j+1)*pydots - 1) - pdely2*((i+1)*pxdots - 1);
@@ -511,7 +517,7 @@ skip_UI:
                 }
                 else
                 {
-                    std::fprintf(parmfile, "%-19s{", g_command_name.c_str());
+                    std::fprintf(s_parm_file, "%-19s{", g_command_name.c_str());
                 }
                 {
                     /* guarantee that there are no blank comments above the last
@@ -534,9 +540,9 @@ skip_UI:
                 }
                 if (!g_command_comment[0].empty())
                 {
-                    std::fprintf(parmfile, " ; %s", g_command_comment[0].c_str());
+                    std::fprintf(s_parm_file, " ; %s", g_command_comment[0].c_str());
                 }
-                std::fputc('\n', parmfile);
+                std::fputc('\n', s_parm_file);
                 {
                     char tmpbuff[25];
                     std::memset(tmpbuff, ' ', 23);
@@ -546,21 +552,21 @@ skip_UI:
                     {
                         if (!g_command_comment[k].empty())
                         {
-                            std::fprintf(parmfile, "%s%s\n", tmpbuff, g_command_comment[k].c_str());
+                            std::fprintf(s_parm_file, "%s%s\n", tmpbuff, g_command_comment[k].c_str());
                         }
                     }
                     if (g_patch_level != 0 && !colorsonly)
                     {
-                        std::fprintf(parmfile, "%s id Version %d Patchlevel %d\n", tmpbuff, g_release, g_patch_level);
+                        std::fprintf(s_parm_file, "%s id Version %d Patchlevel %d\n", tmpbuff, g_release, g_patch_level);
                     }
                 }
                 write_batch_parms(colorspec, colorsonly, maxcolor, i, j);
                 if (xm > 1 || ym > 1)
                 {
-                    std::fprintf(parmfile, "  video=%s", vidmde);
-                    std::fprintf(parmfile, " savename=frmig_%c%c\n", par_key(i), par_key(j));
+                    std::fprintf(s_parm_file, "  video=%s", vidmde);
+                    std::fprintf(s_parm_file, " savename=frmig_%c%c\n", par_key(i), par_key(j));
                 }
-                std::fprintf(parmfile, "}\n\n");
+                std::fprintf(s_parm_file, "}\n\n");
             }
         }
         if (xm > 1 || ym > 1)
@@ -583,13 +589,13 @@ skip_UI:
             while (i == 0); // skip blanks
             while (i >= 0)
             {
-                std::fputs(buf, parmfile);
-                std::fputc('\n', parmfile);
+                std::fputs(buf, s_parm_file);
+                std::fputc('\n', s_parm_file);
                 i = file_gets(buf, 255, infile);
             }
             std::fclose(infile);
         }
-        std::fclose(parmfile);
+        std::fclose(s_parm_file);
         if (gotinfile)
         {
             // replace the original file with the new
@@ -598,15 +604,9 @@ skip_UI:
         }
         break;
     }
-    g_help_mode = old_help_mode;
     driver_unstack_screen();
 }
 
-struct write_batch_data // buffer for parms to break lines nicely
-{
-    int len;
-    char buf[10000];
-};
 static write_batch_data s_wbdata;
 
 static int getprec(double a, double b, double c)
@@ -666,10 +666,10 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
     bf_t bfYctr = nullptr;
     int saved;
     saved = save_stack();
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
-        bfXctr = alloc_stack(bflength+2);
-        bfYctr = alloc_stack(bflength+2);
+        bfXctr = alloc_stack(g_bf_length+2);
+        bfYctr = alloc_stack(g_bf_length+2);
     }
 
     s_wbdata.len = 0; // force first parm to start on new line
@@ -772,7 +772,7 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
 
         if (g_use_center_mag)
         {
-            if (bf_math != bf_math_type::NONE)
+            if (g_bf_math != bf_math_type::NONE)
             {
                 int digits;
                 cvtcentermagbf(bfXctr, bfYctr, &Magnification, &Xmagfactor, &Rotation, &Skew);
@@ -781,7 +781,7 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
                 put_bf(0, bfXctr, digits);
                 put_bf(1, bfYctr, digits);
             }
-            else // !bf_math
+            else // !g_bf_math
             {
                 cvtcentermag(&Xctr, &Yctr, &Magnification, &Xmagfactor, &Rotation, &Skew);
                 put_parm(" %s=", "center-mag");
@@ -827,7 +827,7 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
         else // not usemag
         {
             put_parm(" %s=", "corners");
-            if (bf_math != bf_math_type::NONE)
+            if (g_bf_math != bf_math_type::NONE)
             {
                 int digits;
                 digits = getprecbf(MAXREZ);
@@ -1197,19 +1197,19 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
         {
             put_filename("filename", g_read_filename.c_str());
         }
-        if (SPHERE)
+        if (g_sphere)
         {
             put_parm(" %s=y", "sphere");
-            put_parm(" %s=%d/%d", "latitude", THETA1, THETA2);
-            put_parm(" %s=%d/%d", "longitude", PHI1, PHI2);
-            put_parm(" %s=%d", "radius", RADIUS);
+            put_parm(" %s=%d/%d", "latitude", g_sphere_theta_min, g_sphere_theta_max);
+            put_parm(" %s=%d/%d", "longitude", g_sphere_phi_min, g_sphere_phi_max);
+            put_parm(" %s=%d", "radius", g_sphere_radius);
         }
-        put_parm(" %s=%d/%d", "scalexyz", XSCALE, YSCALE);
-        put_parm(" %s=%d", "roughness", ROUGH);
-        put_parm(" %s=%d", "waterline", WATERLINE);
-        if (FILLTYPE)
+        put_parm(" %s=%d/%d", "scalexyz", g_x_scale, g_y_scale);
+        put_parm(" %s=%d", "roughness", g_rough);
+        put_parm(" %s=%d", "waterline", g_water_line);
+        if (g_fill_type != fill_type::POINTS)
         {
-            put_parm(" %s=%d", "filltype", FILLTYPE);
+            put_parm(" %s=%d", "filltype", +g_fill_type);
         }
         if (g_transparent_color_3d[0] || g_transparent_color_3d[1])
         {
@@ -1232,12 +1232,12 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
                 put_parm(" %s=y", "brief");
             }
         }
-        if (FILLTYPE > 4)
+        if (g_fill_type > fill_type::SOLID_FILL)
         {
-            put_parm(" %s=%d/%d/%d", "lightsource", XLIGHT, YLIGHT, ZLIGHT);
-            if (LIGHTAVG)
+            put_parm(" %s=%d/%d/%d", "lightsource", g_light_x, g_light_y, g_light_z);
+            if (g_light_avg)
             {
-                put_parm(" %s=%d", "smoothing", LIGHTAVG);
+                put_parm(" %s=%d", "smoothing", g_light_avg);
             }
         }
         if (g_randomize_3d)
@@ -1271,12 +1271,12 @@ static void write_batch_parms(char const *colorinf, bool colorsonly, int maxcolo
     {
         // universal 3d
         //**** common (fractal & transform) 3d parameters in this section ****
-        if (!SPHERE || g_display_3d < display_3d_modes::NONE)
+        if (!g_sphere || g_display_3d < display_3d_modes::NONE)
         {
-            put_parm(" %s=%d/%d/%d", "rotation", XROT, YROT, ZROT);
+            put_parm(" %s=%d/%d/%d", "rotation", g_x_rot, g_y_rot, g_z_rot);
         }
-        put_parm(" %s=%d", "perspective", ZVIEWER);
-        put_parm(" %s=%d/%d", "xyshift", XSHIFT, YSHIFT);
+        put_parm(" %s=%d", "perspective", g_viewer_z);
+        put_parm(" %s=%d/%d", "xyshift", g_shift_x, g_shift_y);
         if (g_adjust_3d_x || g_adjust_3d_y)
         {
             put_parm(" %s=%d/%d", "xyadjust", g_adjust_3d_x, g_adjust_3d_y);
@@ -1730,13 +1730,13 @@ static void put_parm_line()
     }
     c = s_wbdata.buf[len];
     s_wbdata.buf[len] = 0;
-    std::fputs("  ", parmfile);
-    std::fputs(s_wbdata.buf, parmfile);
+    std::fputs("  ", s_parm_file);
+    std::fputs(s_wbdata.buf, s_parm_file);
     if (c && c != ' ')
     {
-        std::fputc('\\', parmfile);
+        std::fputc('\\', s_parm_file);
     }
-    std::fputc('\n', parmfile);
+    std::fputc('\n', s_parm_file);
     s_wbdata.buf[len] = (char)c;
     if (c == ' ')
     {

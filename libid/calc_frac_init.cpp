@@ -111,7 +111,7 @@ void fractal_floattobf()
     {
         if (typehasparm(g_fractal_type, i, nullptr))
         {
-            floattobf(bfparms[i], g_params[i]);
+            floattobf(g_bf_parms[i], g_params[i]);
         }
     }
     g_calc_status = calc_status_value::PARAMS_CHANGED;
@@ -150,13 +150,13 @@ void calcfracinit() // initialize a *pile* of stuff for fractal calculation
         fractal_type tofloat = g_cur_fractal_specific->tofloat;
         if (tofloat == fractal_type::NOFRACTAL)
         {
-            bf_math = bf_math_type::NONE;
+            g_bf_math = bf_math_type::NONE;
         }
         else if (bit_clear(g_fractal_specific[+tofloat].flags, fractal_flags::BF_MATH))
         {
-            bf_math = bf_math_type::NONE;
+            g_bf_math = bf_math_type::NONE;
         }
-        else if (bf_math != bf_math_type::NONE)
+        else if (g_bf_math != bf_math_type::NONE)
         {
             g_cur_fractal_specific = &g_fractal_specific[+tofloat];
             g_fractal_type = tofloat;
@@ -164,13 +164,13 @@ void calcfracinit() // initialize a *pile* of stuff for fractal calculation
     }
 
     // switch back to double when zooming out if using arbitrary precision
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         int gotprec = getprecbf(CURRENTREZ);
         if ((gotprec <= DBL_DIG+1 && g_debug_flag != debug_flags::force_arbitrary_precision_math) || g_math_tol[1] >= 1.0)
         {
             bfcornerstofloat();
-            bf_math = bf_math_type::NONE;
+            g_bf_math = bf_math_type::NONE;
         }
         else
         {
@@ -220,7 +220,7 @@ void calcfracinit() // initialize a *pile* of stuff for fractal calculation
     {
         free_bf_vars();
     }
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         g_float_flag = true;
     }
@@ -271,7 +271,7 @@ init_restart:
         && g_colors >= 64
         && (g_cur_fractal_specific->calctype == standard_fractal
             || g_cur_fractal_specific->calctype == calcmand
-            || g_cur_fractal_specific->calctype == calcmandfp || g_fractal_type == fractal_type::TEST))    // PHD 240708
+            || g_cur_fractal_specific->calctype == calcmandfp))
     {
         g_potential_flag = true;
         g_user_distance_estimator_value = 0;
@@ -420,7 +420,7 @@ init_restart:
     g_f_at_rad = 1.0/32768L;
 
     // now setup arrays of real coordinates corresponding to each pixel
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         adjust_to_limitsbf(1.0); // make sure all corners in valid range
     }
@@ -449,11 +449,11 @@ init_restart:
     }
 
     // skip this if plasma to avoid 3d problems
-    // skip if bf_math to avoid extraseg conflict with dx0 arrays
+    // skip if g_bf_math to avoid extraseg conflict with dx0 arrays
     // skip if ifs, ifs3d, or lsystem to avoid crash when mathtolerance
     // is set.  These types don't auto switch between float and integer math
     if (g_fractal_type != fractal_type::PLASMA
-        && bf_math == bf_math_type::NONE
+        && g_bf_math == bf_math_type::NONE
         && g_fractal_type != fractal_type::IFS
         && g_fractal_type != fractal_type::IFS3D
         && g_fractal_type != fractal_type::LSYSTEM)
@@ -529,7 +529,7 @@ expand_retry:
                 dy0 = (double)(dy0 - (double)g_delta_y);
                 dx1 = (double)(dx1 + (double)g_delta_x2);
             }
-            if (bf_math == bf_math_type::NONE) // redundant test, leave for now
+            if (g_bf_math == bf_math_type::NONE) // redundant test, leave for now
             {
                 /* Following is the old logic for detecting failure of double
                    precision. It has two advantages: it is independent of the
@@ -630,7 +630,7 @@ expand_retry:
         g_plot_my1 = (double)((0.0-g_delta_y2) * g_logical_screen_x_size_dots * g_logical_screen_y_size_dots / ftemp);
         g_plot_my2 = (g_x_max-g_x_3rd) * g_logical_screen_y_size_dots / ftemp;
     }
-    if (bf_math == bf_math_type::NONE)
+    if (g_bf_math == bf_math_type::NONE)
     {
         free_bf_vars();
     }
@@ -673,9 +673,9 @@ void adjust_cornerbf()
     bf_t btmp1;
     int saved;
     saved = save_stack();
-    bftemp  = alloc_stack(rbflength+2);
-    bftemp2 = alloc_stack(rbflength+2);
-    btmp1  =  alloc_stack(rbflength+2);
+    bftemp  = alloc_stack(g_r_bf_length+2);
+    bftemp2 = alloc_stack(g_r_bf_length+2);
+    btmp1  =  alloc_stack(g_r_bf_length+2);
 
     // While we're at it, let's adjust the Xmagfactor as well
     // use bftemp, bftemp2 as bfXctr, bfYctr
@@ -820,27 +820,27 @@ static void adjust_to_limitsbf(double expand)
     bf_t bexpand;
     int saved;
     saved = save_stack();
-    bcornerx[0] = alloc_stack(rbflength+2);
-    bcornerx[1] = alloc_stack(rbflength+2);
-    bcornerx[2] = alloc_stack(rbflength+2);
-    bcornerx[3] = alloc_stack(rbflength+2);
-    bcornery[0] = alloc_stack(rbflength+2);
-    bcornery[1] = alloc_stack(rbflength+2);
-    bcornery[2] = alloc_stack(rbflength+2);
-    bcornery[3] = alloc_stack(rbflength+2);
-    blowx       = alloc_stack(rbflength+2);
-    bhighx      = alloc_stack(rbflength+2);
-    blowy       = alloc_stack(rbflength+2);
-    bhighy      = alloc_stack(rbflength+2);
-    blimit      = alloc_stack(rbflength+2);
-    bftemp      = alloc_stack(rbflength+2);
-    bcenterx    = alloc_stack(rbflength+2);
-    bcentery    = alloc_stack(rbflength+2);
-    badjx       = alloc_stack(rbflength+2);
-    badjy       = alloc_stack(rbflength+2);
-    btmp1       = alloc_stack(rbflength+2);
-    btmp2       = alloc_stack(rbflength+2);
-    bexpand     = alloc_stack(rbflength+2);
+    bcornerx[0] = alloc_stack(g_r_bf_length+2);
+    bcornerx[1] = alloc_stack(g_r_bf_length+2);
+    bcornerx[2] = alloc_stack(g_r_bf_length+2);
+    bcornerx[3] = alloc_stack(g_r_bf_length+2);
+    bcornery[0] = alloc_stack(g_r_bf_length+2);
+    bcornery[1] = alloc_stack(g_r_bf_length+2);
+    bcornery[2] = alloc_stack(g_r_bf_length+2);
+    bcornery[3] = alloc_stack(g_r_bf_length+2);
+    blowx       = alloc_stack(g_r_bf_length+2);
+    bhighx      = alloc_stack(g_r_bf_length+2);
+    blowy       = alloc_stack(g_r_bf_length+2);
+    bhighy      = alloc_stack(g_r_bf_length+2);
+    blimit      = alloc_stack(g_r_bf_length+2);
+    bftemp      = alloc_stack(g_r_bf_length+2);
+    bcenterx    = alloc_stack(g_r_bf_length+2);
+    bcentery    = alloc_stack(g_r_bf_length+2);
+    badjx       = alloc_stack(g_r_bf_length+2);
+    badjy       = alloc_stack(g_r_bf_length+2);
+    btmp1       = alloc_stack(g_r_bf_length+2);
+    btmp2       = alloc_stack(g_r_bf_length+2);
+    bexpand     = alloc_stack(g_r_bf_length+2);
 
     limit = 32767.99;
 
@@ -1232,7 +1232,7 @@ static void smallest_add_bf(bf_t num)
     bf_t btmp1;
     int saved;
     saved = save_stack();
-    btmp1 = alloc_stack(bflength+2);
+    btmp1 = alloc_stack(g_bf_length+2);
     mult_bf(btmp1, floattobf(btmp1, 5.0e-16), num);
     add_a_bf(num, btmp1);
     restore_stack(saved);

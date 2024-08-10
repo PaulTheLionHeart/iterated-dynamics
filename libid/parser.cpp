@@ -1,4 +1,4 @@
-/* (C) 1990, Mark C. Peterson, CompuServe [70441,3353]
+/* (C) 1990, Mark C. Peterson
    All rights reserved.
 
    Code may be used in any program provided the author is credited
@@ -12,9 +12,6 @@
     however this is optional.
 
     Mark C. Peterson
-    405-C Queen St. Suite #181
-    Southington, CT 06489
-    (203) 276-9721
 */
 #include "port.h"
 #include "prototyp.h" // for stricmp
@@ -54,7 +51,12 @@
 #include <string>
 
 // ** Formula Declarations **
-enum MATH_TYPE { D_MATH, M_MATH, L_MATH };
+enum MATH_TYPE
+{
+    D_MATH,
+    M_MATH,
+    L_MATH
+};
 
 using Function = void();
 using FunctionPtr = Function *;
@@ -65,28 +67,9 @@ enum
     MAX_ARGS = 100
 };
 
-unsigned int g_max_function_ops  = MAX_OPS;
-unsigned int g_max_function_args = MAX_ARGS;
-
-static MATH_TYPE s_math_type = D_MATH;
-static unsigned long s_num_ops{};
-static unsigned long s_num_loads{};
-static unsigned long s_num_stores{};
-static unsigned long s_num_jumps{};
-
-struct PEND_OP
+enum
 {
-    FunctionPtr f;
-    int p;
-};
-
-#define MAX_JUMPS 200  // size of JUMP_CONTROL array
-
-struct JUMP_PTRS_ST
-{
-    int      JumpOpPtr;
-    int      JumpLodPtr;
-    int      JumpStoPtr;
+    MAX_JUMPS = 200  // size of JUMP_CONTROL array
 };
 
 enum class jump_control_type
@@ -97,83 +80,6 @@ enum class jump_control_type
     ELSE = 3,
     END_IF = 4
 };
-
-struct JUMP_CONTROL_ST
-{
-    jump_control_type type;
-    JUMP_PTRS_ST ptrs;
-    int DestJumpIndex;
-};
-
-std::vector<JUMP_CONTROL_ST> g_jump_control;
-int g_jump_index{};
-static int s_init_jump_index{};
-
-inline void push_jump(jump_control_type type)
-{
-    JUMP_CONTROL_ST value{};
-    value.type = type;
-    g_jump_control.push_back(value);
-    ++g_jump_index;
-}
-
-static bool frm_prescan(std::FILE * open_file);
-
-#define CASE_TERMINATOR case',':\
-                        case '\n':\
-                        case '(':\
-                        case ')':\
-                        case '!':\
-                        case '=':\
-                        case '<':\
-                        case '>':\
-                        case '|':\
-                        case '&':\
-                        case '}':\
-                        case ':':\
-                        case '+':\
-                        case '-':\
-                        case '*':\
-                        case '/':\
-                        case '^'
-
-#define CASE_ALPHA      case 'a':\
-                        case 'b':\
-                        case 'c':\
-                        case 'd':\
-                        case 'e':\
-                        case 'f':\
-                        case 'g':\
-                        case 'h':\
-                        case 'i':\
-                        case 'j':\
-                        case 'k':\
-                        case 'l':\
-                        case 'm':\
-                        case 'n':\
-                        case 'o':\
-                        case 'p':\
-                        case 'q':\
-                        case 'r':\
-                        case 's':\
-                        case 't':\
-                        case 'u':\
-                        case 'v':\
-                        case 'w':\
-                        case 'x':\
-                        case 'y':\
-                        case 'z'
-
-#define CASE_NUM        case '0':\
-                        case '1':\
-                        case '2':\
-                        case '3':\
-                        case '4':\
-                        case '5':\
-                        case '6':\
-                        case '7':\
-                        case '8':\
-                        case '9'
 
 // token_type definitions
 enum class token_type
@@ -292,91 +198,6 @@ inline int operator+(token_id value)
     return static_cast<int>(value);
 }
 
-struct token_st
-{
-    char str[80];
-    token_type type;
-    token_id id;
-    DComplex constant;
-};
-
-
-// MAX_STORES must be even to make Unix alignment work
-
-#define MAX_STORES ((g_max_function_ops/4)*2)  // at most only half the ops can be stores
-#define MAX_LOADS  ((unsigned)(g_max_function_ops*.8))  // and 80% can be loads
-
-static std::vector<PEND_OP> s_op;
-
-static void parser_allocate();
-
-Arg *Arg1{};
-Arg *Arg2{};
-
-// Some of these variables should be renamed for safety
-std::array<Arg, 20> g_stack{};
-std::vector<Arg *> Store;
-std::vector<Arg *> Load;
-int g_op_ptr{};
-std::vector<FunctionPtr> f;
-std::vector<ConstArg> v;
-int g_store_index{};
-int g_load_index{};
-bool g_is_mandelbrot{true};
-unsigned int g_operation_index{};
-unsigned int g_variable_index{};
-unsigned int g_last_op{};
-static unsigned int s_n{};
-static unsigned int s_next_op{};
-static unsigned int s_init_n{};
-static int s_paren{};
-static bool s_expecting_arg{};
-int InitLodPtr{};
-int InitStoPtr{};
-int InitOpPtr{};
-int g_last_init_op{};
-static int s_delta16{};
-double g_fudge_limit{};
-static double s_fudge{};
-static int s_shift_back{};
-static bool s_set_random{};
-static bool s_randomized{};
-static unsigned long s_rand_num{};
-bool g_frm_uses_p1{};
-bool g_frm_uses_p2{};
-bool g_frm_uses_p3{};
-bool g_frm_uses_p4{};
-bool g_frm_uses_p5{};
-bool g_uses_jump{};
-bool g_frm_uses_ismand{};
-static unsigned int s_chars_in_formula{};
-
-inline bool check_denom(long denom)
-{
-    if (denom == 0 || g_overflow)
-    {
-        g_overflow = true;
-        return true;
-    }
-    if (denom == 0)
-    {
-        return true;
-    }
-    return false;
-}
-
-inline bool check_denom(double denom)
-{
-    if (std::fabs(denom) <= DBL_MIN)
-    {
-        g_overflow = true;
-        return true;
-    }
-    return false;
-}
-
-#define LastSqr v[4].a
-
 /* ParseErrs() defines; all calls to ParseErrs(), or any variable which will
    be used as the argument in a call to ParseErrs(), should use one of these
    defines.
@@ -421,6 +242,382 @@ enum
     PE_SECOND_COLON = 34,
     PE_INVALID_CALL_TO_PARSEERRS = 35
 };
+
+struct PEND_OP
+{
+    FunctionPtr f;
+    int p;
+};
+
+struct JUMP_PTRS_ST
+{
+    int      JumpOpPtr;
+    int      JumpLodPtr;
+    int      JumpStoPtr;
+};
+
+struct JUMP_CONTROL_ST
+{
+    jump_control_type type;
+    JUMP_PTRS_ST ptrs;
+    int DestJumpIndex;
+};
+
+struct token_st
+{
+    char str[80];
+    token_type type;
+    token_id id;
+    DComplex constant;
+};
+
+struct FNCT_LIST
+{
+    char const *s;
+    FunctionPtr *ptr;
+};
+
+struct SymmetryName
+{
+    char const *s;
+    symmetry_type n;
+};
+
+struct error_data_st
+{
+    long start_pos;
+    long error_pos;
+    int error_number;
+};
+
+// forward declarations
+static bool frm_prescan(std::FILE *open_file);
+static void parser_allocate();
+static void dStkSRand();
+static void dStkAdd();
+static void dStkSub();
+static void dStkReal();
+static void dStkImag();
+static void dStkNeg();
+static void dStkDiv();
+static void dStkMod();
+static void dStkLT();
+static void dStkGT();
+static void dStkLTE();
+static void dStkGTE();
+static void dStkEQ();
+static void dStkNE();
+static void dStkOR();
+static void dStkAND();
+static void EndInit();
+static void dStkJumpOnFalse();
+static void dStkJumpOnTrue();
+
+unsigned int g_max_function_ops{MAX_OPS};
+unsigned int g_max_function_args{MAX_ARGS};
+Arg *g_arg1{};
+Arg *g_arg2{};
+int g_store_index{};
+int g_load_index{};
+bool g_is_mandelbrot{true};
+unsigned int g_operation_index{};
+unsigned int g_variable_index{};
+int g_last_init_op{};
+double g_fudge_limit{};
+bool g_frm_uses_p1{};
+bool g_frm_uses_p2{};
+bool g_frm_uses_p3{};
+bool g_frm_uses_p4{};
+bool g_frm_uses_p5{};
+bool g_frm_uses_ismand{};
+char g_max_function{};
+
+static std::vector<JUMP_CONTROL_ST> s_jump_control;
+static int s_jump_index{};
+static std::array<Arg, 20> s_stack{};
+static std::vector<Arg *> s_load;
+static int s_op_ptr{};
+static std::vector<FunctionPtr> s_fns;
+static std::vector<ConstArg> s_vars;
+#define LastSqr s_vars[4].a
+static unsigned int s_op_count{};
+static int s_init_load_ptr{};
+static int s_init_store_ptr{};
+static int s_init_op_ptr{};
+static bool s_uses_jump{};
+static std::vector<Arg *> s_store;
+static MATH_TYPE s_math_type{D_MATH};
+static unsigned long s_num_ops{};
+static unsigned long s_num_loads{};
+static unsigned long s_num_stores{};
+static unsigned long s_num_jumps{};
+static int s_init_jump_index{};
+static std::vector<PEND_OP> s_op;
+static unsigned int s_n{};
+static unsigned int s_next_op{};
+static unsigned int s_init_n{};
+static int s_paren{};
+static bool s_expecting_arg{};
+static int s_delta16{};
+static double s_fudge{};
+static int s_shift_back{};
+static bool s_set_random{};
+static bool s_randomized{};
+static unsigned long s_rand_num{};
+static unsigned int s_chars_in_formula{};
+static constexpr std::array<char const *, 4> s_jump_list
+{
+    "if",
+    "elseif",
+    "else",
+    "endif"
+};
+static std::string s_formula;
+static std::array<error_data_st, 3> s_errors{};
+
+static FunctionPtr s_srand{dStkSRand};
+static FunctionPtr s_abs{dStkAbs};
+static FunctionPtr s_sqr{dStkSqr};
+static FunctionPtr s_add{dStkAdd};
+static FunctionPtr s_sub{dStkSub};
+static FunctionPtr s_conj{dStkConj};
+static FunctionPtr s_floor{dStkFloor};
+static FunctionPtr s_ceil{dStkCeil};
+static FunctionPtr s_trunc{dStkTrunc};
+static FunctionPtr s_round{dStkRound};
+static FunctionPtr s_zero{dStkZero};
+static FunctionPtr s_one{dStkOne};
+static FunctionPtr s_real{dStkReal};
+static FunctionPtr s_imag{dStkImag};
+static FunctionPtr s_neg{dStkNeg};
+static FunctionPtr s_mul{dStkMul};
+static FunctionPtr s_div{dStkDiv};
+static FunctionPtr s_mod{dStkMod};
+static FunctionPtr s_flip{dStkFlip};
+static FunctionPtr s_sin{dStkSin};
+static FunctionPtr s_tan{dStkTan};
+static FunctionPtr s_tanh{dStkTanh};
+static FunctionPtr s_cotan{dStkCoTan};
+static FunctionPtr s_cotanh{dStkCoTanh};
+static FunctionPtr s_sinh{dStkSinh};
+static FunctionPtr s_cos{dStkCos};
+static FunctionPtr s_cosxx{dStkCosXX};
+static FunctionPtr s_cosh{dStkCosh};
+static FunctionPtr s_asin{dStkASin};
+static FunctionPtr s_asinh{dStkASinh};
+static FunctionPtr s_acos{dStkACos};
+static FunctionPtr s_acosh{dStkACosh};
+static FunctionPtr s_atan{dStkATan};
+static FunctionPtr s_atanh{dStkATanh};
+static FunctionPtr s_sqrt{dStkSqrt};
+static FunctionPtr s_cabs{dStkCAbs};
+static FunctionPtr s_lt{dStkLT};
+static FunctionPtr s_gt{dStkGT};
+static FunctionPtr s_lte{dStkLTE};
+static FunctionPtr s_gte{dStkGTE};
+static FunctionPtr s_eq{dStkEQ};
+static FunctionPtr s_ne{dStkNE};
+static FunctionPtr s_or{dStkOR};
+static FunctionPtr s_and{dStkAND};
+static FunctionPtr s_log{dStkLog};
+static FunctionPtr s_exp{dStkExp};
+static FunctionPtr s_pwr{dStkPwr};
+static FunctionPtr s_end_init{EndInit};
+static FunctionPtr s_jump_on_false{dStkJumpOnFalse};
+static FunctionPtr s_jump_on_true{dStkJumpOnTrue};
+static FunctionPtr s_trig0{dStkSin};
+static FunctionPtr s_trig1{dStkSqr};
+static FunctionPtr s_trig2{dStkSinh};
+static FunctionPtr s_trig3{dStkCosh};
+static constexpr std::array<FNCT_LIST, 34> s_func_list
+{
+    FNCT_LIST{"sin",   &s_sin},
+    FNCT_LIST{"sinh",  &s_sinh},
+    FNCT_LIST{"cos",   &s_cos},
+    FNCT_LIST{"cosh",  &s_cosh},
+    FNCT_LIST{"sqr",   &s_sqr},
+    FNCT_LIST{"log",   &s_log},
+    FNCT_LIST{"exp",   &s_exp},
+    FNCT_LIST{"abs",   &s_abs},
+    FNCT_LIST{"conj",  &s_conj},
+    FNCT_LIST{"real",  &s_real},
+    FNCT_LIST{"imag",  &s_imag},
+    FNCT_LIST{"fn1",   &s_trig0},
+    FNCT_LIST{"fn2",   &s_trig1},
+    FNCT_LIST{"fn3",   &s_trig2},
+    FNCT_LIST{"fn4",   &s_trig3},
+    FNCT_LIST{"flip",  &s_flip},
+    FNCT_LIST{"tan",   &s_tan},
+    FNCT_LIST{"tanh",  &s_tanh},
+    FNCT_LIST{"cotan", &s_cotan},
+    FNCT_LIST{"cotanh", &s_cotanh},
+    FNCT_LIST{"cosxx", &s_cosxx},
+    FNCT_LIST{"srand", &s_srand},
+    FNCT_LIST{"asin",  &s_asin},
+    FNCT_LIST{"asinh", &s_asinh},
+    FNCT_LIST{"acos",  &s_acos},
+    FNCT_LIST{"acosh", &s_acosh},
+    FNCT_LIST{"atan",  &s_atan},
+    FNCT_LIST{"atanh", &s_atanh},
+    FNCT_LIST{"sqrt",  &s_sqrt},
+    FNCT_LIST{"cabs",  &s_cabs},
+    FNCT_LIST{"floor", &s_floor},
+    FNCT_LIST{"ceil",  &s_ceil},
+    FNCT_LIST{"trunc", &s_trunc},
+    FNCT_LIST{"round", &s_round},
+};
+static std::array<char const *, 17> s_op_list
+{
+    ",",    //  0
+    "!=",   //  1
+    "=",    //  2
+    "==",   //  3
+    "<",    //  4
+    "<=",   //  5
+    ">",    //  6
+    ">=",   //  7
+    "|",    //  8
+    "||",   //  9
+    "&&",   // 10
+    ":",    // 11
+    "+",    // 12
+    "-",    // 13
+    "*",    // 14
+    "/",    // 15
+    "^"     // 16
+};
+static constexpr std::array<char const *, 19> s_variables
+{
+    "pixel",        // v[0]
+    "p1",           // v[1]
+    "p2",           // v[2]
+    "z",            // v[3]
+    "LastSqr",      // v[4]
+    "pi",           // v[5]
+    "e",            // v[6]
+    "rand",         // v[7]
+    "p3",           // v[8]
+    "whitesq",      // v[9]
+    "scrnpix",      // v[10]
+    "scrnmax",      // v[11]
+    "maxit",        // v[12]
+    "ismand",       // v[13]
+    "center",       // v[14]
+    "magxmag",      // v[15]
+    "rotskew",      // v[16]
+    "p4",           // v[17]
+    "p5"            // v[18]
+};
+static constexpr std::array<SymmetryName, 14> s_symmetry_names
+{
+    SymmetryName{ "NOSYM",         symmetry_type::NONE },
+    SymmetryName{ "XAXIS_NOPARM",  symmetry_type::X_AXIS_NO_PARAM },
+    SymmetryName{ "XAXIS",         symmetry_type::X_AXIS },
+    SymmetryName{ "YAXIS_NOPARM",  symmetry_type::Y_AXIS_NO_PARAM },
+    SymmetryName{ "YAXIS",         symmetry_type::Y_AXIS },
+    SymmetryName{ "XYAXIS_NOPARM", symmetry_type::XY_AXIS_NO_PARAM },
+    SymmetryName{ "XYAXIS",        symmetry_type::XY_AXIS },
+    SymmetryName{ "ORIGIN_NOPARM", symmetry_type::ORIGIN_NO_PARAM },
+    SymmetryName{ "ORIGIN",        symmetry_type::ORIGIN },
+    SymmetryName{ "PI_SYM_NOPARM", symmetry_type::PI_SYM_NO_PARAM },
+    SymmetryName{ "PI_SYM",        symmetry_type::PI_SYM },
+    SymmetryName{ "XAXIS_NOIMAG",  symmetry_type::X_AXIS_NO_IMAG },
+    SymmetryName{ "XAXIS_NOREAL",  symmetry_type::X_AXIS_NO_REAL },
+    SymmetryName{ "NOPLOT",        symmetry_type::NO_PLOT },
+};
+
+inline void push_jump(jump_control_type type)
+{
+    JUMP_CONTROL_ST value{};
+    value.type = type;
+    s_jump_control.push_back(value);
+    ++s_jump_index;
+}
+
+#define CASE_TERMINATOR case',':\
+                        case '\n':\
+                        case '(':\
+                        case ')':\
+                        case '!':\
+                        case '=':\
+                        case '<':\
+                        case '>':\
+                        case '|':\
+                        case '&':\
+                        case '}':\
+                        case ':':\
+                        case '+':\
+                        case '-':\
+                        case '*':\
+                        case '/':\
+                        case '^'
+
+#define CASE_ALPHA      case 'a':\
+                        case 'b':\
+                        case 'c':\
+                        case 'd':\
+                        case 'e':\
+                        case 'f':\
+                        case 'g':\
+                        case 'h':\
+                        case 'i':\
+                        case 'j':\
+                        case 'k':\
+                        case 'l':\
+                        case 'm':\
+                        case 'n':\
+                        case 'o':\
+                        case 'p':\
+                        case 'q':\
+                        case 'r':\
+                        case 's':\
+                        case 't':\
+                        case 'u':\
+                        case 'v':\
+                        case 'w':\
+                        case 'x':\
+                        case 'y':\
+                        case 'z'
+
+#define CASE_NUM        case '0':\
+                        case '1':\
+                        case '2':\
+                        case '3':\
+                        case '4':\
+                        case '5':\
+                        case '6':\
+                        case '7':\
+                        case '8':\
+                        case '9'
+
+// MAX_STORES must be even to make Unix alignment work
+
+#define MAX_STORES ((g_max_function_ops/4)*2)  // at most only half the ops can be stores
+#define MAX_LOADS  ((unsigned)(g_max_function_ops*.8))  // and 80% can be loads
+
+inline bool check_denom(long denom)
+{
+    if (denom == 0 || g_overflow)
+    {
+        g_overflow = true;
+        return true;
+    }
+    if (denom == 0)
+    {
+        return true;
+    }
+    return false;
+}
+
+inline bool check_denom(double denom)
+{
+    if (std::fabs(denom) <= DBL_MIN)
+    {
+        g_overflow = true;
+        return true;
+    }
+    return false;
+}
 
 static char const *ParseErrs(int which)
 {
@@ -475,9 +672,9 @@ static char const *ParseErrs(int which)
 
 static void mStkFunct(FunctionPtr fct)   // call mStk via dStk
 {
-    Arg1->d = MPC2cmplx(Arg1->m);
+    g_arg1->d = MPC2cmplx(g_arg1->m);
     (*fct)();
-    Arg1->m = cmplx2MPC(Arg1->d);
+    g_arg1->m = cmplx2MPC(g_arg1->d);
 }
 
 static void lStkFunct(FunctionPtr fct)   // call lStk via dStk
@@ -487,14 +684,14 @@ static void lStkFunct(FunctionPtr fct)   // call lStk via dStk
        intermediate variable needed for safety because of
        different size of double and long in Arg union
     */
-    y = (double)Arg1->l.y / s_fudge;
-    Arg1->d.x = (double)Arg1->l.x / s_fudge;
-    Arg1->d.y = y;
+    y = (double)g_arg1->l.y / s_fudge;
+    g_arg1->d.x = (double)g_arg1->l.x / s_fudge;
+    g_arg1->d.y = y;
     (*fct)();
-    if (std::fabs(Arg1->d.x) < g_fudge_limit && std::fabs(Arg1->d.y) < g_fudge_limit)
+    if (std::fabs(g_arg1->d.x) < g_fudge_limit && std::fabs(g_arg1->d.y) < g_fudge_limit)
     {
-        Arg1->l.x = (long)(Arg1->d.x * s_fudge);
-        Arg1->l.y = (long)(Arg1->d.y * s_fudge);
+        g_arg1->l.x = (long)(g_arg1->d.x * s_fudge);
+        g_arg1->l.y = (long)(g_arg1->d.y * s_fudge);
     }
     else
     {
@@ -509,8 +706,8 @@ static unsigned long NewRandNum()
 
 static void lRandom()
 {
-    v[7].a.l.x = NewRandNum() >> (32 - g_bit_shift);
-    v[7].a.l.y = NewRandNum() >> (32 - g_bit_shift);
+    s_vars[7].a.l.x = NewRandNum() >> (32 - g_bit_shift);
+    s_vars[7].a.l.y = NewRandNum() >> (32 - g_bit_shift);
 }
 
 static void dRandom()
@@ -522,8 +719,8 @@ static void dRandom()
            the same fractals when the srand() function is used. */
     x = NewRandNum() >> (32 - g_bit_shift);
     y = NewRandNum() >> (32 - g_bit_shift);
-    v[7].a.d.x = ((double)x / (1L << g_bit_shift));
-    v[7].a.d.y = ((double)y / (1L << g_bit_shift));
+    s_vars[7].a.d.x = ((double)x / (1L << g_bit_shift));
+    s_vars[7].a.d.y = ((double)y / (1L << g_bit_shift));
 
 }
 
@@ -536,8 +733,8 @@ static void mRandom()
        the same fractals when the srand() function is used. */
     x = NewRandNum() >> (32 - g_bit_shift);
     y = NewRandNum() >> (32 - g_bit_shift);
-    v[7].a.m.x = *fg2MP(x, g_bit_shift);
-    v[7].a.m.y = *fg2MP(y, g_bit_shift);
+    s_vars[7].a.m.x = *fg2MP(x, g_bit_shift);
+    s_vars[7].a.m.y = *fg2MP(y, g_bit_shift);
 }
 
 static void SetRandFnct()
@@ -546,7 +743,7 @@ static void SetRandFnct()
 
     if (!s_set_random)
     {
-        s_rand_num = Arg1->l.x ^ Arg1->l.y;
+        s_rand_num = g_arg1->l.x ^ g_arg1->l.y;
     }
 
     Seed = (unsigned)s_rand_num ^ (unsigned)(s_rand_num >> 16);
@@ -577,55 +774,53 @@ static void lStkSRand()
 {
     SetRandFnct();
     lRandom();
-    Arg1->l = v[7].a.l;
+    g_arg1->l = s_vars[7].a.l;
 }
 
 static void mStkSRand()
 {
-    Arg1->l.x = Arg1->m.x.Mant ^ (long)Arg1->m.x.Exp;
-    Arg1->l.y = Arg1->m.y.Mant ^ (long)Arg1->m.y.Exp;
+    g_arg1->l.x = g_arg1->m.x.Mant ^ (long)g_arg1->m.x.Exp;
+    g_arg1->l.y = g_arg1->m.y.Mant ^ (long)g_arg1->m.y.Exp;
     SetRandFnct();
     mRandom();
-    Arg1->m = v[7].a.m;
+    g_arg1->m = s_vars[7].a.m;
 }
 
 static void dStkSRand()
 {
-    Arg1->l.x = (long)(Arg1->d.x * (1L << g_bit_shift));
-    Arg1->l.y = (long)(Arg1->d.y * (1L << g_bit_shift));
+    g_arg1->l.x = (long)(g_arg1->d.x * (1L << g_bit_shift));
+    g_arg1->l.y = (long)(g_arg1->d.y * (1L << g_bit_shift));
     SetRandFnct();
     dRandom();
-    Arg1->d = v[7].a.d;
+    g_arg1->d = s_vars[7].a.d;
 }
-
-static FunctionPtr StkSRand{dStkSRand};
 
 void dStkLodDup()
 {
-    Arg1 += 2;
-    Arg2 += 2;
-    *Arg1 = *Load[g_load_index];
-    *Arg2 = *Arg1;
+    g_arg1 += 2;
+    g_arg2 += 2;
+    *g_arg1 = *s_load[g_load_index];
+    *g_arg2 = *g_arg1;
     g_load_index += 2;
 }
 
 void dStkLodSqr()
 {
-    Arg1++;
-    Arg2++;
-    Arg1->d.y = Load[g_load_index]->d.x * Load[g_load_index]->d.y * 2.0;
-    Arg1->d.x = (Load[g_load_index]->d.x * Load[g_load_index]->d.x) - (Load[g_load_index]->d.y * Load[g_load_index]->d.y);
+    g_arg1++;
+    g_arg2++;
+    g_arg1->d.y = s_load[g_load_index]->d.x * s_load[g_load_index]->d.y * 2.0;
+    g_arg1->d.x = (s_load[g_load_index]->d.x * s_load[g_load_index]->d.x) - (s_load[g_load_index]->d.y * s_load[g_load_index]->d.y);
     g_load_index++;
 }
 
 void dStkLodSqr2()
 {
-    Arg1++;
-    Arg2++;
-    LastSqr.d.x = Load[g_load_index]->d.x * Load[g_load_index]->d.x;
-    LastSqr.d.y = Load[g_load_index]->d.y * Load[g_load_index]->d.y;
-    Arg1->d.y = Load[g_load_index]->d.x * Load[g_load_index]->d.y * 2.0;
-    Arg1->d.x = LastSqr.d.x - LastSqr.d.y;
+    g_arg1++;
+    g_arg2++;
+    LastSqr.d.x = s_load[g_load_index]->d.x * s_load[g_load_index]->d.x;
+    LastSqr.d.y = s_load[g_load_index]->d.y * s_load[g_load_index]->d.y;
+    g_arg1->d.y = s_load[g_load_index]->d.x * s_load[g_load_index]->d.y * 2.0;
+    g_arg1->d.x = LastSqr.d.x - LastSqr.d.y;
     LastSqr.d.x += LastSqr.d.y;
     LastSqr.d.y = 0;
     g_load_index++;
@@ -633,68 +828,66 @@ void dStkLodSqr2()
 
 void dStkLodDbl()
 {
-    Arg1++;
-    Arg2++;
-    Arg1->d.x = Load[g_load_index]->d.x * 2.0;
-    Arg1->d.y = Load[g_load_index]->d.y * 2.0;
+    g_arg1++;
+    g_arg2++;
+    g_arg1->d.x = s_load[g_load_index]->d.x * 2.0;
+    g_arg1->d.y = s_load[g_load_index]->d.y * 2.0;
     g_load_index++;
 }
 
 void dStkSqr0()
 {
-    LastSqr.d.y = Arg1->d.y * Arg1->d.y; // use LastSqr as temp storage
-    Arg1->d.y = Arg1->d.x * Arg1->d.y * 2.0;
-    Arg1->d.x = Arg1->d.x * Arg1->d.x - LastSqr.d.y;
+    LastSqr.d.y = g_arg1->d.y * g_arg1->d.y; // use LastSqr as temp storage
+    g_arg1->d.y = g_arg1->d.x * g_arg1->d.y * 2.0;
+    g_arg1->d.x = g_arg1->d.x * g_arg1->d.x - LastSqr.d.y;
 }
 
 void dStkSqr3()
 {
-    Arg1->d.x = Arg1->d.x * Arg1->d.x;
+    g_arg1->d.x = g_arg1->d.x * g_arg1->d.x;
 }
 
 void dStkAbs()
 {
-    Arg1->d.x = std::fabs(Arg1->d.x);
-    Arg1->d.y = std::fabs(Arg1->d.y);
+    g_arg1->d.x = std::fabs(g_arg1->d.x);
+    g_arg1->d.y = std::fabs(g_arg1->d.y);
 }
 
 void mStkAbs()
 {
-    if (Arg1->m.x.Exp < 0)
+    if (g_arg1->m.x.Exp < 0)
     {
-        Arg1->m.x.Exp = -Arg1->m.x.Exp;
+        g_arg1->m.x.Exp = -g_arg1->m.x.Exp;
     }
-    if (Arg1->m.y.Exp < 0)
+    if (g_arg1->m.y.Exp < 0)
     {
-        Arg1->m.y.Exp = -Arg1->m.y.Exp;
+        g_arg1->m.y.Exp = -g_arg1->m.y.Exp;
     }
 }
 
 void lStkAbs()
 {
-    Arg1->l.x = labs(Arg1->l.x);
-    Arg1->l.y = labs(Arg1->l.y);
+    g_arg1->l.x = labs(g_arg1->l.x);
+    g_arg1->l.y = labs(g_arg1->l.y);
 }
-
-static FunctionPtr StkAbs{dStkAbs};
 
 void dStkSqr()
 {
-    LastSqr.d.x = Arg1->d.x * Arg1->d.x;
-    LastSqr.d.y = Arg1->d.y * Arg1->d.y;
-    Arg1->d.y = Arg1->d.x * Arg1->d.y * 2.0;
-    Arg1->d.x = LastSqr.d.x - LastSqr.d.y;
+    LastSqr.d.x = g_arg1->d.x * g_arg1->d.x;
+    LastSqr.d.y = g_arg1->d.y * g_arg1->d.y;
+    g_arg1->d.y = g_arg1->d.x * g_arg1->d.y * 2.0;
+    g_arg1->d.x = LastSqr.d.x - LastSqr.d.y;
     LastSqr.d.x += LastSqr.d.y;
     LastSqr.d.y = 0;
 }
 
 void mStkSqr()
 {
-    LastSqr.m.x = *MPmul(Arg1->m.x, Arg1->m.x);
-    LastSqr.m.y = *MPmul(Arg1->m.y, Arg1->m.y);
-    Arg1->m.y = *MPmul(Arg1->m.x, Arg1->m.y);
-    Arg1->m.y.Exp++;
-    Arg1->m.x = *MPsub(LastSqr.m.x, LastSqr.m.y);
+    LastSqr.m.x = *MPmul(g_arg1->m.x, g_arg1->m.x);
+    LastSqr.m.y = *MPmul(g_arg1->m.y, g_arg1->m.y);
+    g_arg1->m.y = *MPmul(g_arg1->m.x, g_arg1->m.y);
+    g_arg1->m.y.Exp++;
+    g_arg1->m.x = *MPsub(LastSqr.m.x, LastSqr.m.y);
     LastSqr.m.x = *MPadd(LastSqr.m.x, LastSqr.m.y);
     LastSqr.m.y.Exp = 0;
     LastSqr.m.y.Mant = 0;
@@ -702,87 +895,79 @@ void mStkSqr()
 
 void lStkSqr()
 {
-    LastSqr.l.x = multiply(Arg1->l.x, Arg1->l.x, g_bit_shift);
-    LastSqr.l.y = multiply(Arg1->l.y, Arg1->l.y, g_bit_shift);
-    Arg1->l.y = multiply(Arg1->l.x, Arg1->l.y, g_bit_shift) << 1;
-    Arg1->l.x = LastSqr.l.x - LastSqr.l.y;
+    LastSqr.l.x = multiply(g_arg1->l.x, g_arg1->l.x, g_bit_shift);
+    LastSqr.l.y = multiply(g_arg1->l.y, g_arg1->l.y, g_bit_shift);
+    g_arg1->l.y = multiply(g_arg1->l.x, g_arg1->l.y, g_bit_shift) << 1;
+    g_arg1->l.x = LastSqr.l.x - LastSqr.l.y;
     LastSqr.l.x += LastSqr.l.y;
     LastSqr.l.y = 0L;
 }
 
-static FunctionPtr StkSqr{dStkSqr};
-
 static void dStkAdd()
 {
-    Arg2->d.x += Arg1->d.x;
-    Arg2->d.y += Arg1->d.y;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x += g_arg1->d.x;
+    g_arg2->d.y += g_arg1->d.y;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkAdd()
 {
-    Arg2->m = MPCadd(Arg2->m, Arg1->m);
-    Arg1--;
-    Arg2--;
+    g_arg2->m = MPCadd(g_arg2->m, g_arg1->m);
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkAdd()
 {
-    Arg2->l.x += Arg1->l.x;
-    Arg2->l.y += Arg1->l.y;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x += g_arg1->l.x;
+    g_arg2->l.y += g_arg1->l.y;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkAdd{dStkAdd};
 
 static void dStkSub()
 {
-    Arg2->d.x -= Arg1->d.x;
-    Arg2->d.y -= Arg1->d.y;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x -= g_arg1->d.x;
+    g_arg2->d.y -= g_arg1->d.y;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkSub()
 {
-    Arg2->m = MPCsub(Arg2->m, Arg1->m);
-    Arg1--;
-    Arg2--;
+    g_arg2->m = MPCsub(g_arg2->m, g_arg1->m);
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkSub()
 {
-    Arg2->l.x -= Arg1->l.x;
-    Arg2->l.y -= Arg1->l.y;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x -= g_arg1->l.x;
+    g_arg2->l.y -= g_arg1->l.y;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkSub{dStkSub};
 
 void dStkConj()
 {
-    Arg1->d.y = -Arg1->d.y;
+    g_arg1->d.y = -g_arg1->d.y;
 }
 
 void mStkConj()
 {
-    Arg1->m.y.Exp ^= 0x8000;
+    g_arg1->m.y.Exp ^= 0x8000;
 }
 
 void lStkConj()
 {
-    Arg1->l.y = -Arg1->l.y;
+    g_arg1->l.y = -g_arg1->l.y;
 }
-
-static FunctionPtr StkConj{dStkConj};
 
 void dStkFloor()
 {
-    Arg1->d.x = floor(Arg1->d.x);
-    Arg1->d.y = floor(Arg1->d.y);
+    g_arg1->d.x = floor(g_arg1->d.x);
+    g_arg1->d.y = floor(g_arg1->d.y);
 }
 
 void mStkFloor()
@@ -796,18 +981,16 @@ void lStkFloor()
      * Kill fractional part. This operation truncates negative numbers
      * toward negative infinity as desired.
      */
-    Arg1->l.x = (Arg1->l.x) >> g_bit_shift;
-    Arg1->l.y = (Arg1->l.y) >> g_bit_shift;
-    Arg1->l.x = (Arg1->l.x) << g_bit_shift;
-    Arg1->l.y = (Arg1->l.y) << g_bit_shift;
+    g_arg1->l.x = (g_arg1->l.x) >> g_bit_shift;
+    g_arg1->l.y = (g_arg1->l.y) >> g_bit_shift;
+    g_arg1->l.x = (g_arg1->l.x) << g_bit_shift;
+    g_arg1->l.y = (g_arg1->l.y) << g_bit_shift;
 }
-
-static FunctionPtr StkFloor{dStkFloor};
 
 void dStkCeil()
 {
-    Arg1->d.x = ceil(Arg1->d.x);
-    Arg1->d.y = ceil(Arg1->d.y);
+    g_arg1->d.x = ceil(g_arg1->d.x);
+    g_arg1->d.y = ceil(g_arg1->d.y);
 }
 
 void mStkCeil()
@@ -819,18 +1002,16 @@ void lStkCeil()
 {
     /* the shift operation does the "floor" operation, so we
        negate everything before the operation */
-    Arg1->l.x = (-Arg1->l.x) >> g_bit_shift;
-    Arg1->l.y = (-Arg1->l.y) >> g_bit_shift;
-    Arg1->l.x = -((Arg1->l.x) << g_bit_shift);
-    Arg1->l.y = -((Arg1->l.y) << g_bit_shift);
+    g_arg1->l.x = (-g_arg1->l.x) >> g_bit_shift;
+    g_arg1->l.y = (-g_arg1->l.y) >> g_bit_shift;
+    g_arg1->l.x = -((g_arg1->l.x) << g_bit_shift);
+    g_arg1->l.y = -((g_arg1->l.y) << g_bit_shift);
 }
-
-static FunctionPtr StkCeil{dStkCeil};
 
 void dStkTrunc()
 {
-    Arg1->d.x = (int)(Arg1->d.x);
-    Arg1->d.y = (int)(Arg1->d.y);
+    g_arg1->d.x = (int)(g_arg1->d.x);
+    g_arg1->d.y = (int)(g_arg1->d.y);
 }
 
 void mStkTrunc()
@@ -844,24 +1025,22 @@ void lStkTrunc()
        so we make the numbers positive */
     int signx;
     int signy;
-    signx = sign(Arg1->l.x);
-    signy = sign(Arg1->l.y);
-    Arg1->l.x = labs(Arg1->l.x);
-    Arg1->l.y = labs(Arg1->l.y);
-    Arg1->l.x = (Arg1->l.x) >> g_bit_shift;
-    Arg1->l.y = (Arg1->l.y) >> g_bit_shift;
-    Arg1->l.x = (Arg1->l.x) << g_bit_shift;
-    Arg1->l.y = (Arg1->l.y) << g_bit_shift;
-    Arg1->l.x = signx*Arg1->l.x;
-    Arg1->l.y = signy*Arg1->l.y;
+    signx = sign(g_arg1->l.x);
+    signy = sign(g_arg1->l.y);
+    g_arg1->l.x = labs(g_arg1->l.x);
+    g_arg1->l.y = labs(g_arg1->l.y);
+    g_arg1->l.x = (g_arg1->l.x) >> g_bit_shift;
+    g_arg1->l.y = (g_arg1->l.y) >> g_bit_shift;
+    g_arg1->l.x = (g_arg1->l.x) << g_bit_shift;
+    g_arg1->l.y = (g_arg1->l.y) << g_bit_shift;
+    g_arg1->l.x = signx*g_arg1->l.x;
+    g_arg1->l.y = signy*g_arg1->l.y;
 }
-
-static FunctionPtr StkTrunc{dStkTrunc};
 
 void dStkRound()
 {
-    Arg1->d.x = floor(Arg1->d.x+.5);
-    Arg1->d.y = floor(Arg1->d.y+.5);
+    g_arg1->d.x = floor(g_arg1->d.x+.5);
+    g_arg1->d.y = floor(g_arg1->d.y+.5);
 }
 
 void mStkRound()
@@ -872,125 +1051,113 @@ void mStkRound()
 void lStkRound()
 {
     // Add .5 then truncate
-    Arg1->l.x += (1L << g_bit_shift_less_1);
-    Arg1->l.y += (1L << g_bit_shift_less_1);
+    g_arg1->l.x += (1L << g_bit_shift_less_1);
+    g_arg1->l.y += (1L << g_bit_shift_less_1);
     lStkFloor();
 }
 
-static FunctionPtr StkRound{dStkRound};
-
 void dStkZero()
 {
-    Arg1->d.x = 0.0;
-    Arg1->d.y = Arg1->d.x;
+    g_arg1->d.x = 0.0;
+    g_arg1->d.y = g_arg1->d.x;
 }
 
 void mStkZero()
 {
-    Arg1->m.x.Exp = 0;
-    Arg1->m.x.Mant = 0;
-    Arg1->m.y.Exp = 0;
-    Arg1->m.y.Mant = 0;
+    g_arg1->m.x.Exp = 0;
+    g_arg1->m.x.Mant = 0;
+    g_arg1->m.y.Exp = 0;
+    g_arg1->m.y.Mant = 0;
 }
 
 void lStkZero()
 {
-    Arg1->l.x = 0;
-    Arg1->l.y = Arg1->l.x;
+    g_arg1->l.x = 0;
+    g_arg1->l.y = g_arg1->l.x;
 }
-
-static FunctionPtr StkZero{dStkZero};
 
 void dStkOne()
 {
-    Arg1->d.x = 1.0;
-    Arg1->d.y = 0.0;
+    g_arg1->d.x = 1.0;
+    g_arg1->d.y = 0.0;
 }
 
 void mStkOne()
 {
-    Arg1->m = g_mpc_one;
+    g_arg1->m = g_mpc_one;
 }
 
 void lStkOne()
 {
-    Arg1->l.x = (long) s_fudge;
-    Arg1->l.y = 0L;
+    g_arg1->l.x = (long) s_fudge;
+    g_arg1->l.y = 0L;
 }
-
-static FunctionPtr StkOne{dStkOne};
 
 static void dStkReal()
 {
-    Arg1->d.y = 0.0;
+    g_arg1->d.y = 0.0;
 }
 
 static void mStkReal()
 {
-    Arg1->m.y.Exp = 0;
-    Arg1->m.y.Mant = 0;
+    g_arg1->m.y.Exp = 0;
+    g_arg1->m.y.Mant = 0;
 }
 
 static void lStkReal()
 {
-    Arg1->l.y = 0l;
+    g_arg1->l.y = 0l;
 }
-
-static FunctionPtr StkReal{dStkReal};
 
 static void dStkImag()
 {
-    Arg1->d.x = Arg1->d.y;
-    Arg1->d.y = 0.0;
+    g_arg1->d.x = g_arg1->d.y;
+    g_arg1->d.y = 0.0;
 }
 
 static void mStkImag()
 {
-    Arg1->m.x = Arg1->m.y;
-    Arg1->m.y.Exp = 0;
-    Arg1->m.y.Mant = 0;
+    g_arg1->m.x = g_arg1->m.y;
+    g_arg1->m.y.Exp = 0;
+    g_arg1->m.y.Mant = 0;
 }
 
 static void lStkImag()
 {
-    Arg1->l.x = Arg1->l.y;
-    Arg1->l.y = 0l;
+    g_arg1->l.x = g_arg1->l.y;
+    g_arg1->l.y = 0l;
 }
-
-static FunctionPtr StkImag{dStkImag};
 
 static void dStkNeg()
 {
-    Arg1->d.x = -Arg1->d.x;
-    Arg1->d.y = -Arg1->d.y;
+    g_arg1->d.x = -g_arg1->d.x;
+    g_arg1->d.y = -g_arg1->d.y;
 }
 
 static void mStkNeg()
 {
-    Arg1->m.x.Exp ^= 0x8000;
-    Arg1->m.y.Exp ^= 0x8000;
+    g_arg1->m.x.Exp ^= 0x8000;
+    g_arg1->m.y.Exp ^= 0x8000;
 }
 
 static void lStkNeg()
 {
-    Arg1->l.x = -Arg1->l.x;
-    Arg1->l.y = -Arg1->l.y;
+    g_arg1->l.x = -g_arg1->l.x;
+    g_arg1->l.y = -g_arg1->l.y;
 }
-
-static FunctionPtr StkNeg{dStkNeg};
 
 void dStkMul()
 {
-    FPUcplxmul(&Arg2->d, &Arg1->d, &Arg2->d);
-    Arg1--;
-    Arg2--;
+    FPUcplxmul(&g_arg2->d, &g_arg1->d, &g_arg2->d);
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkMul()
 {
-    Arg2->m = MPCmul(Arg2->m, Arg1->m);
-    Arg1--;
-    Arg2--;
+    g_arg2->m = MPCmul(g_arg2->m, g_arg1->m);
+    g_arg1--;
+    g_arg2--;
 }
 
 void lStkMul()
@@ -998,30 +1165,28 @@ void lStkMul()
     long x;
     long y;
 
-    x = multiply(Arg2->l.x, Arg1->l.x, g_bit_shift) -
-        multiply(Arg2->l.y, Arg1->l.y, g_bit_shift);
-    y = multiply(Arg2->l.y, Arg1->l.x, g_bit_shift) +
-        multiply(Arg2->l.x, Arg1->l.y, g_bit_shift);
-    Arg2->l.x = x;
-    Arg2->l.y = y;
-    Arg1--;
-    Arg2--;
+    x = multiply(g_arg2->l.x, g_arg1->l.x, g_bit_shift) -
+        multiply(g_arg2->l.y, g_arg1->l.y, g_bit_shift);
+    y = multiply(g_arg2->l.y, g_arg1->l.x, g_bit_shift) +
+        multiply(g_arg2->l.x, g_arg1->l.y, g_bit_shift);
+    g_arg2->l.x = x;
+    g_arg2->l.y = y;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkMul{dStkMul};
 
 static void dStkDiv()
 {
-    FPUcplxdiv(&Arg2->d, &Arg1->d, &Arg2->d);
-    Arg1--;
-    Arg2--;
+    FPUcplxdiv(&g_arg2->d, &g_arg1->d, &g_arg2->d);
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkDiv()
 {
-    Arg2->m = MPCdiv(Arg2->m, Arg1->m);
-    Arg1--;
-    Arg2--;
+    g_arg2->m = MPCdiv(g_arg2->m, g_arg1->m);
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkDiv()
@@ -1032,97 +1197,91 @@ static void lStkDiv()
     long x2;
     long y2;
 
-    mod = multiply(Arg1->l.x, Arg1->l.x, g_bit_shift) +
-          multiply(Arg1->l.y, Arg1->l.y, g_bit_shift);
-    x = divide(Arg1->l.x, mod, g_bit_shift);
-    y = -divide(Arg1->l.y, mod, g_bit_shift);
-    x2 = multiply(Arg2->l.x, x, g_bit_shift) - multiply(Arg2->l.y, y, g_bit_shift);
-    y2 = multiply(Arg2->l.y, x, g_bit_shift) + multiply(Arg2->l.x, y, g_bit_shift);
-    Arg2->l.x = x2;
-    Arg2->l.y = y2;
-    Arg1--;
-    Arg2--;
+    mod = multiply(g_arg1->l.x, g_arg1->l.x, g_bit_shift) +
+          multiply(g_arg1->l.y, g_arg1->l.y, g_bit_shift);
+    x = divide(g_arg1->l.x, mod, g_bit_shift);
+    y = -divide(g_arg1->l.y, mod, g_bit_shift);
+    x2 = multiply(g_arg2->l.x, x, g_bit_shift) - multiply(g_arg2->l.y, y, g_bit_shift);
+    y2 = multiply(g_arg2->l.y, x, g_bit_shift) + multiply(g_arg2->l.x, y, g_bit_shift);
+    g_arg2->l.x = x2;
+    g_arg2->l.y = y2;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkDiv{dStkDiv};
 
 static void dStkMod()
 {
-    Arg1->d.x = (Arg1->d.x * Arg1->d.x) + (Arg1->d.y * Arg1->d.y);
-    Arg1->d.y = 0.0;
+    g_arg1->d.x = (g_arg1->d.x * g_arg1->d.x) + (g_arg1->d.y * g_arg1->d.y);
+    g_arg1->d.y = 0.0;
 }
 
 static void mStkMod()
 {
-    Arg1->m.x = MPCmod(Arg1->m);
-    Arg1->m.y.Exp = 0;
-    Arg1->m.y.Mant = 0;
+    g_arg1->m.x = MPCmod(g_arg1->m);
+    g_arg1->m.y.Exp = 0;
+    g_arg1->m.y.Mant = 0;
 }
 
 static void lStkMod()
 {
     //   Arg1->l.x = multiply(Arg2->l.x, Arg1->l.x, bitshift) +
     //   multiply(Arg2->l.y, Arg1->l.y, bitshift);
-    Arg1->l.x = multiply(Arg1->l.x, Arg1->l.x, g_bit_shift) +
-                multiply(Arg1->l.y, Arg1->l.y, g_bit_shift);
-    if (Arg1->l.x < 0)
+    g_arg1->l.x = multiply(g_arg1->l.x, g_arg1->l.x, g_bit_shift) +
+                multiply(g_arg1->l.y, g_arg1->l.y, g_bit_shift);
+    if (g_arg1->l.x < 0)
     {
         g_overflow = true;
     }
-    Arg1->l.y = 0L;
+    g_arg1->l.y = 0L;
 }
-
-static FunctionPtr StkMod{dStkMod};
 
 static void StkSto()
 {
-    assert(Store[g_store_index] != nullptr);
-    *Store[g_store_index++] = *Arg1;
+    assert(s_store[g_store_index] != nullptr);
+    *s_store[g_store_index++] = *g_arg1;
 }
 
 static void StkLod()
 {
-    Arg1++;
-    Arg2++;
-    *Arg1 = *Load[g_load_index++];
+    g_arg1++;
+    g_arg2++;
+    *g_arg1 = *s_load[g_load_index++];
 }
 
 static void StkClr()
 {
-    g_stack[0] = *Arg1;
-    Arg1 = &g_stack[0];
-    Arg2 = &g_stack[0];
-    Arg2--;
+    s_stack[0] = *g_arg1;
+    g_arg1 = &s_stack[0];
+    g_arg2 = &s_stack[0];
+    g_arg2--;
 }
 
 void dStkFlip()
 {
     double t;
 
-    t = Arg1->d.x;
-    Arg1->d.x = Arg1->d.y;
-    Arg1->d.y = t;
+    t = g_arg1->d.x;
+    g_arg1->d.x = g_arg1->d.y;
+    g_arg1->d.y = t;
 }
 
 void mStkFlip()
 {
     MP t;
 
-    t = Arg1->m.x;
-    Arg1->m.x = Arg1->m.y;
-    Arg1->m.y = t;
+    t = g_arg1->m.x;
+    g_arg1->m.x = g_arg1->m.y;
+    g_arg1->m.y = t;
 }
 
 void lStkFlip()
 {
     long t;
 
-    t = Arg1->l.x;
-    Arg1->l.x = Arg1->l.y;
-    Arg1->l.y = t;
+    t = g_arg1->l.x;
+    g_arg1->l.x = g_arg1->l.y;
+    g_arg1->l.y = t;
 }
-
-static FunctionPtr StkFlip{dStkFlip};
 
 void dStkSin()
 {
@@ -1131,10 +1290,10 @@ void dStkSin()
     double sinhy;
     double coshy;
 
-    FPUsincos(&Arg1->d.x, &sinx, &cosx);
-    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
-    Arg1->d.x = sinx*coshy;
-    Arg1->d.y = cosx*sinhy;
+    FPUsincos(&g_arg1->d.x, &sinx, &cosx);
+    FPUsinhcosh(&g_arg1->d.y, &sinhy, &coshy);
+    g_arg1->d.x = sinx*coshy;
+    g_arg1->d.y = cosx*sinhy;
 }
 
 void mStkSin()
@@ -1150,15 +1309,13 @@ void lStkSin()
     long cosx;
     long sinhy;
     long coshy;
-    x = Arg1->l.x >> s_delta16;
-    y = Arg1->l.y >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     SinCos086(x, &sinx, &cosx);
     SinhCosh086(y, &sinhy, &coshy);
-    Arg1->l.x = multiply(sinx, coshy, s_shift_back);
-    Arg1->l.y = multiply(cosx, sinhy, s_shift_back);
+    g_arg1->l.x = multiply(sinx, coshy, s_shift_back);
+    g_arg1->l.y = multiply(cosx, sinhy, s_shift_back);
 }
-
-static FunctionPtr StkSin{dStkSin};
 
 /* The following functions are supported by both the parser and for fn
    variable replacement.
@@ -1170,17 +1327,17 @@ void dStkTan()
     double sinhy;
     double coshy;
     double denom;
-    Arg1->d.x *= 2;
-    Arg1->d.y *= 2;
-    FPUsincos(&Arg1->d.x, &sinx, &cosx);
-    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
+    g_arg1->d.x *= 2;
+    g_arg1->d.y *= 2;
+    FPUsincos(&g_arg1->d.x, &sinx, &cosx);
+    FPUsinhcosh(&g_arg1->d.y, &sinhy, &coshy);
     denom = cosx + coshy;
     if (check_denom(denom))
     {
         return;
     }
-    Arg1->d.x = sinx/denom;
-    Arg1->d.y = sinhy/denom;
+    g_arg1->d.x = sinx/denom;
+    g_arg1->d.y = sinhy/denom;
 }
 
 void mStkTan()
@@ -1197,9 +1354,9 @@ void lStkTan()
     long sinhy;
     long coshy;
     long denom;
-    x = Arg1->l.x >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
     x = x << 1;
-    y = Arg1->l.y >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     y = y << 1;
     SinCos086(x, &sinx, &cosx);
     SinhCosh086(y, &sinhy, &coshy);
@@ -1208,11 +1365,9 @@ void lStkTan()
     {
         return;
     }
-    Arg1->l.x = divide(sinx, denom, g_bit_shift);
-    Arg1->l.y = divide(sinhy, denom, g_bit_shift);
+    g_arg1->l.x = divide(sinx, denom, g_bit_shift);
+    g_arg1->l.y = divide(sinhy, denom, g_bit_shift);
 }
-
-static FunctionPtr StkTan{dStkTan};
 
 void dStkTanh()
 {
@@ -1221,17 +1376,17 @@ void dStkTanh()
     double sinhx;
     double coshx;
     double denom;
-    Arg1->d.x *= 2;
-    Arg1->d.y *= 2;
-    FPUsincos(&Arg1->d.y, &siny, &cosy);
-    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
+    g_arg1->d.x *= 2;
+    g_arg1->d.y *= 2;
+    FPUsincos(&g_arg1->d.y, &siny, &cosy);
+    FPUsinhcosh(&g_arg1->d.x, &sinhx, &coshx);
     denom = coshx + cosy;
     if (check_denom(denom))
     {
         return;
     }
-    Arg1->d.x = sinhx/denom;
-    Arg1->d.y = siny/denom;
+    g_arg1->d.x = sinhx/denom;
+    g_arg1->d.y = siny/denom;
 }
 
 void mStkTanh()
@@ -1248,9 +1403,9 @@ void lStkTanh()
     long sinhx;
     long coshx;
     long denom;
-    x = Arg1->l.x >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
     x = x << 1;
-    y = Arg1->l.y >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     y = y << 1;
     SinCos086(y, &siny, &cosy);
     SinhCosh086(x, &sinhx, &coshx);
@@ -1259,11 +1414,9 @@ void lStkTanh()
     {
         return;
     }
-    Arg1->l.x = divide(sinhx, denom, g_bit_shift);
-    Arg1->l.y = divide(siny, denom, g_bit_shift);
+    g_arg1->l.x = divide(sinhx, denom, g_bit_shift);
+    g_arg1->l.y = divide(siny, denom, g_bit_shift);
 }
-
-static FunctionPtr StkTanh{dStkTanh};
 
 void dStkCoTan()
 {
@@ -1272,17 +1425,17 @@ void dStkCoTan()
     double sinhy;
     double coshy;
     double denom;
-    Arg1->d.x *= 2;
-    Arg1->d.y *= 2;
-    FPUsincos(&Arg1->d.x, &sinx, &cosx);
-    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
+    g_arg1->d.x *= 2;
+    g_arg1->d.y *= 2;
+    FPUsincos(&g_arg1->d.x, &sinx, &cosx);
+    FPUsinhcosh(&g_arg1->d.y, &sinhy, &coshy);
     denom = coshy - cosx;
     if (check_denom(denom))
     {
         return;
     }
-    Arg1->d.x = sinx/denom;
-    Arg1->d.y = -sinhy/denom;
+    g_arg1->d.x = sinx/denom;
+    g_arg1->d.y = -sinhy/denom;
 }
 
 void mStkCoTan()
@@ -1299,9 +1452,9 @@ void lStkCoTan()
     long sinhy;
     long coshy;
     long denom;
-    x = Arg1->l.x >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
     x = x << 1;
-    y = Arg1->l.y >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     y = y << 1;
     SinCos086(x, &sinx, &cosx);
     SinhCosh086(y, &sinhy, &coshy);
@@ -1310,11 +1463,9 @@ void lStkCoTan()
     {
         return;
     }
-    Arg1->l.x = divide(sinx, denom, g_bit_shift);
-    Arg1->l.y = -divide(sinhy, denom, g_bit_shift);
+    g_arg1->l.x = divide(sinx, denom, g_bit_shift);
+    g_arg1->l.y = -divide(sinhy, denom, g_bit_shift);
 }
-
-static FunctionPtr StkCoTan{dStkCoTan};
 
 void dStkCoTanh()
 {
@@ -1323,17 +1474,17 @@ void dStkCoTanh()
     double sinhx;
     double coshx;
     double denom;
-    Arg1->d.x *= 2;
-    Arg1->d.y *= 2;
-    FPUsincos(&Arg1->d.y, &siny, &cosy);
-    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
+    g_arg1->d.x *= 2;
+    g_arg1->d.y *= 2;
+    FPUsincos(&g_arg1->d.y, &siny, &cosy);
+    FPUsinhcosh(&g_arg1->d.x, &sinhx, &coshx);
     denom = coshx - cosy;
     if (check_denom(denom))
     {
         return;
     }
-    Arg1->d.x = sinhx/denom;
-    Arg1->d.y = -siny/denom;
+    g_arg1->d.x = sinhx/denom;
+    g_arg1->d.y = -siny/denom;
 }
 
 void mStkCoTanh()
@@ -1350,9 +1501,9 @@ void lStkCoTanh()
     long sinhx;
     long coshx;
     long denom;
-    x = Arg1->l.x >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
     x = x << 1;
-    y = Arg1->l.y >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     y = y << 1;
     SinCos086(y, &siny, &cosy);
     SinhCosh086(x, &sinhx, &coshx);
@@ -1361,11 +1512,9 @@ void lStkCoTanh()
     {
         return;
     }
-    Arg1->l.x = divide(sinhx, denom, g_bit_shift);
-    Arg1->l.y = -divide(siny, denom, g_bit_shift);
+    g_arg1->l.x = divide(sinhx, denom, g_bit_shift);
+    g_arg1->l.y = -divide(siny, denom, g_bit_shift);
 }
-
-static FunctionPtr StkCoTanh{dStkCoTanh};
 
 /* The following functions are not directly used by the parser - support
    for the parser was not provided because the existing parser language
@@ -1377,40 +1526,40 @@ static FunctionPtr StkCoTanh{dStkCoTanh};
 void dStkRecip()
 {
     double mod;
-    mod =Arg1->d.x * Arg1->d.x + Arg1->d.y * Arg1->d.y;
+    mod =g_arg1->d.x * g_arg1->d.x + g_arg1->d.y * g_arg1->d.y;
     if (check_denom(mod))
     {
         return;
     }
-    Arg1->d.x =  Arg1->d.x/mod;
-    Arg1->d.y = -Arg1->d.y/mod;
+    g_arg1->d.x =  g_arg1->d.x/mod;
+    g_arg1->d.y = -g_arg1->d.y/mod;
 }
 
 void mStkRecip()
 {
     MP mod;
-    mod = *MPadd(*MPmul(Arg1->m.x, Arg1->m.x), *MPmul(Arg1->m.y, Arg1->m.y));
+    mod = *MPadd(*MPmul(g_arg1->m.x, g_arg1->m.x), *MPmul(g_arg1->m.y, g_arg1->m.y));
     if (mod.Mant == 0L)
     {
         g_overflow = true;
         return;
     }
-    Arg1->m.x = *MPdiv(Arg1->m.x, mod);
-    Arg1->m.y = *MPdiv(Arg1->m.y, mod);
-    Arg1->m.y.Exp ^= 0x8000;
+    g_arg1->m.x = *MPdiv(g_arg1->m.x, mod);
+    g_arg1->m.y = *MPdiv(g_arg1->m.y, mod);
+    g_arg1->m.y.Exp ^= 0x8000;
 }
 
 void lStkRecip()
 {
     long mod;
-    mod = multiply(Arg1->l.x, Arg1->l.x, g_bit_shift)
-          + multiply(Arg1->l.y, Arg1->l.y, g_bit_shift);
+    mod = multiply(g_arg1->l.x, g_arg1->l.x, g_bit_shift)
+          + multiply(g_arg1->l.y, g_arg1->l.y, g_bit_shift);
     if (check_denom(mod))
     {
         return;
     }
-    Arg1->l.x =  divide(Arg1->l.x, mod, g_bit_shift);
-    Arg1->l.y = -divide(Arg1->l.y, mod, g_bit_shift);
+    g_arg1->l.x =  divide(g_arg1->l.x, mod, g_bit_shift);
+    g_arg1->l.y = -divide(g_arg1->l.y, mod, g_bit_shift);
 }
 
 void StkIdent()
@@ -1425,10 +1574,10 @@ void dStkSinh()
     double sinhx;
     double coshx;
 
-    FPUsincos(&Arg1->d.y, &siny, &cosy);
-    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
-    Arg1->d.x = sinhx*cosy;
-    Arg1->d.y = coshx*siny;
+    FPUsincos(&g_arg1->d.y, &siny, &cosy);
+    FPUsinhcosh(&g_arg1->d.x, &sinhx, &coshx);
+    g_arg1->d.x = sinhx*cosy;
+    g_arg1->d.y = coshx*siny;
 }
 
 void mStkSinh()
@@ -1445,15 +1594,13 @@ void lStkSinh()
     long siny;
     long cosy;
 
-    x = Arg1->l.x >> s_delta16;
-    y = Arg1->l.y >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     SinCos086(y, &siny, &cosy);
     SinhCosh086(x, &sinhx, &coshx);
-    Arg1->l.x = multiply(cosy, sinhx, s_shift_back);
-    Arg1->l.y = multiply(siny, coshx, s_shift_back);
+    g_arg1->l.x = multiply(cosy, sinhx, s_shift_back);
+    g_arg1->l.y = multiply(siny, coshx, s_shift_back);
 }
-
-static FunctionPtr StkSinh{dStkSinh};
 
 void dStkCos()
 {
@@ -1462,10 +1609,10 @@ void dStkCos()
     double sinhy;
     double coshy;
 
-    FPUsincos(&Arg1->d.x, &sinx, &cosx);
-    FPUsinhcosh(&Arg1->d.y, &sinhy, &coshy);
-    Arg1->d.x = cosx*coshy;
-    Arg1->d.y = -sinx*sinhy;
+    FPUsincos(&g_arg1->d.x, &sinx, &cosx);
+    FPUsinhcosh(&g_arg1->d.y, &sinhy, &coshy);
+    g_arg1->d.x = cosx*coshy;
+    g_arg1->d.y = -sinx*sinhy;
 }
 
 void mStkCos()
@@ -1482,22 +1629,20 @@ void lStkCos()
     long sinhy;
     long coshy;
 
-    x = Arg1->l.x >> s_delta16;
-    y = Arg1->l.y >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     SinCos086(x, &sinx, &cosx);
     SinhCosh086(y, &sinhy, &coshy);
-    Arg1->l.x = multiply(cosx, coshy, s_shift_back);
-    Arg1->l.y = -multiply(sinx, sinhy, s_shift_back);
+    g_arg1->l.x = multiply(cosx, coshy, s_shift_back);
+    g_arg1->l.y = -multiply(sinx, sinhy, s_shift_back);
 }
-
-static FunctionPtr StkCos{dStkCos};
 
 // Bogus version of cos, to replicate bug which was in regular cos till v16:
 
 void dStkCosXX()
 {
     dStkCos();
-    Arg1->d.y = -Arg1->d.y;
+    g_arg1->d.y = -g_arg1->d.y;
 }
 
 void mStkCosXX()
@@ -1508,10 +1653,8 @@ void mStkCosXX()
 void lStkCosXX()
 {
     lStkCos();
-    Arg1->l.y = -Arg1->l.y;
+    g_arg1->l.y = -g_arg1->l.y;
 }
-
-static FunctionPtr StkCosXX{dStkCosXX};
 
 void dStkCosh()
 {
@@ -1520,10 +1663,10 @@ void dStkCosh()
     double sinhx;
     double coshx;
 
-    FPUsincos(&Arg1->d.y, &siny, &cosy);
-    FPUsinhcosh(&Arg1->d.x, &sinhx, &coshx);
-    Arg1->d.x = coshx*cosy;
-    Arg1->d.y = sinhx*siny;
+    FPUsincos(&g_arg1->d.y, &siny, &cosy);
+    FPUsinhcosh(&g_arg1->d.x, &sinhx, &coshx);
+    g_arg1->d.x = coshx*cosy;
+    g_arg1->d.y = sinhx*siny;
 }
 
 void mStkCosh()
@@ -1540,19 +1683,17 @@ void lStkCosh()
     long siny;
     long cosy;
 
-    x = Arg1->l.x >> s_delta16;
-    y = Arg1->l.y >> s_delta16;
+    x = g_arg1->l.x >> s_delta16;
+    y = g_arg1->l.y >> s_delta16;
     SinCos086(y, &siny, &cosy);
     SinhCosh086(x, &sinhx, &coshx);
-    Arg1->l.x = multiply(cosy, coshx, s_shift_back);
-    Arg1->l.y = multiply(siny, sinhx, s_shift_back);
+    g_arg1->l.x = multiply(cosy, coshx, s_shift_back);
+    g_arg1->l.y = multiply(siny, sinhx, s_shift_back);
 }
-
-static FunctionPtr StkCosh{dStkCosh};
 
 void dStkASin()
 {
-    Arcsinz(Arg1->d, &(Arg1->d));
+    Arcsinz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkASin()
@@ -1565,11 +1706,9 @@ void lStkASin()
     lStkFunct(dStkASin);
 }
 
-static FunctionPtr StkASin{dStkASin};
-
 void dStkASinh()
 {
-    Arcsinhz(Arg1->d, &(Arg1->d));
+    Arcsinhz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkASinh()
@@ -1582,11 +1721,9 @@ void lStkASinh()
     lStkFunct(dStkASinh);
 }
 
-static FunctionPtr StkASinh{dStkASinh};
-
 void dStkACos()
 {
-    Arccosz(Arg1->d, &(Arg1->d));
+    Arccosz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkACos()
@@ -1599,11 +1736,9 @@ void lStkACos()
     lStkFunct(dStkACos);
 }
 
-static FunctionPtr StkACos{dStkACos};
-
 void dStkACosh()
 {
-    Arccoshz(Arg1->d, &(Arg1->d));
+    Arccoshz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkACosh()
@@ -1616,11 +1751,9 @@ void lStkACosh()
     lStkFunct(dStkACosh);
 }
 
-static FunctionPtr StkACosh{dStkACosh};
-
 void dStkATan()
 {
-    Arctanz(Arg1->d, &(Arg1->d));
+    Arctanz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkATan()
@@ -1633,11 +1766,9 @@ void lStkATan()
     lStkFunct(dStkATan);
 }
 
-static FunctionPtr StkATan{dStkATan};
-
 void dStkATanh()
 {
-    Arctanhz(Arg1->d, &(Arg1->d));
+    Arctanhz(g_arg1->d, &(g_arg1->d));
 }
 
 void mStkATanh()
@@ -1650,11 +1781,9 @@ void lStkATanh()
     lStkFunct(dStkATanh);
 }
 
-static FunctionPtr StkATanh{dStkATanh};
-
 void dStkSqrt()
 {
-    Arg1->d = ComplexSqrtFloat(Arg1->d.x, Arg1->d.y);
+    g_arg1->d = ComplexSqrtFloat(g_arg1->d.x, g_arg1->d.y);
 }
 
 void mStkSqrt()
@@ -1665,15 +1794,13 @@ void mStkSqrt()
 void lStkSqrt()
 {
     // lStkFunct(dStkSqrt);
-    Arg1->l = ComplexSqrtLong(Arg1->l.x, Arg1->l.y);
+    g_arg1->l = ComplexSqrtLong(g_arg1->l.x, g_arg1->l.y);
 }
-
-static FunctionPtr StkSqrt{dStkSqrt};
 
 void dStkCAbs()
 {
-    Arg1->d.x = std::sqrt(sqr(Arg1->d.x)+sqr(Arg1->d.y));
-    Arg1->d.y = 0.0;
+    g_arg1->d.x = std::sqrt(sqr(g_arg1->d.x)+sqr(g_arg1->d.y));
+    g_arg1->d.y = 0.0;
 }
 
 void mStkCAbs()
@@ -1686,239 +1813,221 @@ void lStkCAbs()
     lStkFunct(dStkCAbs);
 }
 
-static FunctionPtr StkCAbs{dStkCAbs};
-
 static void dStkLT()
 {
-    Arg2->d.x = (double)(Arg2->d.x < Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x < g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkLT()
 {
-    Arg2->m.x = *fg2MP((long)(MPcmp(Arg2->m.x, Arg1->m.x) == -1), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    g_arg2->m.x = *fg2MP((long)(MPcmp(g_arg2->m.x, g_arg1->m.x) == -1), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkLT()
 {
-    Arg2->l.x = (long)(Arg2->l.x < Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x < g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkLT{dStkLT};
 
 static void dStkGT()
 {
-    Arg2->d.x = (double)(Arg2->d.x > Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x > g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkGT()
 {
-    Arg2->m.x = *fg2MP((long)(MPcmp(Arg2->m.x, Arg1->m.x) == 1), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    g_arg2->m.x = *fg2MP((long)(MPcmp(g_arg2->m.x, g_arg1->m.x) == 1), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkGT()
 {
-    Arg2->l.x = (long)(Arg2->l.x > Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x > g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkGT{dStkGT};
 
 static void dStkLTE()
 {
-    Arg2->d.x = (double)(Arg2->d.x <= Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x <= g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkLTE()
 {
     int comp;
 
-    comp = MPcmp(Arg2->m.x, Arg1->m.x);
-    Arg2->m.x = *fg2MP((long)(comp == -1 || comp == 0), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    comp = MPcmp(g_arg2->m.x, g_arg1->m.x);
+    g_arg2->m.x = *fg2MP((long)(comp == -1 || comp == 0), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkLTE()
 {
-    Arg2->l.x = (long)(Arg2->l.x <= Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x <= g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkLTE{dStkLTE};
 
 static void dStkGTE()
 {
-    Arg2->d.x = (double)(Arg2->d.x >= Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x >= g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkGTE()
 {
     int comp;
 
-    comp = MPcmp(Arg2->m.x, Arg1->m.x);
-    Arg2->m.x = *fg2MP((long)(comp == 1 || comp == 0), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    comp = MPcmp(g_arg2->m.x, g_arg1->m.x);
+    g_arg2->m.x = *fg2MP((long)(comp == 1 || comp == 0), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkGTE()
 {
-    Arg2->l.x = (long)(Arg2->l.x >= Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x >= g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkGTE{dStkGTE};
 
 static void dStkEQ()
 {
-    Arg2->d.x = (double)(Arg2->d.x == Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x == g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkEQ()
 {
     int comp;
 
-    comp = MPcmp(Arg2->m.x, Arg1->m.x);
-    Arg2->m.x = *fg2MP((long)(comp == 0), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    comp = MPcmp(g_arg2->m.x, g_arg1->m.x);
+    g_arg2->m.x = *fg2MP((long)(comp == 0), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkEQ()
 {
-    Arg2->l.x = (long)(Arg2->l.x == Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x == g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkEQ{dStkEQ};
 
 static void dStkNE()
 {
-    Arg2->d.x = (double)(Arg2->d.x != Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x != g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkNE()
 {
     int comp;
 
-    comp = MPcmp(Arg2->m.x, Arg1->m.x);
-    Arg2->m.x = *fg2MP((long)(comp != 0), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    comp = MPcmp(g_arg2->m.x, g_arg1->m.x);
+    g_arg2->m.x = *fg2MP((long)(comp != 0), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkNE()
 {
-    Arg2->l.x = (long)(Arg2->l.x != Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x != g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkNE{dStkNE};
 
 static void dStkOR()
 {
-    Arg2->d.x = (double)(Arg2->d.x || Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x || g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkOR()
 {
-    Arg2->m.x = *fg2MP((long)(Arg2->m.x.Mant || Arg1->m.x.Mant), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    g_arg2->m.x = *fg2MP((long)(g_arg2->m.x.Mant || g_arg1->m.x.Mant), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkOR()
 {
-    Arg2->l.x = (long)(Arg2->l.x || Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x || g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkOR{dStkOR};
 
 static void dStkAND()
 {
-    Arg2->d.x = (double)(Arg2->d.x && Arg1->d.x);
-    Arg2->d.y = 0.0;
-    Arg1--;
-    Arg2--;
+    g_arg2->d.x = (double)(g_arg2->d.x && g_arg1->d.x);
+    g_arg2->d.y = 0.0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void mStkAND()
 {
-    Arg2->m.x = *fg2MP((long)(Arg2->m.x.Mant && Arg1->m.x.Mant), 0);
-    Arg2->m.y.Exp = 0;
-    Arg2->m.y.Mant = 0;
-    Arg1--;
-    Arg2--;
+    g_arg2->m.x = *fg2MP((long)(g_arg2->m.x.Mant && g_arg1->m.x.Mant), 0);
+    g_arg2->m.y.Exp = 0;
+    g_arg2->m.y.Mant = 0;
+    g_arg1--;
+    g_arg2--;
 }
 
 static void lStkAND()
 {
-    Arg2->l.x = (long)(Arg2->l.x && Arg1->l.x) << g_bit_shift;
-    Arg2->l.y = 0l;
-    Arg1--;
-    Arg2--;
+    g_arg2->l.x = (long)(g_arg2->l.x && g_arg1->l.x) << g_bit_shift;
+    g_arg2->l.y = 0l;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkAND{dStkAND};
 
 void dStkLog()
 {
-    FPUcplxlog(&Arg1->d, &Arg1->d);
+    FPUcplxlog(&g_arg1->d, &g_arg1->d);
 }
 
 void mStkLog()
@@ -1931,11 +2040,9 @@ void lStkLog()
     lStkFunct(dStkLog);
 }
 
-static FunctionPtr StkLog{dStkLog};
-
 void dStkExp()
 {
-    FPUcplxexp(&Arg1->d, &Arg1->d);
+    FPUcplxexp(&g_arg1->d, &g_arg1->d);
 }
 
 void mStkExp()
@@ -1948,13 +2055,11 @@ void lStkExp()
     lStkFunct(dStkExp);
 }
 
-static FunctionPtr StkExp{dStkExp};
-
 void dStkPwr()
 {
-    Arg2->d = ComplexPower(Arg2->d, Arg1->d);
-    Arg1--;
-    Arg2--;
+    g_arg2->d = ComplexPower(g_arg2->d, g_arg1->d);
+    g_arg1--;
+    g_arg2--;
 }
 
 void mStkPwr()
@@ -1962,12 +2067,12 @@ void mStkPwr()
     DComplex x;
     DComplex y;
 
-    x = MPC2cmplx(Arg2->m);
-    y = MPC2cmplx(Arg1->m);
+    x = MPC2cmplx(g_arg2->m);
+    y = MPC2cmplx(g_arg1->m);
     x = ComplexPower(x, y);
-    Arg2->m = cmplx2MPC(x);
-    Arg1--;
-    Arg2--;
+    g_arg2->m = cmplx2MPC(x);
+    g_arg1--;
+    g_arg2--;
 }
 
 void lStkPwr()
@@ -1975,121 +2080,113 @@ void lStkPwr()
     DComplex x;
     DComplex y;
 
-    x.x = (double)Arg2->l.x / s_fudge;
-    x.y = (double)Arg2->l.y / s_fudge;
-    y.x = (double)Arg1->l.x / s_fudge;
-    y.y = (double)Arg1->l.y / s_fudge;
+    x.x = (double)g_arg2->l.x / s_fudge;
+    x.y = (double)g_arg2->l.y / s_fudge;
+    y.x = (double)g_arg1->l.x / s_fudge;
+    y.y = (double)g_arg1->l.y / s_fudge;
     x = ComplexPower(x, y);
     if (std::fabs(x.x) < g_fudge_limit && std::fabs(x.y) < g_fudge_limit)
     {
-        Arg2->l.x = (long)(x.x * s_fudge);
-        Arg2->l.y = (long)(x.y * s_fudge);
+        g_arg2->l.x = (long)(x.x * s_fudge);
+        g_arg2->l.y = (long)(x.y * s_fudge);
     }
     else
     {
         g_overflow = true;
     }
-    Arg1--;
-    Arg2--;
+    g_arg1--;
+    g_arg2--;
 }
-
-static FunctionPtr StkPwr{dStkPwr};
 
 static void EndInit()
 {
-    g_last_init_op = g_op_ptr;
-    s_init_jump_index = g_jump_index;
+    g_last_init_op = s_op_ptr;
+    s_init_jump_index = s_jump_index;
 }
 
-static FunctionPtr PtrEndInit{EndInit};
-
-void StkJump()
+static void StkJump()
 {
-    g_op_ptr =  g_jump_control[g_jump_index].ptrs.JumpOpPtr;
-    g_load_index = g_jump_control[g_jump_index].ptrs.JumpLodPtr;
-    g_store_index = g_jump_control[g_jump_index].ptrs.JumpStoPtr;
-    g_jump_index = g_jump_control[g_jump_index].DestJumpIndex;
+    s_op_ptr =  s_jump_control[s_jump_index].ptrs.JumpOpPtr;
+    g_load_index = s_jump_control[s_jump_index].ptrs.JumpLodPtr;
+    g_store_index = s_jump_control[s_jump_index].ptrs.JumpStoPtr;
+    s_jump_index = s_jump_control[s_jump_index].DestJumpIndex;
 }
 
-void dStkJumpOnFalse()
+static void dStkJumpOnFalse()
 {
-    if (Arg1->d.x == 0)
+    if (g_arg1->d.x == 0)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-void mStkJumpOnFalse()
+static void mStkJumpOnFalse()
 {
-    if (Arg1->m.x.Mant == 0)
+    if (g_arg1->m.x.Mant == 0)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-void lStkJumpOnFalse()
+static void lStkJumpOnFalse()
 {
-    if (Arg1->l.x == 0)
+    if (g_arg1->l.x == 0)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-static FunctionPtr StkJumpOnFalse{dStkJumpOnFalse};
-
-void dStkJumpOnTrue()
+static void dStkJumpOnTrue()
 {
-    if (Arg1->d.x)
+    if (g_arg1->d.x)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-void mStkJumpOnTrue()
+static void mStkJumpOnTrue()
 {
-    if (Arg1->m.x.Mant)
+    if (g_arg1->m.x.Mant)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-void lStkJumpOnTrue()
+static void lStkJumpOnTrue()
 {
-    if (Arg1->l.x)
+    if (g_arg1->l.x)
     {
         StkJump();
     }
     else
     {
-        g_jump_index++;
+        s_jump_index++;
     }
 }
 
-static FunctionPtr StkJumpOnTrue{dStkJumpOnTrue};
-
-void StkJumpLabel()
+static void StkJumpLabel()
 {
-    g_jump_index++;
+    s_jump_index++;
 }
 
 static unsigned int SkipWhiteSpace(char const *Str)
@@ -2141,9 +2238,9 @@ static ConstArg *is_const(char const *Str, int Len)
     // next line enforces variable vs constant naming convention
     for (unsigned n = 0U; n < g_variable_index; n++)
     {
-        if (v[n].len == Len)
+        if (s_vars[n].len == Len)
         {
-            if (!strnicmp(v[n].s, Str, Len))
+            if (!strnicmp(s_vars[n].s, Str, Len))
             {
                 if (n == 1)          // The formula uses 'p1'.
                 {
@@ -2182,28 +2279,28 @@ static ConstArg *is_const(char const *Str, int Len)
                 }
                 if (!isconst_pair(Str))
                 {
-                    return &v[n];
+                    return &s_vars[n];
                 }
             }
         }
     }
-    v[g_variable_index].s = Str;
-    v[g_variable_index].len = Len;
-    v[g_variable_index].a.d.y = 0.0;
-    v[g_variable_index].a.d.x = v[g_variable_index].a.d.y;
+    s_vars[g_variable_index].s = Str;
+    s_vars[g_variable_index].len = Len;
+    s_vars[g_variable_index].a.d.y = 0.0;
+    s_vars[g_variable_index].a.d.x = s_vars[g_variable_index].a.d.y;
 
     // v[vsp].a should already be zeroed out
     switch (s_math_type)
     {
     case M_MATH:
-        v[g_variable_index].a.m.x.Exp = 0;
-        v[g_variable_index].a.m.x.Mant = 0;
-        v[g_variable_index].a.m.y.Exp = 0;
-        v[g_variable_index].a.m.y.Mant = 0;
+        s_vars[g_variable_index].a.m.x.Exp = 0;
+        s_vars[g_variable_index].a.m.x.Mant = 0;
+        s_vars[g_variable_index].a.m.y.Exp = 0;
+        s_vars[g_variable_index].a.m.y.Mant = 0;
         break;
     case L_MATH:
-        v[g_variable_index].a.l.y = 0;
-        v[g_variable_index].a.l.x = v[g_variable_index].a.l.y;
+        s_vars[g_variable_index].a.l.y = 0;
+        s_vars[g_variable_index].a.l.x = s_vars[g_variable_index].a.l.y;
         break;
     case D_MATH:
         break;
@@ -2215,13 +2312,13 @@ static ConstArg *is_const(char const *Str, int Len)
     {
         assert(g_operation_index > 0);
         assert(g_operation_index == s_op.size());
-        if (s_op.back().f == StkNeg)
+        if (s_op.back().f == s_neg)
         {
             s_op.pop_back();
             g_operation_index--;
             Str = Str - 1;
             s_init_n--;
-            v[g_variable_index].len++;
+            s_vars[g_variable_index].len++;
         }
         unsigned n;
         for (n = 1; std::isdigit(Str[n]) || Str[n] == '.'; n++)
@@ -2238,7 +2335,7 @@ static ConstArg *is_const(char const *Str, int Len)
                 for (; std::isdigit(Str[j]) || Str[j] == '.' || Str[j] == '-'; j++)
                 {
                 }
-                v[g_variable_index].len = j;
+                s_vars[g_variable_index].len = j;
             }
             else
             {
@@ -2253,44 +2350,20 @@ static ConstArg *is_const(char const *Str, int Len)
         switch (s_math_type)
         {
         case D_MATH:
-            v[g_variable_index].a.d = z;
+            s_vars[g_variable_index].a.d = z;
             break;
         case M_MATH:
-            v[g_variable_index].a.m = cmplx2MPC(z);
+            s_vars[g_variable_index].a.m = cmplx2MPC(z);
             break;
         case L_MATH:
-            v[g_variable_index].a.l.x = (long)(z.x * s_fudge);
-            v[g_variable_index].a.l.y = (long)(z.y * s_fudge);
+            s_vars[g_variable_index].a.l.x = (long)(z.x * s_fudge);
+            s_vars[g_variable_index].a.l.y = (long)(z.y * s_fudge);
             break;
         }
-        v[g_variable_index].s = Str;
+        s_vars[g_variable_index].s = Str;
     }
-    return &v[g_variable_index++];
+    return &s_vars[g_variable_index++];
 }
-
-namespace
-{
-
-struct FNCT_LIST
-{
-    char const *s;
-    FunctionPtr *ptr;
-};
-
-} // namespace
-
-static constexpr std::array<char const *, 4> s_jump_list
-{
-    "if",
-    "elseif",
-    "else",
-    "endif"
-};
-
-static FunctionPtr StkTrig0{dStkSin};
-static FunctionPtr StkTrig1{dStkSqr};
-static FunctionPtr StkTrig2{dStkSinh};
-static FunctionPtr StkTrig3{dStkCosh};
 
 /* return values
     0 - Not a jump
@@ -2310,67 +2383,6 @@ static jump_control_type is_jump(char const *Str, int Len)
     }
     return jump_control_type::NONE;
 }
-
-char g_max_function{};
-
-static constexpr std::array<FNCT_LIST, 34> s_func_list
-{
-    FNCT_LIST{"sin",   &StkSin},
-    FNCT_LIST{"sinh",  &StkSinh},
-    FNCT_LIST{"cos",   &StkCos},
-    FNCT_LIST{"cosh",  &StkCosh},
-    FNCT_LIST{"sqr",   &StkSqr},
-    FNCT_LIST{"log",   &StkLog},
-    FNCT_LIST{"exp",   &StkExp},
-    FNCT_LIST{"abs",   &StkAbs},
-    FNCT_LIST{"conj",  &StkConj},
-    FNCT_LIST{"real",  &StkReal},
-    FNCT_LIST{"imag",  &StkImag},
-    FNCT_LIST{"fn1",   &StkTrig0},
-    FNCT_LIST{"fn2",   &StkTrig1},
-    FNCT_LIST{"fn3",   &StkTrig2},
-    FNCT_LIST{"fn4",   &StkTrig3},
-    FNCT_LIST{"flip",  &StkFlip},
-    FNCT_LIST{"tan",   &StkTan},
-    FNCT_LIST{"tanh",  &StkTanh},
-    FNCT_LIST{"cotan", &StkCoTan},
-    FNCT_LIST{"cotanh", &StkCoTanh},
-    FNCT_LIST{"cosxx", &StkCosXX},
-    FNCT_LIST{"srand", &StkSRand},
-    FNCT_LIST{"asin",  &StkASin},
-    FNCT_LIST{"asinh", &StkASinh},
-    FNCT_LIST{"acos",  &StkACos},
-    FNCT_LIST{"acosh", &StkACosh},
-    FNCT_LIST{"atan",  &StkATan},
-    FNCT_LIST{"atanh", &StkATanh},
-    FNCT_LIST{"sqrt",  &StkSqrt},
-    FNCT_LIST{"cabs",  &StkCAbs},
-    FNCT_LIST{"floor", &StkFloor},
-    FNCT_LIST{"ceil",  &StkCeil},
-    FNCT_LIST{"trunc", &StkTrunc},
-    FNCT_LIST{"round", &StkRound},
-};
-
-static std::array<char const *, 17> s_op_list
-{
-    ",",    //  0
-    "!=",   //  1
-    "=",    //  2
-    "==",   //  3
-    "<",    //  4
-    "<=",   //  5
-    ">",    //  6
-    ">=",   //  7
-    "|",    //  8
-    "||",   //  9
-    "&&",   // 10
-    ":",    // 11
-    "+",    // 12
-    "-",    // 13
-    "*",    // 14
-    "/",    // 15
-    "^"     // 16
-};
 
 static void NotAFnct()
 {
@@ -2436,61 +2448,14 @@ static void RecSortPrec()
     {
         RecSortPrec();
     }
-    if (g_op_ptr > static_cast<int>(f.size()))
+    if (s_op_ptr > static_cast<int>(s_fns.size()))
     {
         throw std::runtime_error(
-            "OpPtr (" + std::to_string(g_op_ptr) + ") exceeds size of f[] (" + std::to_string(f.size()) + ")");
+            "OpPtr (" + std::to_string(s_op_ptr) + ") exceeds size of f[] (" + std::to_string(s_fns.size()) + ")");
     }
-    f.push_back(s_op[ThisOp].f);
-    ++g_op_ptr;
+    s_fns.push_back(s_op[ThisOp].f);
+    ++s_op_ptr;
 }
-
-static constexpr std::array<char const *, 19> s_variables
-{
-    "pixel",        // v[0]
-    "p1",           // v[1]
-    "p2",           // v[2]
-    "z",            // v[3]
-    "LastSqr",      // v[4]
-    "pi",           // v[5]
-    "e",            // v[6]
-    "rand",         // v[7]
-    "p3",           // v[8]
-    "whitesq",      // v[9]
-    "scrnpix",      // v[10]
-    "scrnmax",      // v[11]
-    "maxit",        // v[12]
-    "ismand",       // v[13]
-    "center",       // v[14]
-    "magxmag",      // v[15]
-    "rotskew",      // v[16]
-    "p4",           // v[17]
-    "p5"            // v[18]
-};
-
-struct SymmetryName
-{
-    char const *s;
-    symmetry_type n;
-};
-
-static constexpr std::array<SymmetryName, 14> s_symmetry_names
-{
-    SymmetryName{ "NOSYM",         symmetry_type::NONE },
-    SymmetryName{ "XAXIS_NOPARM",  symmetry_type::X_AXIS_NO_PARAM },
-    SymmetryName{ "XAXIS",         symmetry_type::X_AXIS },
-    SymmetryName{ "YAXIS_NOPARM",  symmetry_type::Y_AXIS_NO_PARAM },
-    SymmetryName{ "YAXIS",         symmetry_type::Y_AXIS },
-    SymmetryName{ "XYAXIS_NOPARM", symmetry_type::XY_AXIS_NO_PARAM },
-    SymmetryName{ "XYAXIS",        symmetry_type::XY_AXIS },
-    SymmetryName{ "ORIGIN_NOPARM", symmetry_type::ORIGIN_NO_PARAM },
-    SymmetryName{ "ORIGIN",        symmetry_type::ORIGIN },
-    SymmetryName{ "PI_SYM_NOPARM", symmetry_type::PI_SYM_NO_PARAM },
-    SymmetryName{ "PI_SYM",        symmetry_type::PI_SYM },
-    SymmetryName{ "XAXIS_NOIMAG",  symmetry_type::X_AXIS_NO_IMAG },
-    SymmetryName{ "XAXIS_NOREAL",  symmetry_type::X_AXIS_NO_REAL },
-    SymmetryName{ "NOPLOT",        symmetry_type::NO_PLOT },
-};
 
 inline void push_pending_op(FunctionPtr f, int p)
 {
@@ -2517,273 +2482,273 @@ static bool parse_formula_text(char const *text)
     LDBL Magnification;
     s_set_random = false;
     s_randomized = false;
-    g_uses_jump = false;
-    g_jump_index = 0;
-    g_jump_control.clear();
+    s_uses_jump = false;
+    s_jump_index = 0;
+    s_jump_control.clear();
 
     switch (s_math_type)
     {
     case D_MATH:
-        StkAdd = dStkAdd;
-        StkSub = dStkSub;
-        StkNeg = dStkNeg;
-        StkMul = dStkMul;
-        StkSin = dStkSin;
-        StkSinh = dStkSinh;
-        StkLT = dStkLT;
-        StkLTE = dStkLTE;
-        StkMod = dStkMod;
-        StkSqr = dStkSqr;
-        StkCos = dStkCos;
-        StkCosh = dStkCosh;
-        StkLog = dStkLog;
-        StkExp = dStkExp;
-        StkPwr = dStkPwr;
-        StkDiv = dStkDiv;
-        StkAbs = dStkAbs;
-        StkReal = dStkReal;
-        StkImag = dStkImag;
-        StkConj = dStkConj;
-        StkTrig0 = dtrig0;
-        StkTrig1 = dtrig1;
-        StkTrig2 = dtrig2;
-        StkTrig3 = dtrig3;
-        StkFlip = dStkFlip;
-        StkTan = dStkTan;
-        StkTanh = dStkTanh;
-        StkCoTan = dStkCoTan;
-        StkCoTanh = dStkCoTanh;
-        StkCosXX = dStkCosXX;
-        StkGT  = dStkGT;
-        StkGTE = dStkGTE;
-        StkEQ  = dStkEQ;
-        StkNE  = dStkNE;
-        StkAND = dStkAND;
-        StkOR  = dStkOR ;
-        StkSRand = dStkSRand;
-        StkASin = dStkASin;
-        StkASinh = dStkASinh;
-        StkACos = dStkACos;
-        StkACosh = dStkACosh;
-        StkATan = dStkATan;
-        StkATanh = dStkATanh;
-        StkCAbs = dStkCAbs;
-        StkSqrt = dStkSqrt;
-        StkZero = dStkZero;
-        StkFloor = dStkFloor;
-        StkCeil = dStkCeil;
-        StkTrunc = dStkTrunc;
-        StkRound = dStkRound;
-        StkJumpOnTrue  = dStkJumpOnTrue;
-        StkJumpOnFalse = dStkJumpOnFalse;
-        StkOne = dStkOne;
+        s_add = dStkAdd;
+        s_sub = dStkSub;
+        s_neg = dStkNeg;
+        s_mul = dStkMul;
+        s_sin = dStkSin;
+        s_sinh = dStkSinh;
+        s_lt = dStkLT;
+        s_lte = dStkLTE;
+        s_mod = dStkMod;
+        s_sqr = dStkSqr;
+        s_cos = dStkCos;
+        s_cosh = dStkCosh;
+        s_log = dStkLog;
+        s_exp = dStkExp;
+        s_pwr = dStkPwr;
+        s_div = dStkDiv;
+        s_abs = dStkAbs;
+        s_real = dStkReal;
+        s_imag = dStkImag;
+        s_conj = dStkConj;
+        s_trig0 = g_dtrig0;
+        s_trig1 = g_dtrig1;
+        s_trig2 = g_dtrig2;
+        s_trig3 = g_dtrig3;
+        s_flip = dStkFlip;
+        s_tan = dStkTan;
+        s_tanh = dStkTanh;
+        s_cotan = dStkCoTan;
+        s_cotanh = dStkCoTanh;
+        s_cosxx = dStkCosXX;
+        s_gt  = dStkGT;
+        s_gte = dStkGTE;
+        s_eq  = dStkEQ;
+        s_ne  = dStkNE;
+        s_and = dStkAND;
+        s_or  = dStkOR ;
+        s_srand = dStkSRand;
+        s_asin = dStkASin;
+        s_asinh = dStkASinh;
+        s_acos = dStkACos;
+        s_acosh = dStkACosh;
+        s_atan = dStkATan;
+        s_atanh = dStkATanh;
+        s_cabs = dStkCAbs;
+        s_sqrt = dStkSqrt;
+        s_zero = dStkZero;
+        s_floor = dStkFloor;
+        s_ceil = dStkCeil;
+        s_trunc = dStkTrunc;
+        s_round = dStkRound;
+        s_jump_on_true  = dStkJumpOnTrue;
+        s_jump_on_false = dStkJumpOnFalse;
+        s_one = dStkOne;
         break;
     case M_MATH:
-        StkAdd = mStkAdd;
-        StkSub = mStkSub;
-        StkNeg = mStkNeg;
-        StkMul = mStkMul;
-        StkSin = mStkSin;
-        StkSinh = mStkSinh;
-        StkLT = mStkLT;
-        StkLTE = mStkLTE;
-        StkMod = mStkMod;
-        StkSqr = mStkSqr;
-        StkCos = mStkCos;
-        StkCosh = mStkCosh;
-        StkLog = mStkLog;
-        StkExp = mStkExp;
-        StkPwr = mStkPwr;
-        StkDiv = mStkDiv;
-        StkAbs = mStkAbs;
-        StkReal = mStkReal;
-        StkImag = mStkImag;
-        StkConj = mStkConj;
-        StkTrig0 = mtrig0;
-        StkTrig1 = mtrig1;
-        StkTrig2 = mtrig2;
-        StkTrig3 = mtrig3;
-        StkFlip = mStkFlip;
-        StkTan  = mStkTan;
-        StkTanh  = mStkTanh;
-        StkCoTan  = mStkCoTan;
-        StkCoTanh  = mStkCoTanh;
-        StkCosXX = mStkCosXX;
-        StkGT  = mStkGT;
-        StkGTE = mStkGTE;
-        StkEQ  = mStkEQ;
-        StkNE  = mStkNE;
-        StkAND = mStkAND;
-        StkOR  = mStkOR ;
-        StkSRand = mStkSRand;
-        StkASin = mStkASin;
-        StkACos = mStkACos;
-        StkACosh = mStkACosh;
-        StkATan = mStkATan;
-        StkATanh = mStkATanh;
-        StkCAbs = mStkCAbs;
-        StkSqrt = mStkSqrt;
-        StkZero = mStkZero;
-        StkFloor = mStkFloor;
-        StkCeil = mStkCeil;
-        StkTrunc = mStkTrunc;
-        StkRound = mStkRound;
-        StkJumpOnTrue  = mStkJumpOnTrue;
-        StkJumpOnFalse = mStkJumpOnFalse;
-        StkOne = mStkOne;
+        s_add = mStkAdd;
+        s_sub = mStkSub;
+        s_neg = mStkNeg;
+        s_mul = mStkMul;
+        s_sin = mStkSin;
+        s_sinh = mStkSinh;
+        s_lt = mStkLT;
+        s_lte = mStkLTE;
+        s_mod = mStkMod;
+        s_sqr = mStkSqr;
+        s_cos = mStkCos;
+        s_cosh = mStkCosh;
+        s_log = mStkLog;
+        s_exp = mStkExp;
+        s_pwr = mStkPwr;
+        s_div = mStkDiv;
+        s_abs = mStkAbs;
+        s_real = mStkReal;
+        s_imag = mStkImag;
+        s_conj = mStkConj;
+        s_trig0 = g_mtrig0;
+        s_trig1 = g_mtrig1;
+        s_trig2 = g_mtrig2;
+        s_trig3 = g_mtrig3;
+        s_flip = mStkFlip;
+        s_tan  = mStkTan;
+        s_tanh  = mStkTanh;
+        s_cotan  = mStkCoTan;
+        s_cotanh  = mStkCoTanh;
+        s_cosxx = mStkCosXX;
+        s_gt  = mStkGT;
+        s_gte = mStkGTE;
+        s_eq  = mStkEQ;
+        s_ne  = mStkNE;
+        s_and = mStkAND;
+        s_or  = mStkOR ;
+        s_srand = mStkSRand;
+        s_asin = mStkASin;
+        s_acos = mStkACos;
+        s_acosh = mStkACosh;
+        s_atan = mStkATan;
+        s_atanh = mStkATanh;
+        s_cabs = mStkCAbs;
+        s_sqrt = mStkSqrt;
+        s_zero = mStkZero;
+        s_floor = mStkFloor;
+        s_ceil = mStkCeil;
+        s_trunc = mStkTrunc;
+        s_round = mStkRound;
+        s_jump_on_true  = mStkJumpOnTrue;
+        s_jump_on_false = mStkJumpOnFalse;
+        s_one = mStkOne;
         break;
     case L_MATH:
         s_delta16 = g_bit_shift - 16;
         s_shift_back = 32 - g_bit_shift;
-        StkAdd = lStkAdd;
-        StkSub = lStkSub;
-        StkNeg = lStkNeg;
-        StkMul = lStkMul;
-        StkSin = lStkSin;
-        StkSinh = lStkSinh;
-        StkLT = lStkLT;
-        StkLTE = lStkLTE;
-        StkMod = lStkMod;
-        StkSqr = lStkSqr;
-        StkCos = lStkCos;
-        StkCosh = lStkCosh;
-        StkLog = lStkLog;
-        StkExp = lStkExp;
-        StkPwr = lStkPwr;
-        StkDiv = lStkDiv;
-        StkAbs = lStkAbs;
-        StkReal = lStkReal;
-        StkImag = lStkImag;
-        StkConj = lStkConj;
-        StkTrig0 = ltrig0;
-        StkTrig1 = ltrig1;
-        StkTrig2 = ltrig2;
-        StkTrig3 = ltrig3;
-        StkFlip = lStkFlip;
-        StkTan  = lStkTan;
-        StkTanh  = lStkTanh;
-        StkCoTan  = lStkCoTan;
-        StkCoTanh  = lStkCoTanh;
-        StkCosXX = lStkCosXX;
-        StkGT  = lStkGT;
-        StkGTE = lStkGTE;
-        StkEQ  = lStkEQ;
-        StkNE  = lStkNE;
-        StkAND = lStkAND;
-        StkOR  = lStkOR ;
-        StkSRand = lStkSRand;
-        StkASin = lStkASin;
-        StkACos = lStkACos;
-        StkACosh = lStkACosh;
-        StkATan = lStkATan;
-        StkATanh = lStkATanh;
-        StkCAbs = lStkCAbs;
-        StkSqrt = lStkSqrt;
-        StkZero = lStkZero;
-        StkFloor = lStkFloor;
-        StkCeil = lStkCeil;
-        StkTrunc = lStkTrunc;
-        StkRound = lStkRound;
-        StkJumpOnTrue  = lStkJumpOnTrue;
-        StkJumpOnFalse = lStkJumpOnFalse;
-        StkOne = lStkOne;
+        s_add = lStkAdd;
+        s_sub = lStkSub;
+        s_neg = lStkNeg;
+        s_mul = lStkMul;
+        s_sin = lStkSin;
+        s_sinh = lStkSinh;
+        s_lt = lStkLT;
+        s_lte = lStkLTE;
+        s_mod = lStkMod;
+        s_sqr = lStkSqr;
+        s_cos = lStkCos;
+        s_cosh = lStkCosh;
+        s_log = lStkLog;
+        s_exp = lStkExp;
+        s_pwr = lStkPwr;
+        s_div = lStkDiv;
+        s_abs = lStkAbs;
+        s_real = lStkReal;
+        s_imag = lStkImag;
+        s_conj = lStkConj;
+        s_trig0 = g_ltrig0;
+        s_trig1 = g_ltrig1;
+        s_trig2 = g_ltrig2;
+        s_trig3 = g_ltrig3;
+        s_flip = lStkFlip;
+        s_tan  = lStkTan;
+        s_tanh  = lStkTanh;
+        s_cotan  = lStkCoTan;
+        s_cotanh  = lStkCoTanh;
+        s_cosxx = lStkCosXX;
+        s_gt  = lStkGT;
+        s_gte = lStkGTE;
+        s_eq  = lStkEQ;
+        s_ne  = lStkNE;
+        s_and = lStkAND;
+        s_or  = lStkOR ;
+        s_srand = lStkSRand;
+        s_asin = lStkASin;
+        s_acos = lStkACos;
+        s_acosh = lStkACosh;
+        s_atan = lStkATan;
+        s_atanh = lStkATanh;
+        s_cabs = lStkCAbs;
+        s_sqrt = lStkSqrt;
+        s_zero = lStkZero;
+        s_floor = lStkFloor;
+        s_ceil = lStkCeil;
+        s_trunc = lStkTrunc;
+        s_round = lStkRound;
+        s_jump_on_true  = lStkJumpOnTrue;
+        s_jump_on_false = lStkJumpOnFalse;
+        s_one = lStkOne;
         break;
     }
     g_max_function = 0;
     for (g_variable_index = 0; g_variable_index < static_cast<unsigned>(s_variables.size()); g_variable_index++)
     {
-        v[g_variable_index].s = s_variables[g_variable_index];
-        v[g_variable_index].len = (int) std::strlen(s_variables[g_variable_index]);
+        s_vars[g_variable_index].s = s_variables[g_variable_index];
+        s_vars[g_variable_index].len = (int) std::strlen(s_variables[g_variable_index]);
     }
     cvtcentermag(&Xctr, &Yctr, &Magnification, &Xmagfactor, &Rotation, &Skew);
     const_pi = std::atan(1.0) * 4;
     const_e  = std::exp(1.0);
-    v[7].a.d.y = 0.0;
-    v[7].a.d.x = v[7].a.d.y;
-    v[11].a.d.x = (double)g_logical_screen_x_dots;
-    v[11].a.d.y = (double)g_logical_screen_y_dots;
-    v[12].a.d.x = (double)g_max_iterations;
-    v[12].a.d.y = 0;
-    v[13].a.d.x = g_is_mandelbrot ? 1.0 : 0.0;
-    v[13].a.d.y = 0;
-    v[14].a.d.x = Xctr;
-    v[14].a.d.y = Yctr;
-    v[15].a.d.x = (double)Magnification;
-    v[15].a.d.y = Xmagfactor;
-    v[16].a.d.x = Rotation;
-    v[16].a.d.y = Skew;
+    s_vars[7].a.d.y = 0.0;
+    s_vars[7].a.d.x = s_vars[7].a.d.y;
+    s_vars[11].a.d.x = (double)g_logical_screen_x_dots;
+    s_vars[11].a.d.y = (double)g_logical_screen_y_dots;
+    s_vars[12].a.d.x = (double)g_max_iterations;
+    s_vars[12].a.d.y = 0;
+    s_vars[13].a.d.x = g_is_mandelbrot ? 1.0 : 0.0;
+    s_vars[13].a.d.y = 0;
+    s_vars[14].a.d.x = Xctr;
+    s_vars[14].a.d.y = Yctr;
+    s_vars[15].a.d.x = (double)Magnification;
+    s_vars[15].a.d.y = Xmagfactor;
+    s_vars[16].a.d.x = Rotation;
+    s_vars[16].a.d.y = Skew;
 
     switch (s_math_type)
     {
     case D_MATH:
-        v[1].a.d.x = g_params[0];
-        v[1].a.d.y = g_params[1];
-        v[2].a.d.x = g_params[2];
-        v[2].a.d.y = g_params[3];
-        v[5].a.d.x = const_pi;
-        v[5].a.d.y = 0.0;
-        v[6].a.d.x = const_e;
-        v[6].a.d.y = 0.0;
-        v[8].a.d.x = g_params[4];
-        v[8].a.d.y = g_params[5];
-        v[17].a.d.x = g_params[6];
-        v[17].a.d.y = g_params[7];
-        v[18].a.d.x = g_params[8];
-        v[18].a.d.y = g_params[9];
+        s_vars[1].a.d.x = g_params[0];
+        s_vars[1].a.d.y = g_params[1];
+        s_vars[2].a.d.x = g_params[2];
+        s_vars[2].a.d.y = g_params[3];
+        s_vars[5].a.d.x = const_pi;
+        s_vars[5].a.d.y = 0.0;
+        s_vars[6].a.d.x = const_e;
+        s_vars[6].a.d.y = 0.0;
+        s_vars[8].a.d.x = g_params[4];
+        s_vars[8].a.d.y = g_params[5];
+        s_vars[17].a.d.x = g_params[6];
+        s_vars[17].a.d.y = g_params[7];
+        s_vars[18].a.d.x = g_params[8];
+        s_vars[18].a.d.y = g_params[9];
         break;
     case M_MATH:
-        v[1].a.m.x = *d2MP(g_params[0]);
-        v[1].a.m.y = *d2MP(g_params[1]);
-        v[2].a.m.x = *d2MP(g_params[2]);
-        v[2].a.m.y = *d2MP(g_params[3]);
-        v[5].a.m.x = *d2MP(const_pi);
-        v[5].a.m.y = *d2MP(0.0);
-        v[6].a.m.x = *d2MP(const_e);
-        v[6].a.m.y = *d2MP(0.0);
-        v[8].a.m.x = *d2MP(g_params[4]);
-        v[8].a.m.y = *d2MP(g_params[5]);
-        v[11].a.m  = cmplx2MPC(v[11].a.d);
-        v[12].a.m  = cmplx2MPC(v[12].a.d);
-        v[13].a.m  = cmplx2MPC(v[13].a.d);
-        v[14].a.m  = cmplx2MPC(v[14].a.d);
-        v[15].a.m  = cmplx2MPC(v[15].a.d);
-        v[16].a.m  = cmplx2MPC(v[16].a.d);
-        v[17].a.m.x = *d2MP(g_params[6]);
-        v[17].a.m.y = *d2MP(g_params[7]);
-        v[18].a.m.x = *d2MP(g_params[8]);
-        v[18].a.m.y = *d2MP(g_params[9]);
+        s_vars[1].a.m.x = *d2MP(g_params[0]);
+        s_vars[1].a.m.y = *d2MP(g_params[1]);
+        s_vars[2].a.m.x = *d2MP(g_params[2]);
+        s_vars[2].a.m.y = *d2MP(g_params[3]);
+        s_vars[5].a.m.x = *d2MP(const_pi);
+        s_vars[5].a.m.y = *d2MP(0.0);
+        s_vars[6].a.m.x = *d2MP(const_e);
+        s_vars[6].a.m.y = *d2MP(0.0);
+        s_vars[8].a.m.x = *d2MP(g_params[4]);
+        s_vars[8].a.m.y = *d2MP(g_params[5]);
+        s_vars[11].a.m  = cmplx2MPC(s_vars[11].a.d);
+        s_vars[12].a.m  = cmplx2MPC(s_vars[12].a.d);
+        s_vars[13].a.m  = cmplx2MPC(s_vars[13].a.d);
+        s_vars[14].a.m  = cmplx2MPC(s_vars[14].a.d);
+        s_vars[15].a.m  = cmplx2MPC(s_vars[15].a.d);
+        s_vars[16].a.m  = cmplx2MPC(s_vars[16].a.d);
+        s_vars[17].a.m.x = *d2MP(g_params[6]);
+        s_vars[17].a.m.y = *d2MP(g_params[7]);
+        s_vars[18].a.m.x = *d2MP(g_params[8]);
+        s_vars[18].a.m.y = *d2MP(g_params[9]);
         break;
     case L_MATH:
-        v[1].a.l.x = (long)(g_params[0] * s_fudge);
-        v[1].a.l.y = (long)(g_params[1] * s_fudge);
-        v[2].a.l.x = (long)(g_params[2] * s_fudge);
-        v[2].a.l.y = (long)(g_params[3] * s_fudge);
-        v[5].a.l.x = (long)(const_pi * s_fudge);
-        v[5].a.l.y = 0L;
-        v[6].a.l.x = (long)(const_e * s_fudge);
-        v[6].a.l.y = 0L;
-        v[8].a.l.x = (long)(g_params[4] * s_fudge);
-        v[8].a.l.y = (long)(g_params[5] * s_fudge);
-        v[11].a.l.x = g_logical_screen_x_dots;
-        v[11].a.l.x <<= g_bit_shift;
-        v[11].a.l.y = g_logical_screen_y_dots;
-        v[11].a.l.y <<= g_bit_shift;
-        v[12].a.l.x = g_max_iterations;
-        v[12].a.l.x <<= g_bit_shift;
-        v[12].a.l.y = 0L;
-        v[13].a.l.x = g_is_mandelbrot ? 1 : 0;
-        v[13].a.l.x <<= g_bit_shift;
-        v[13].a.l.y = 0L;
-        v[14].a.l.x = (long)(v[14].a.d.x * s_fudge);
-        v[14].a.l.y = (long)(v[14].a.d.y * s_fudge);
-        v[15].a.l.x = (long)(v[15].a.d.x * s_fudge);
-        v[15].a.l.y = (long)(v[15].a.d.y * s_fudge);
-        v[16].a.l.x = (long)(v[16].a.d.x * s_fudge);
-        v[16].a.l.y = (long)(v[16].a.d.y * s_fudge);
-        v[17].a.l.x = (long)(g_params[6] * s_fudge);
-        v[17].a.l.y = (long)(g_params[7] * s_fudge);
-        v[18].a.l.x = (long)(g_params[8] * s_fudge);
-        v[18].a.l.y = (long)(g_params[9] * s_fudge);
+        s_vars[1].a.l.x = (long)(g_params[0] * s_fudge);
+        s_vars[1].a.l.y = (long)(g_params[1] * s_fudge);
+        s_vars[2].a.l.x = (long)(g_params[2] * s_fudge);
+        s_vars[2].a.l.y = (long)(g_params[3] * s_fudge);
+        s_vars[5].a.l.x = (long)(const_pi * s_fudge);
+        s_vars[5].a.l.y = 0L;
+        s_vars[6].a.l.x = (long)(const_e * s_fudge);
+        s_vars[6].a.l.y = 0L;
+        s_vars[8].a.l.x = (long)(g_params[4] * s_fudge);
+        s_vars[8].a.l.y = (long)(g_params[5] * s_fudge);
+        s_vars[11].a.l.x = g_logical_screen_x_dots;
+        s_vars[11].a.l.x <<= g_bit_shift;
+        s_vars[11].a.l.y = g_logical_screen_y_dots;
+        s_vars[11].a.l.y <<= g_bit_shift;
+        s_vars[12].a.l.x = g_max_iterations;
+        s_vars[12].a.l.x <<= g_bit_shift;
+        s_vars[12].a.l.y = 0L;
+        s_vars[13].a.l.x = g_is_mandelbrot ? 1 : 0;
+        s_vars[13].a.l.x <<= g_bit_shift;
+        s_vars[13].a.l.y = 0L;
+        s_vars[14].a.l.x = (long)(s_vars[14].a.d.x * s_fudge);
+        s_vars[14].a.l.y = (long)(s_vars[14].a.d.y * s_fudge);
+        s_vars[15].a.l.x = (long)(s_vars[15].a.d.x * s_fudge);
+        s_vars[15].a.l.y = (long)(s_vars[15].a.d.y * s_fudge);
+        s_vars[16].a.l.x = (long)(s_vars[16].a.d.x * s_fudge);
+        s_vars[16].a.l.y = (long)(s_vars[16].a.d.y * s_fudge);
+        s_vars[17].a.l.x = (long)(g_params[6] * s_fudge);
+        s_vars[17].a.l.y = (long)(g_params[7] * s_fudge);
+        s_vars[18].a.l.x = (long)(g_params[8] * s_fudge);
+        s_vars[18].a.l.y = (long)(g_params[9] * s_fudge);
         break;
     }
 
@@ -2791,7 +2756,7 @@ static bool parse_formula_text(char const *text)
     s_op.clear();
     g_store_index = 0;
     g_load_index = 0;
-    g_op_ptr = 0;
+    s_op_ptr = 0;
     s_paren = 0;
     g_last_init_op = 0;
     s_expecting_arg = true;
@@ -2820,7 +2785,7 @@ static bool parse_formula_text(char const *text)
             {
                 s_expecting_arg = true;
                 s_n++;
-                push_pending_op(StkOR, 7 - (s_paren + Equals) * 15);
+                push_pending_op(s_or, 7 - (s_paren + Equals) * 15);
             }
             else if (ModFlag == s_paren-1)
             {
@@ -2831,7 +2796,7 @@ static bool parse_formula_text(char const *text)
             {
                 assert(mdstk < Mods.size());
                 Mods[mdstk++] = ModFlag;
-                push_pending_op(StkMod, 2 - (s_paren + Equals) * 15);
+                push_pending_op(s_mod, 2 - (s_paren + Equals) * 15);
                 ModFlag = s_paren++;
             }
             break;
@@ -2856,28 +2821,28 @@ static bool parse_formula_text(char const *text)
             break;
         case '+':
             s_expecting_arg = true;
-            push_pending_op(StkAdd, 4 - (s_paren + Equals)*15);
+            push_pending_op(s_add, 4 - (s_paren + Equals)*15);
             break;
         case '-':
             if (s_expecting_arg)
             {
-                push_pending_op(StkNeg, 2 - (s_paren + Equals)*15);
+                push_pending_op(s_neg, 2 - (s_paren + Equals)*15);
             }
             else
             {
-                push_pending_op(StkSub, 4 - (s_paren + Equals)*15);
+                push_pending_op(s_sub, 4 - (s_paren + Equals)*15);
                 s_expecting_arg = true;
             }
             break;
         case '&':
             s_expecting_arg = true;
             s_n++;
-            push_pending_op(StkAND, 7 - (s_paren + Equals)*15);
+            push_pending_op(s_and, 7 - (s_paren + Equals)*15);
             break;
         case '!':
             s_expecting_arg = true;
             s_n++;
-            push_pending_op(StkNE, 6 - (s_paren + Equals)*15);
+            push_pending_op(s_ne, 6 - (s_paren + Equals)*15);
             break;
         case '<':
             s_expecting_arg = true;
@@ -2886,11 +2851,11 @@ static bool parse_formula_text(char const *text)
                 if (text[s_n + 1] == '=')
                 {
                     s_n++;
-                    fn = StkLTE;
+                    fn = s_lte;
                 }
                 else
                 {
-                    fn = StkLT;
+                    fn = s_lt;
                 }
                 push_pending_op(fn, 6 - (s_paren + Equals) * 15);
             }
@@ -2902,39 +2867,39 @@ static bool parse_formula_text(char const *text)
                 if (text[s_n + 1] == '=')
                 {
                     s_n++;
-                    fn = StkGTE;
+                    fn = s_gte;
                 }
                 else
                 {
-                    fn = StkGT;
+                    fn = s_gt;
                 }
                 push_pending_op(fn, 6 - (s_paren + Equals) * 15);
             }
             break;
         case '*':
             s_expecting_arg = true;
-            push_pending_op(StkMul, 3 - (s_paren + Equals)*15);
+            push_pending_op(s_mul, 3 - (s_paren + Equals)*15);
             break;
         case '/':
             s_expecting_arg = true;
-            push_pending_op(StkDiv, 3 - (s_paren + Equals)*15);
+            push_pending_op(s_div, 3 - (s_paren + Equals)*15);
             break;
         case '^':
             s_expecting_arg = true;
-            push_pending_op(StkPwr, 2 - (s_paren + Equals)*15);
+            push_pending_op(s_pwr, 2 - (s_paren + Equals)*15);
             break;
         case '=':
             s_expecting_arg = true;
             if (text[s_n+1] == '=')
             {
                 s_n++;
-                push_pending_op(StkEQ, 6 - (s_paren + Equals)*15);
+                push_pending_op(s_eq, 6 - (s_paren + Equals)*15);
             }
             else
             {
                 s_op[g_operation_index-1].f = StkSto;
                 s_op[g_operation_index-1].p = 5 - (s_paren + Equals)*15;
-                Store[g_store_index++] = Load[--g_load_index];
+                s_store[g_store_index++] = s_load[--g_load_index];
                 Equals++;
             }
             break;
@@ -2947,13 +2912,13 @@ static bool parse_formula_text(char const *text)
             s_expecting_arg = false;
             if (const jump_control_type type = is_jump(&text[s_init_n], Len); type != jump_control_type::NONE)
             {
-                g_uses_jump = true;
+                s_uses_jump = true;
                 switch (type)
                 {
                 case jump_control_type::IF:
                     s_expecting_arg = true;
                     push_jump(jump_control_type::IF);
-                    push_pending_op(StkJumpOnFalse, 1);
+                    push_pending_op(s_jump_on_false, 1);
                     break;
                 case jump_control_type::ELSE_IF:
                     s_expecting_arg = true;
@@ -2962,7 +2927,7 @@ static bool parse_formula_text(char const *text)
                     push_pending_op(StkJump, 1);
                     push_pending_op(nullptr, 15);
                     push_pending_op(StkClr, -30000);
-                    push_pending_op(StkJumpOnFalse, 1);
+                    push_pending_op(s_jump_on_false, 1);
                     break;
                 case jump_control_type::ELSE:
                     push_jump(jump_control_type::ELSE);
@@ -2986,7 +2951,7 @@ static bool parse_formula_text(char const *text)
                 else
                 {
                     c = is_const(&text[s_init_n], Len);
-                    Load[g_load_index++] = &(c->a);
+                    s_load[g_load_index++] = &(c->a);
                     push_pending_op(StkLod, 1 - (s_paren + Equals)*15);
                     s_n = s_init_n + c->len - 1;
                 }
@@ -2996,7 +2961,7 @@ static bool parse_formula_text(char const *text)
     }
     push_pending_op(nullptr, 16);
     s_next_op = 0;
-    g_last_op = g_operation_index;
+    s_op_count = g_operation_index;
     while (s_next_op < g_operation_index)
     {
         if (s_op[s_next_op].f)
@@ -3006,7 +2971,7 @@ static bool parse_formula_text(char const *text)
         else
         {
             s_next_op++;
-            g_last_op--;
+            s_op_count--;
         }
     }
     return false;
@@ -3019,10 +2984,10 @@ int Formula()
         return 1;
     }
 
-    g_load_index = InitLodPtr;
-    g_store_index = InitStoPtr;
-    g_op_ptr = InitOpPtr;
-    g_jump_index = s_init_jump_index;
+    g_load_index = s_init_load_ptr;
+    g_store_index = s_init_store_ptr;
+    s_op_ptr = s_init_op_ptr;
+    s_jump_index = s_init_jump_index;
     // Set the random number
     if (s_set_random || s_randomized)
     {
@@ -3039,33 +3004,33 @@ int Formula()
         }
     }
 
-    Arg1 = &g_stack[0];
-    Arg2 = &g_stack[0];
-    --Arg2;
-    while (g_op_ptr < (int)g_last_op)
+    g_arg1 = &s_stack[0];
+    g_arg2 = &s_stack[0];
+    --g_arg2;
+    while (s_op_ptr < (int)s_op_count)
     {
-        f[g_op_ptr]();
-        g_op_ptr++;
+        s_fns[s_op_ptr]();
+        s_op_ptr++;
     }
 
     switch (s_math_type)
     {
     case D_MATH:
-        g_new_z = v[3].a.d;
+        g_new_z = s_vars[3].a.d;
         g_old_z = g_new_z;
-        return Arg1->d.x == 0.0;
+        return g_arg1->d.x == 0.0;
     case M_MATH:
-        g_new_z = MPC2cmplx(v[3].a.m);
+        g_new_z = MPC2cmplx(s_vars[3].a.m);
         g_old_z = g_new_z;
-        return Arg1->m.x.Exp == 0 && Arg1->m.x.Mant == 0;
+        return g_arg1->m.x.Exp == 0 && g_arg1->m.x.Mant == 0;
     case L_MATH:
-        g_l_new_z = v[3].a.l;
+        g_l_new_z = s_vars[3].a.l;
         g_l_old_z = g_l_new_z;
         if (g_overflow)
         {
             return 1;
         }
-        return Arg1->l.x == 0L;
+        return g_arg1->l.x == 0L;
     }
     return 1;
 }
@@ -3077,54 +3042,54 @@ int form_per_pixel()
         return 1;
     }
     g_overflow = false;
-    g_jump_index = 0;
-    g_op_ptr = 0;
+    s_jump_index = 0;
+    s_op_ptr = 0;
     g_store_index = 0;
     g_load_index = 0;
-    Arg1 = &g_stack[0];
-    Arg2 = &g_stack[0];
-    Arg2--;
+    g_arg1 = &s_stack[0];
+    g_arg2 = &s_stack[0];
+    g_arg2--;
 
 
-    v[10].a.d.x = (double)g_col;
-    v[10].a.d.y = (double)g_row;
+    s_vars[10].a.d.x = (double)g_col;
+    s_vars[10].a.d.y = (double)g_row;
 
     switch (s_math_type)
     {
     case D_MATH:
         if ((g_row+g_col)&1)
         {
-            v[9].a.d.x = 1.0;
+            s_vars[9].a.d.x = 1.0;
         }
         else
         {
-            v[9].a.d.x = 0.0;
+            s_vars[9].a.d.x = 0.0;
         }
-        v[9].a.d.y = 0.0;
+        s_vars[9].a.d.y = 0.0;
         break;
     
     case M_MATH:
         if ((g_row+g_col)&1)
         {
-            v[9].a.m = g_mpc_one;
+            s_vars[9].a.m = g_mpc_one;
         }
         else
         {
-            v[9].a.m.x.Exp = 0;
-            v[9].a.m.x.Mant = 0;
-            v[9].a.m.y.Exp = 0;
-            v[9].a.m.y.Mant = 0;
+            s_vars[9].a.m.x.Exp = 0;
+            s_vars[9].a.m.x.Mant = 0;
+            s_vars[9].a.m.y.Exp = 0;
+            s_vars[9].a.m.y.Mant = 0;
         }
-        v[10].a.m = cmplx2MPC(v[10].a.d);
+        s_vars[10].a.m = cmplx2MPC(s_vars[10].a.d);
         break;
 
     case L_MATH:
-        v[9].a.l.x = (long)(((g_row+g_col)&1) * s_fudge);
-        v[9].a.l.y = 0L;
-        v[10].a.l.x = g_col;
-        v[10].a.l.x <<= g_bit_shift;
-        v[10].a.l.y = g_row;
-        v[10].a.l.y <<= g_bit_shift;
+        s_vars[9].a.l.x = (long)(((g_row+g_col)&1) * s_fudge);
+        s_vars[9].a.l.y = 0L;
+        s_vars[10].a.l.x = g_col;
+        s_vars[10].a.l.x <<= g_bit_shift;
+        s_vars[10].a.l.y = g_row;
+        s_vars[10].a.l.y <<= g_bit_shift;
         break;
     }
 
@@ -3135,12 +3100,12 @@ int form_per_pixel()
             switch (s_math_type)
             {
             case D_MATH:
-                v[0].a.d.x = g_old_z.x;
-                v[0].a.d.y = g_old_z.y;
+                s_vars[0].a.d.x = g_old_z.x;
+                s_vars[0].a.d.y = g_old_z.y;
                 break;
             case M_MATH:
-                v[0].a.m.x = *d2MP(g_old_z.x);
-                v[0].a.m.y = *d2MP(g_old_z.y);
+                s_vars[0].a.m.x = *d2MP(g_old_z.x);
+                s_vars[0].a.m.y = *d2MP(g_old_z.y);
                 break;
             case L_MATH:
                 // watch out for overflow
@@ -3150,8 +3115,8 @@ int form_per_pixel()
                     g_old_z.y = 8;
                 }
                 // convert to fudged longs
-                v[0].a.l.x = (long)(g_old_z.x*s_fudge);
-                v[0].a.l.y = (long)(g_old_z.y*s_fudge);
+                s_vars[0].a.l.x = (long)(g_old_z.x*s_fudge);
+                s_vars[0].a.l.y = (long)(g_old_z.y*s_fudge);
                 break;
             }
         }
@@ -3160,16 +3125,16 @@ int form_per_pixel()
             switch (s_math_type)
             {
             case D_MATH:
-                v[0].a.d.x = g_dx_pixel();
-                v[0].a.d.y = g_dy_pixel();
+                s_vars[0].a.d.x = g_dx_pixel();
+                s_vars[0].a.d.y = g_dy_pixel();
                 break;
             case M_MATH:
-                v[0].a.m.x = *d2MP(g_dx_pixel());
-                v[0].a.m.y = *d2MP(g_dy_pixel());
+                s_vars[0].a.m.x = *d2MP(g_dx_pixel());
+                s_vars[0].a.m.y = *d2MP(g_dy_pixel());
                 break;
             case L_MATH:
-                v[0].a.l.x = g_l_x_pixel();
-                v[0].a.l.y = g_l_y_pixel();
+                s_vars[0].a.l.x = g_l_x_pixel();
+                s_vars[0].a.l.y = g_l_y_pixel();
                 break;
             }
         }
@@ -3177,27 +3142,27 @@ int form_per_pixel()
 
     if (g_last_init_op)
     {
-        g_last_init_op = g_last_op;
+        g_last_init_op = s_op_count;
     }
-    while (g_op_ptr < g_last_init_op)
+    while (s_op_ptr < g_last_init_op)
     {
-        f[g_op_ptr]();
-        g_op_ptr++;
+        s_fns[s_op_ptr]();
+        s_op_ptr++;
     }
-    InitLodPtr = g_load_index;
-    InitStoPtr = g_store_index;
-    InitOpPtr = g_op_ptr;
+    s_init_load_ptr = g_load_index;
+    s_init_store_ptr = g_store_index;
+    s_init_op_ptr = s_op_ptr;
     // Set old variable for orbits
     switch (s_math_type)
     {
     case D_MATH:
-        g_old_z = v[3].a.d;
+        g_old_z = s_vars[3].a.d;
         break;
     case M_MATH:
-        g_old_z = MPC2cmplx(v[3].a.m);
+        g_old_z = MPC2cmplx(s_vars[3].a.m);
         break;
     case L_MATH:
-        g_l_old_z = v[3].a.l;
+        g_l_old_z = s_vars[3].a.l;
         break;
     }
 
@@ -3211,22 +3176,22 @@ static int fill_if_group(int endif_index, JUMP_PTRS_ST* jump_data)
     while (i > 0)
     {
         i--;
-        switch (g_jump_control[i].type)
+        switch (s_jump_control[i].type)
         {
         case jump_control_type::IF:    //if (); this concludes processing of this group
-            g_jump_control[i].ptrs = jump_data[ljp];
-            g_jump_control[i].DestJumpIndex = ljp + 1;
+            s_jump_control[i].ptrs = jump_data[ljp];
+            s_jump_control[i].DestJumpIndex = ljp + 1;
             return i;
         case jump_control_type::ELSE_IF:    //elseif* ( 2 jumps, the else and the if
             // first, the "if" part
-            g_jump_control[i].ptrs = jump_data[ljp];
-            g_jump_control[i].DestJumpIndex = ljp + 1;
+            s_jump_control[i].ptrs = jump_data[ljp];
+            s_jump_control[i].DestJumpIndex = ljp + 1;
 
             // then, the else part
             i--; //fall through to "else" is intentional
         case jump_control_type::ELSE:
-            g_jump_control[i].ptrs = jump_data[endif_index];
-            g_jump_control[i].DestJumpIndex = endif_index + 1;
+            s_jump_control[i].ptrs = jump_data[endif_index];
+            s_jump_control[i].DestJumpIndex = endif_index + 1;
             ljp = i;
             break;
         case jump_control_type::END_IF:    //endif
@@ -3252,16 +3217,16 @@ static bool fill_jump_struct()
 
     std::vector<JUMP_PTRS_ST> jump_data;
 
-    for (g_op_ptr = 0; g_op_ptr < (int) g_last_op; g_op_ptr++)
+    for (s_op_ptr = 0; s_op_ptr < (int) s_op_count; s_op_ptr++)
     {
         if (find_new_func)
         {
-            if (i < static_cast<int>(g_jump_control.size()))
+            if (i < static_cast<int>(s_jump_control.size()))
             {
-                switch (g_jump_control[i].type)
+                switch (s_jump_control[i].type)
                 {
                 case jump_control_type::IF:
-                    JumpFunc = StkJumpOnFalse;
+                    JumpFunc = s_jump_on_false;
                     break;
                 case jump_control_type::ELSE_IF:
                     checkforelse = !checkforelse;
@@ -3271,7 +3236,7 @@ static bool fill_jump_struct()
                     }
                     else
                     {
-                        JumpFunc = StkJumpOnFalse;
+                        JumpFunc = s_jump_on_false;
                     }
                     break;
                 case jump_control_type::ELSE:
@@ -3286,18 +3251,18 @@ static bool fill_jump_struct()
             }
             find_new_func = false;
         }
-        if (*(f[g_op_ptr]) == StkLod)
+        if (*(s_fns[s_op_ptr]) == StkLod)
         {
             loadcount++;
         }
-        else if (*(f[g_op_ptr]) == StkSto)
+        else if (*(s_fns[s_op_ptr]) == StkSto)
         {
             storecount++;
         }
-        else if (*(f[g_op_ptr]) == JumpFunc)
+        else if (*(s_fns[s_op_ptr]) == JumpFunc)
         {
             JUMP_PTRS_ST value{};
-            value.JumpOpPtr = g_op_ptr;
+            value.JumpOpPtr = s_op_ptr;
             value.JumpLodPtr = loadcount;
             value.JumpStoPtr = storecount;
             jump_data.push_back(value);
@@ -3307,9 +3272,9 @@ static bool fill_jump_struct()
     }
 
     // Following for safety only; all should always be false
-    if (i != g_jump_index
-        || g_jump_control[i - 1].type != jump_control_type::END_IF
-        || g_jump_control[0].type != jump_control_type::IF)
+    if (i != s_jump_index
+        || s_jump_control[i - 1].type != jump_control_type::END_IF
+        || s_jump_control[0].type != jump_control_type::IF)
     {
         return true;
     }
@@ -3321,8 +3286,6 @@ static bool fill_jump_struct()
     }
     return i < 0;
 }
-
-static std::string s_formula;
 
 static int frmgetchar(std::FILE * openfile)
 {
@@ -4324,7 +4287,7 @@ bool run_formula(const std::string &name, bool report_bad_sym)
         {
             return true;   //  parse failed, don't change fn pointers
         }
-        if (g_uses_jump && fill_jump_struct())
+        if (s_uses_jump && fill_jump_struct())
         {
             stopmsg(ParseErrs(PE_ERROR_IN_PARSING_JUMP_STATEMENTS));
             return true;
@@ -4369,12 +4332,12 @@ void init_misc()
 {
     static Arg argfirst;
     static Arg argsecond;
-    if (v.empty())
+    if (s_vars.empty())
     {
-        v.resize(5);
+        s_vars.resize(5);
     }
-    Arg1 = &argfirst;
-    Arg2 = &argsecond; // needed by all the ?Stk* functions
+    g_arg1 = &argfirst;
+    g_arg2 = &argsecond; // needed by all the ?Stk* functions
     s_fudge = (double)(1L << g_bit_shift);
     g_fudge_limit = (double)0x7fffffffL / s_fudge;
     s_shift_back = 32 - g_bit_shift;
@@ -4383,7 +4346,7 @@ void init_misc()
     g_frm_uses_p1 = false;
     g_frm_uses_p2 = false;
     g_frm_uses_p3 = false;
-    g_uses_jump = false;
+    s_uses_jump = false;
     g_frm_uses_ismand = false;
     g_frm_uses_p4 = false;
     g_frm_uses_p5 = false;
@@ -4395,10 +4358,10 @@ static void parser_allocate()
     g_max_function_ops = 2300;
     g_max_function_args = (unsigned)(g_max_function_ops/2.5);
 
-    f.reserve(g_max_function_ops);
-    Store.resize(MAX_STORES);
-    Load.resize(MAX_LOADS);
-    v.resize(g_max_function_args);
+    s_fns.reserve(g_max_function_ops);
+    s_store.resize(MAX_STORES);
+    s_load.resize(MAX_LOADS);
+    s_vars.resize(g_max_function_args);
 
     if (!parse_formula_text(s_formula.c_str()))
     {
@@ -4415,20 +4378,11 @@ static void parser_allocate()
 
 void free_workarea()
 {
-    Store.clear();
-    Load.clear();
-    v.clear();
-    f.clear();
+    s_store.clear();
+    s_load.clear();
+    s_vars.clear();
+    s_fns.clear();
 }
-
-struct error_data_st
-{
-    long start_pos;
-    long error_pos;
-    int error_number;
-};
-
-static std::array<error_data_st, 3> s_errors{};
 
 static void frm_error(std::FILE * open_file, long begin_frm)
 {
@@ -4571,7 +4525,7 @@ static bool frm_prescan(std::FILE * open_file)
     s_num_loads = 0UL;
     s_num_ops = 0UL;
     s_chars_in_formula = 0U;
-    g_uses_jump = false;
+    s_uses_jump = false;
     s_paren = 0;
 
     statement_pos = ftell(open_file);
@@ -4864,7 +4818,7 @@ static bool frm_prescan(std::FILE * open_file)
             }
             else
             {
-                g_uses_jump = true;
+                s_uses_jump = true;
                 switch (this_token.id)
                 {
                 case token_id::JUMP_IF:  // if

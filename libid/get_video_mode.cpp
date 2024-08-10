@@ -28,6 +28,7 @@
 #include "make_batch_file.h"
 #include "stop_msg.h"
 #include "trim_filename.h"
+#include "value_saver.h"
 #include "version.h"
 #include "video_mode.h"
 
@@ -39,18 +40,6 @@
 #include <sstream>
 #include <string>
 
-// routines in this module
-
-static void   format_item(int, char *);
-static int    check_modekey(int, int);
-static void   format_vid_inf(int i, char const *err, char *buf);
-static double vid_aspect(int tryxdots, int tryydots);
-
-struct vidinf
-{
-    int entnum;     // g_video_entry subscript
-    unsigned flags; // flags for sort's compare, defined below
-};
 /* defines for flags; done this way instead of bit union to ensure ordering;
    these bits represent the sort sequence for video mode list */
 enum
@@ -66,6 +55,19 @@ enum
     VI_CBIG = 4,       // mode has excess colors
     VI_ASPECT = 1      // aspect ratio bad
 };
+
+struct vidinf
+{
+    int entnum;     // g_video_entry subscript
+    unsigned flags; // flags for sort's compare, defined below
+};
+
+static std::vector<vidinf> s_video_info;
+
+static void   format_item(int, char *);
+static int    check_modekey(int, int);
+static void   format_vid_inf(int i, char const *err, char *buf);
+static double vid_aspect(int tryxdots, int tryydots);
 
 static bool vidinf_less(const vidinf &lhs, const vidinf &rhs)
 {
@@ -112,8 +114,6 @@ static double vid_aspect(int tryxdots, int tryydots)
            * (double)g_video_entry.xdots / (double)g_video_entry.ydots
            * g_screen_aspect;
 }
-
-static std::vector<vidinf> s_video_info;
 
 static std::string heading_detail(FRACTAL_INFO const *info, ext_blk_3 const *blk_3_info)
 {
@@ -310,13 +310,14 @@ int get_video_mode(FRACTAL_INFO *info, ext_blk_3 *blk_3_info)
         }
         instructions += "ESCAPE to back out.";
 
-        help_labels const oldhelpmode = g_help_mode;
-        g_help_mode = help_labels::HELP_LOADFILE;
-        const int i = fullscreen_choice(0, heading,
-            "key...name......................err...xdot..ydot.clr.comment..................",
-            instructions.c_str(), g_video_table_len, nullptr, &attributes[0], 1, 13, 78, 0,
-            format_item, nullptr, nullptr, check_modekey);
-        g_help_mode = oldhelpmode;
+        int i;
+        {
+            ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_LOADFILE};
+            i = fullscreen_choice(0, heading,
+                "key...name......................err...xdot..ydot.clr.comment..................",
+                instructions.c_str(), g_video_table_len, nullptr, &attributes[0], 1, 13, 78, 0,
+                format_item, nullptr, nullptr, check_modekey);
+        }
         if (i == -1)
         {
             return -1;

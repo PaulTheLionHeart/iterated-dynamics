@@ -3,8 +3,8 @@
 #include "port.h"
 #include "prototyp.h"
 
-#include "calcfrac.h"
 #include "calc_frac_init.h"
+#include "calcfrac.h"
 #include "choice_builder.h"
 #include "cmdfiles.h"
 #include "convert_center_mag.h"
@@ -16,6 +16,7 @@
 #include "id_keys.h"
 #include "lorenz.h"
 #include "sticky_orbits.h"
+#include "value_saver.h"
 #include "zoom.h"
 
 #include <cfloat>
@@ -117,10 +118,11 @@ gc_loop:
     // 1 item
     builder.comment("Press F4 to reset to type default values");
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_COORDS;
-    const int prompt_ret = builder.prompt("Image Coordinates", 128 | 16);
-    g_help_mode = old_help_mode;
+    int prompt_ret;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_COORDS};
+        prompt_ret = builder.prompt("Image Coordinates", 128 | 16);
+    }
 
     if (prompt_ret < 0)
     {
@@ -147,7 +149,7 @@ gc_loop:
         {
             aspectratio_crop(g_screen_aspect, g_final_aspect_ratio);
         }
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             fractal_floattobf();
         }
@@ -325,10 +327,10 @@ gsc_loop:
     }
     builder.comment("Press F4 to reset to type default values");
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_SCREEN_COORDS;
-    prompt_ret = builder.prompt("Screen Coordinates", 128 | 16);
-    g_help_mode = old_help_mode;
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_SCREEN_COORDS};
+        prompt_ret = builder.prompt("Screen Coordinates", 128 | 16);
+    }
 
     if (prompt_ret < 0)
     {

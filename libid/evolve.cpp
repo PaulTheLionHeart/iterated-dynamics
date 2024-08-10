@@ -17,6 +17,7 @@
 #include "sqr.h"
 #include "trig_fns.h"
 #include "type_has_param.h"
+#include "value_saver.h"
 #include "zoom.h"
 
 #include <algorithm>
@@ -25,18 +26,45 @@
 #include <iterator>
 #include <vector>
 
-#define PARMBOX 128
+enum
+{
+    EVOLVE_MAX_GRID_SIZE = 51  // This is arbitrary, = 1024/20
+};
+
+// for saving evolution data of center image
+struct PARAMHIST
+{
+    double param0;
+    double param1;
+    double param2;
+    double param3;
+    double param4;
+    double param5;
+    double param6;
+    double param7;
+    double param8;
+    double param9;
+    int inside;
+    int outside;
+    int decomp0;
+    double invert0;
+    double invert1;
+    double invert2;
+    BYTE trigndx0;
+    BYTE trigndx1;
+    BYTE trigndx2;
+    BYTE trigndx3;
+    bailouts bailoutest;
+};
+
 GENEBASE g_gene_bank[NUM_GENES];
 
 // px and py are coordinates in the parameter grid (small images on screen)
 // evolving = flag, evolve_image_grid_size = dimensions of image grid (evolve_image_grid_size x evolve_image_grid_size)
 int g_evolve_param_grid_x;
 int g_evolve_param_grid_y;
-int g_evolving;
+evolution_mode_flags g_evolving{evolution_mode_flags::NONE};
 int g_evolve_image_grid_size;
-
-#define EVOLVE_MAX_GRID_SIZE 51  // This is arbitrary, = 1024/20
-static int ecountbox[EVOLVE_MAX_GRID_SIZE][EVOLVE_MAX_GRID_SIZE];
 
 // used to replay random sequences to obtain correct values when selecting a
 // seed image for next generation
@@ -70,39 +98,16 @@ char g_evolve_new_discrete_x_parameter_offset;
 char g_evolve_new_discrete_y_parameter_offset;
 
 int g_evolve_param_box_count;
-static std::vector<int> param_box_x;
-static std::vector<int> param_box_y;
-static std::vector<int> param_box_values;
-static int s_image_box_count;
-static std::vector<int> image_box_x;
-static std::vector<int> image_box_y;
-static std::vector<int> image_box_values;
 
-// for saving evolution data of center image
-struct PARAMHIST
-{
-    double param0;
-    double param1;
-    double param2;
-    double param3;
-    double param4;
-    double param5;
-    double param6;
-    double param7;
-    double param8;
-    double param9;
-    int inside;
-    int outside;
-    int decomp0;
-    double invert0;
-    double invert1;
-    double invert2;
-    BYTE trigndx0;
-    BYTE trigndx1;
-    BYTE trigndx2;
-    BYTE trigndx3;
-    bailouts bailoutest;
-};
+static int s_ecount_box[EVOLVE_MAX_GRID_SIZE][EVOLVE_MAX_GRID_SIZE];
+static std::vector<int> s_param_box_x;
+static std::vector<int> s_param_box_y;
+static std::vector<int> s_param_box_values;
+static int s_image_box_count;
+static std::vector<int> s_image_box_x;
+static std::vector<int> s_image_box_y;
+static std::vector<int> s_image_box_values;
+static PARAMHIST s_old_history{};
 
 void varydbl(GENEBASE gene[], int randval, int i);
 int varyint(int randvalue, int limit, int mode);
@@ -199,59 +204,57 @@ void initgene()
     copy_genes_to_bank(gene);
 }
 
-static PARAMHIST oldhistory = { 0 };
-
 void save_param_history()
 {
     // save the old parameter history
-    oldhistory.param0 = g_params[0];
-    oldhistory.param1 = g_params[1];
-    oldhistory.param2 = g_params[2];
-    oldhistory.param3 = g_params[3];
-    oldhistory.param4 = g_params[4];
-    oldhistory.param5 = g_params[5];
-    oldhistory.param6 = g_params[6];
-    oldhistory.param7 = g_params[7];
-    oldhistory.param8 = g_params[8];
-    oldhistory.param9 = g_params[9];
-    oldhistory.inside = g_inside_color;
-    oldhistory.outside = g_outside_color;
-    oldhistory.decomp0 = g_decomp[0];
-    oldhistory.invert0 = g_inversion[0];
-    oldhistory.invert1 = g_inversion[1];
-    oldhistory.invert2 = g_inversion[2];
-    oldhistory.trigndx0 = static_cast<BYTE>(g_trig_index[0]);
-    oldhistory.trigndx1 = static_cast<BYTE>(g_trig_index[1]);
-    oldhistory.trigndx2 = static_cast<BYTE>(g_trig_index[2]);
-    oldhistory.trigndx3 = static_cast<BYTE>(g_trig_index[3]);
-    oldhistory.bailoutest = g_bail_out_test;
+    s_old_history.param0 = g_params[0];
+    s_old_history.param1 = g_params[1];
+    s_old_history.param2 = g_params[2];
+    s_old_history.param3 = g_params[3];
+    s_old_history.param4 = g_params[4];
+    s_old_history.param5 = g_params[5];
+    s_old_history.param6 = g_params[6];
+    s_old_history.param7 = g_params[7];
+    s_old_history.param8 = g_params[8];
+    s_old_history.param9 = g_params[9];
+    s_old_history.inside = g_inside_color;
+    s_old_history.outside = g_outside_color;
+    s_old_history.decomp0 = g_decomp[0];
+    s_old_history.invert0 = g_inversion[0];
+    s_old_history.invert1 = g_inversion[1];
+    s_old_history.invert2 = g_inversion[2];
+    s_old_history.trigndx0 = static_cast<BYTE>(g_trig_index[0]);
+    s_old_history.trigndx1 = static_cast<BYTE>(g_trig_index[1]);
+    s_old_history.trigndx2 = static_cast<BYTE>(g_trig_index[2]);
+    s_old_history.trigndx3 = static_cast<BYTE>(g_trig_index[3]);
+    s_old_history.bailoutest = g_bail_out_test;
 }
 
 void restore_param_history()
 {
     // restore the old parameter history
-    g_params[0] = oldhistory.param0;
-    g_params[1] = oldhistory.param1;
-    g_params[2] = oldhistory.param2;
-    g_params[3] = oldhistory.param3;
-    g_params[4] = oldhistory.param4;
-    g_params[5] = oldhistory.param5;
-    g_params[6] = oldhistory.param6;
-    g_params[7] = oldhistory.param7;
-    g_params[8] = oldhistory.param8;
-    g_params[9] = oldhistory.param9;
-    g_inside_color = oldhistory.inside;
-    g_outside_color = oldhistory.outside;
-    g_decomp[0] = oldhistory.decomp0;
-    g_inversion[0] = oldhistory.invert0;
-    g_inversion[1] = oldhistory.invert1;
-    g_inversion[2] = oldhistory.invert2;
+    g_params[0] = s_old_history.param0;
+    g_params[1] = s_old_history.param1;
+    g_params[2] = s_old_history.param2;
+    g_params[3] = s_old_history.param3;
+    g_params[4] = s_old_history.param4;
+    g_params[5] = s_old_history.param5;
+    g_params[6] = s_old_history.param6;
+    g_params[7] = s_old_history.param7;
+    g_params[8] = s_old_history.param8;
+    g_params[9] = s_old_history.param9;
+    g_inside_color = s_old_history.inside;
+    g_outside_color = s_old_history.outside;
+    g_decomp[0] = s_old_history.decomp0;
+    g_inversion[0] = s_old_history.invert0;
+    g_inversion[1] = s_old_history.invert1;
+    g_inversion[2] = s_old_history.invert2;
     g_invert = (g_inversion[0] == 0.0) ? 0 : 3;
-    g_trig_index[0] = static_cast<trig_fn>(oldhistory.trigndx0);
-    g_trig_index[1] = static_cast<trig_fn>(oldhistory.trigndx1);
-    g_trig_index[2] = static_cast<trig_fn>(oldhistory.trigndx2);
-    g_trig_index[3] = static_cast<trig_fn>(oldhistory.trigndx3);
-    g_bail_out_test = static_cast<bailouts>(oldhistory.bailoutest);
+    g_trig_index[0] = static_cast<trig_fn>(s_old_history.trigndx0);
+    g_trig_index[1] = static_cast<trig_fn>(s_old_history.trigndx1);
+    g_trig_index[2] = static_cast<trig_fn>(s_old_history.trigndx2);
+    g_trig_index[3] = static_cast<trig_fn>(s_old_history.trigndx3);
+    g_bail_out_test = static_cast<bailouts>(s_old_history.bailoutest);
 }
 
 // routine to vary doubles
@@ -667,14 +670,13 @@ void set_mutation_level(int strength)
 int get_evolve_Parms()
 {
     ChoiceBuilder<20> choices;
-    help_labels old_help_mode;
     int i, j, tmp;
-    int old_evolving, old_image_grid_size;
+    int old_image_grid_size;
     int old_variations = 0;
     double old_x_parameter_range, old_y_parameter_range, old_x_parameter_offset, old_y_parameter_offset, old_max_random_mutation;
 
     // fill up the previous values arrays
-    old_evolving      = g_evolving;
+    evolution_mode_flags old_evolving = g_evolving;
     old_image_grid_size = g_evolve_image_grid_size;
     old_x_parameter_range = g_evolve_x_parameter_range;
     old_y_parameter_range = g_evolve_y_parameter_range;
@@ -684,7 +686,8 @@ int get_evolve_Parms()
 
 get_evol_restart:
 
-    if ((g_evolving & RANDWALK) || (g_evolving & RANDPARAM))
+    if (bit_set(g_evolving, evolution_mode_flags::RANDWALK) ||
+        bit_set(g_evolving, evolution_mode_flags::RANDPARAM))
     {
         // adjust field param to make some sense when changing from random modes
         // maybe should adjust for aspect ratio here?
@@ -696,14 +699,14 @@ get_evol_restart:
     }
 
     choices.reset()
-        .yes_no("Evolution mode? (no for full screen)", g_evolving & FIELDMAP != 0)
+        .yes_no("Evolution mode? (no for full screen)", bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
         .int_number("Image grid size (odd numbers only)", g_evolve_image_grid_size);
 
     if (explore_check())
     {
         // test to see if any parms are set to linear
         // variation 'explore mode'
-        choices.yes_no("Show parameter zoom box?", (g_evolving & PARMBOX) != 0)
+        choices.yes_no("Show parameter zoom box?", bit_set(g_evolving, evolution_mode_flags::PARMBOX))
             .float_number("x parameter range (across screen)", g_evolve_x_parameter_range)
             .float_number("x parameter offset (left hand edge)", g_evolve_x_parameter_offset)
             .float_number("y parameter range (up screen)", g_evolve_y_parameter_range)
@@ -712,21 +715,21 @@ get_evol_restart:
 
     choices.float_number("Max random mutation", g_evolve_max_random_mutation)
         .float_number("Mutation reduction factor (between generations)", g_evolve_mutation_reduction_factor)
-        .yes_no("Grouting? ", (g_evolving & NOGROUT) == 0)
+        .yes_no("Grouting? ", !bit_set(g_evolving, evolution_mode_flags::NOGROUT))
         .comment("")
         .comment("Press F4 to reset view parameters to defaults.")
         .comment("Press F2 to halve mutation levels")
         .comment("Press F3 to double mutation levels")
         .comment("Press F6 to control which parameters are varied");
 
-    old_help_mode = g_help_mode;     // this prevents HELP from activating
-    g_help_mode = help_labels::HELP_EVOL;
-    i = choices.prompt("Evolution Mode Options", 255);
-    g_help_mode = old_help_mode;     // re-enable HELP
+    {
+        ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_EVOL};
+        i = choices.prompt("Evolution Mode Options", 255);
+    }
     if (i < 0)
     {
         // in case this point has been reached after calling sub menu with F6
-        g_evolving      = old_evolving;
+        g_evolving = old_evolving;
         g_evolve_image_grid_size = old_image_grid_size;
         g_evolve_x_parameter_range = old_x_parameter_range;
         g_evolve_y_parameter_range = old_y_parameter_range;
@@ -773,10 +776,10 @@ get_evol_restart:
     j = i;
 
     // now check out the results
-    g_evolving = choices.read_yes_no() ? 1 : 0;
-    g_view_window = g_evolving != 0;
+    g_evolving = choices.read_yes_no() ? evolution_mode_flags::FIELDMAP : evolution_mode_flags::NONE;
+    g_view_window = g_evolving != evolution_mode_flags::NONE;
 
-    if (!g_evolving && i != ID_KEY_F6)    // don't need any of the other parameters
+    if (g_evolving == evolution_mode_flags::NONE && i != ID_KEY_F6)    // don't need any of the other parameters
     {
         return 1;             // the following code can set evolving even if it's off
     }
@@ -800,11 +803,7 @@ get_evol_restart:
     g_evolve_image_grid_size |= 1; // make sure evolve_image_grid_size is odd
     if (explore_check())
     {
-        tmp = choices.read_yes_no() ? PARMBOX : 0;
-        if (g_evolving)
-        {
-            g_evolving += tmp;
-        }
+        g_evolving |= choices.read_yes_no() ? evolution_mode_flags::PARMBOX : evolution_mode_flags::NONE;
         g_evolve_x_parameter_range = choices.read_float_number();
         g_evolve_x_parameter_offset = choices.read_float_number();
         g_evolve_new_x_parameter_offset = g_evolve_x_parameter_offset;
@@ -814,14 +813,8 @@ get_evol_restart:
     }
 
     g_evolve_max_random_mutation = choices.read_float_number();
-
     g_evolve_mutation_reduction_factor = choices.read_float_number();
-
-    if (!choices.read_yes_no())
-    {
-        g_evolving = g_evolving + NOGROUT;
-    }
-
+    g_evolving |= choices.read_yes_no() ? evolution_mode_flags::NONE : evolution_mode_flags::NOGROUT;
     g_view_x_dots = (g_screen_x_dots / g_evolve_image_grid_size)-2;
     g_view_y_dots = (g_screen_y_dots / g_evolve_image_grid_size)-2;
     if (!g_view_window)
@@ -844,12 +837,12 @@ get_evol_restart:
         i = 1;
     }
 
-    if (g_evolving && !old_evolving)
+    if (g_evolving != evolution_mode_flags::NONE && old_evolving == evolution_mode_flags::NONE)
     {
         save_param_history();
     }
 
-    if (!g_evolving && (g_evolving == old_evolving))
+    if (g_evolving == evolution_mode_flags::NONE && g_evolving == old_evolving)
     {
         i = 0;
     }
@@ -861,7 +854,7 @@ get_evol_restart:
         if (old_variations > 0)
         {
             g_view_window = true;
-            g_evolving |= FIELDMAP;   // leave other settings alone
+            g_evolving |= evolution_mode_flags::FIELDMAP;   // leave other settings alone
         }
         g_evolve_max_random_mutation = 1;
         g_evolve_mutation_reduction_factor = 1.0;
@@ -878,23 +871,23 @@ void SetupParamBox()
     int const num_box_values = (g_logical_screen_x_dots + g_logical_screen_y_dots)*2;
     int const num_values = g_logical_screen_x_dots + g_logical_screen_y_dots + 2;
 
-    param_box_x.resize(num_box_values);
-    param_box_y.resize(num_box_values);
-    param_box_values.resize(num_values);
+    s_param_box_x.resize(num_box_values);
+    s_param_box_y.resize(num_box_values);
+    s_param_box_values.resize(num_values);
 
-    image_box_x.resize(num_box_values);
-    image_box_y.resize(num_box_values);
-    image_box_values.resize(num_values);
+    s_image_box_x.resize(num_box_values);
+    s_image_box_y.resize(num_box_values);
+    s_image_box_values.resize(num_values);
 }
 
 void ReleaseParamBox()
 {
-    param_box_x.clear();
-    param_box_y.clear();
-    param_box_values.clear();
-    image_box_x.clear();
-    image_box_y.clear();
-    image_box_values.clear();
+    s_param_box_x.clear();
+    s_param_box_y.clear();
+    s_param_box_values.clear();
+    s_image_box_x.clear();
+    s_image_box_y.clear();
+    s_image_box_values.clear();
 }
 
 void set_current_params()
@@ -974,28 +967,27 @@ void drawparmbox(int mode)
     // draws parameter zoom box in evolver mode
     // clears boxes off screen if mode = 1, otherwise, redraws boxes
     coords tl, tr, bl, br;
-    int grout;
-    if (!(g_evolving & PARMBOX))
+    if (!bit_set(g_evolving, evolution_mode_flags::PARMBOX))
     {
         return; // don't draw if not asked to!
     }
-    grout = !((g_evolving & NOGROUT)/NOGROUT) ;
+    const int grout = bit_set(g_evolving, evolution_mode_flags::NOGROUT) ? 0 : 1;
     s_image_box_count = g_box_count;
     if (g_box_count)
     {
         // stash normal zoombox pixels
-        std::copy(&g_box_x[0], &g_box_x[g_box_count*2], &image_box_x[0]);
-        std::copy(&g_box_y[0], &g_box_y[g_box_count*2], &image_box_y[0]);
-        std::copy(&g_box_values[0], &g_box_values[g_box_count], &image_box_values[0]);
+        std::copy(&g_box_x[0], &g_box_x[g_box_count*2], &s_image_box_x[0]);
+        std::copy(&g_box_y[0], &g_box_y[g_box_count*2], &s_image_box_y[0]);
+        std::copy(&g_box_values[0], &g_box_values[g_box_count], &s_image_box_values[0]);
         clearbox(); // to avoid probs when one box overlaps the other
     }
     if (g_evolve_param_box_count != 0)
     {
         // clear last parmbox
         g_box_count = g_evolve_param_box_count;
-        std::copy(&param_box_x[0], &param_box_x[g_box_count*2], &g_box_x[0]);
-        std::copy(&param_box_y[0], &param_box_y[g_box_count*2], &g_box_y[0]);
-        std::copy(&param_box_values[0], &param_box_values[g_box_count], &g_box_values[0]);
+        std::copy(&s_param_box_x[0], &s_param_box_x[g_box_count*2], &g_box_x[0]);
+        std::copy(&s_param_box_y[0], &s_param_box_y[g_box_count*2], &g_box_y[0]);
+        std::copy(&s_param_box_values[0], &s_param_box_values[g_box_count], &g_box_values[0]);
         clearbox();
     }
 
@@ -1026,18 +1018,18 @@ void drawparmbox(int mode)
     {
         dispbox();
         // stash pixel values for later
-        std::copy(&g_box_x[0], &g_box_x[g_box_count*2], &param_box_x[0]);
-        std::copy(&g_box_y[0], &g_box_y[g_box_count*2], &param_box_y[0]);
-        std::copy(&g_box_values[0], &g_box_values[g_box_count], &param_box_values[0]);
+        std::copy(&g_box_x[0], &g_box_x[g_box_count*2], &s_param_box_x[0]);
+        std::copy(&g_box_y[0], &g_box_y[g_box_count*2], &s_param_box_y[0]);
+        std::copy(&g_box_values[0], &g_box_values[g_box_count], &s_param_box_values[0]);
     }
     g_evolve_param_box_count = g_box_count;
     g_box_count = s_image_box_count;
     if (s_image_box_count)
     {
         // and move back old values so that everything can proceed as normal
-        std::copy(&image_box_x[0], &image_box_x[g_box_count*2], &g_box_x[0]);
-        std::copy(&image_box_y[0], &image_box_y[g_box_count*2], &g_box_y[0]);
-        std::copy(&image_box_values[0], &image_box_values[g_box_count], &g_box_values[0]);
+        std::copy(&s_image_box_x[0], &s_image_box_x[g_box_count*2], &g_box_x[0]);
+        std::copy(&s_image_box_y[0], &s_image_box_y[g_box_count*2], &g_box_y[0]);
+        std::copy(&s_image_box_values[0], &s_image_box_values[g_box_count], &g_box_values[0]);
         dispbox();
     }
 }
@@ -1125,16 +1117,16 @@ int unspiralmap()
     {
         // set up array and return
         int gridsqr = g_evolve_image_grid_size * g_evolve_image_grid_size;
-        ecountbox[g_evolve_param_grid_x][g_evolve_param_grid_y] = 0;  // we know the first one, do the rest
+        s_ecount_box[g_evolve_param_grid_x][g_evolve_param_grid_y] = 0;  // we know the first one, do the rest
         for (int i = 1; i < gridsqr; i++)
         {
             spiralmap(i);
-            ecountbox[g_evolve_param_grid_x][g_evolve_param_grid_y] = i;
+            s_ecount_box[g_evolve_param_grid_x][g_evolve_param_grid_y] = i;
         }
         old_image_grid_size = g_evolve_image_grid_size;
         g_evolve_param_grid_y = mid;
         g_evolve_param_grid_x = g_evolve_param_grid_y;
         return 0;
     }
-    return ecountbox[g_evolve_param_grid_x][g_evolve_param_grid_y];
+    return s_ecount_box[g_evolve_param_grid_x][g_evolve_param_grid_y];
 }

@@ -2,11 +2,6 @@
 
 #include "path_match.h"
 
-DIR_SEARCH DTA;          // Allocate DTA and define structure
-
-namespace fs = std::filesystem;
-
-static MatchFn s_path_matcher;
 enum class dir_pos
 {
     NONE = 0,
@@ -14,6 +9,12 @@ enum class dir_pos
     DOT_DOT = 2,
     FILES = 3
 };
+
+DIR_SEARCH g_dta;
+
+namespace fs = std::filesystem;
+
+static MatchFn s_path_matcher;
 static dir_pos s_dir_pos{dir_pos::NONE};
 static fs::directory_iterator s_dir_it;
 
@@ -23,26 +24,26 @@ static fs::directory_iterator s_dir_it;
  */
 static void fill_dta()
 {
-    DTA.path = s_dir_it->path().string();
-    DTA.filename = s_dir_it->path().filename().string();
-    DTA.attribute = is_directory(*s_dir_it) ? SUBDIR : 0;
+    g_dta.path = s_dir_it->path().string();
+    g_dta.filename = s_dir_it->path().filename().string();
+    g_dta.attribute = is_directory(*s_dir_it) ? SUBDIR : 0;
 }
 
 static bool next_match()
 {
     if (s_dir_pos == dir_pos::NONE)
     {
-        DTA.path = (s_dir_it->path() / ".").string();
-        DTA.filename = ".";
-        DTA.attribute = SUBDIR;
+        g_dta.path = (s_dir_it->path() / ".").string();
+        g_dta.filename = ".";
+        g_dta.attribute = SUBDIR;
         s_dir_pos = dir_pos::DOT;
         return true;
     }
     if (s_dir_pos == dir_pos::DOT)
     {
-        DTA.path = (s_dir_it->path() / "..").string();
-        DTA.filename = "..";
-        DTA.attribute = SUBDIR;
+        g_dta.path = (s_dir_it->path() / "..").string();
+        g_dta.filename = "..";
+        g_dta.attribute = SUBDIR;
         s_dir_pos = dir_pos::DOT_DOT;
         return true;
     }

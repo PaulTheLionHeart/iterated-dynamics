@@ -51,15 +51,17 @@ static void cmp_line_cleanup();
 static int cmp_line(BYTE *pixels, int linelen);
 
 static long s_save_base{}; // base clock ticks
-static long s_save_ticks;  // save after this many ticks
+static long s_save_ticks{};  // save after this many ticks
+static std::FILE *s_cmp_fp{};
+static int s_err_count{};
 
 bool g_from_text{}; // = true if we're in graphics mode
-int g_finish_row = 0;    // save when this row is finished
-EVOLUTION_INFO g_evolve_info = { 0 };
-bool g_have_evolve_info = false;
-char g_old_std_calc_mode;
-void (*g_out_line_cleanup)();
-bool g_virtual_screens = false;
+int g_finish_row{}; // save when this row is finished
+EVOLUTION_INFO g_evolve_info{};
+bool g_have_evolve_info{};
+char g_old_std_calc_mode{};
+void (*g_out_line_cleanup)(){};
+bool g_virtual_screens{};
 
 main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const resumeflag)
 {
@@ -211,8 +213,8 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
                     g_logical_screen_y_dots = g_view_y_dots;
                 }
                 // changed test to 1, so a 2x2 window will work with the sound feature
-                else if (((g_logical_screen_x_dots <= 1) || (g_logical_screen_y_dots <= 1))
-                    && !(g_evolving & FIELDMAP))
+                else if ((g_logical_screen_x_dots <= 1 || g_logical_screen_y_dots <= 1) &&
+                    !bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
                 {
                     // so ssg works
                     // but no check if in evolve mode to allow lots of small views
@@ -221,19 +223,22 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
                     g_logical_screen_x_dots = g_screen_x_dots;
                     g_logical_screen_y_dots = g_screen_y_dots;
                 }
-                if ((g_evolving & FIELDMAP) && bit_set(g_cur_fractal_specific->flags, fractal_flags::INFCALC))
+                if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP) &&
+                    bit_set(g_cur_fractal_specific->flags, fractal_flags::INFCALC))
                 {
                     stopmsg("Fractal doesn't terminate! switching off evolution.");
-                    g_evolving ^= FIELDMAP;
+                    g_evolving ^= evolution_mode_flags::FIELDMAP;
                     g_view_window = false;
                     g_logical_screen_x_dots = g_screen_x_dots;
                     g_logical_screen_y_dots = g_screen_y_dots;
                 }
-                if (g_evolving & FIELDMAP)
+                if (bit_set(g_evolving, evolution_mode_flags::FIELDMAP))
                 {
-                    g_logical_screen_x_dots = (g_screen_x_dots / g_evolve_image_grid_size)-!((g_evolving & NOGROUT)/NOGROUT);
-                    g_logical_screen_x_dots = g_logical_screen_x_dots - (g_logical_screen_x_dots % 4); // trim to multiple of 4 for SSG
-                    g_logical_screen_y_dots = (g_screen_y_dots / g_evolve_image_grid_size)-!((g_evolving & NOGROUT)/NOGROUT);
+                    const int grout = bit_set(g_evolving, evolution_mode_flags::NOGROUT) ? 0 : 1;
+                    g_logical_screen_x_dots = (g_screen_x_dots / g_evolve_image_grid_size) - grout;
+                    // trim to multiple of 4 for SSG
+                    g_logical_screen_x_dots = g_logical_screen_x_dots - (g_logical_screen_x_dots % 4);
+                    g_logical_screen_y_dots = (g_screen_y_dots / g_evolve_image_grid_size) - grout;
                     g_logical_screen_y_dots = g_logical_screen_y_dots - (g_logical_screen_y_dots % 4);
                 }
                 else
@@ -281,7 +286,8 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
                 }
                 g_out_line = pot_line;
             }
-            else if ((g_sound_flag & SOUNDFLAG_ORBITMASK) > SOUNDFLAG_BEEP && !g_evolving) // regular gif/fra input file
+            else if ((g_sound_flag & SOUNDFLAG_ORBITMASK) > SOUNDFLAG_BEEP &&
+                g_evolving == evolution_mode_flags::NONE) // regular gif/fra input file
             {
                 g_out_line = sound_line;      // sound decoding
             }
@@ -324,7 +330,7 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
         {
             g_zoom_off = false;            // for these cases disable zooming
         }
-        if (!g_evolving)
+        if (g_evolving == evolution_mode_flags::NONE)
         {
             calcfracinit();
         }
@@ -337,7 +343,7 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
         g_save_y_max = g_y_max;
         g_save_y_3rd = g_y_3rd;
 
-        if (bf_math != bf_math_type::NONE)
+        if (g_bf_math != bf_math_type::NONE)
         {
             copy_bf(g_bf_save_x_min, g_bf_x_min);
             copy_bf(g_bf_save_x_max, g_bf_x_max);
@@ -380,10 +386,10 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
             //rb
             g_filename_stack_index = -1;   // reset pointer
             g_browse_name.clear();
-            if (g_view_window && (g_evolving & FIELDMAP) && (g_calc_status != calc_status_value::COMPLETED))
+            if (g_view_window && bit_set(g_evolving, evolution_mode_flags::FIELDMAP) &&
+                g_calc_status != calc_status_value::COMPLETED)
             {
                 // generate a set of images with varied parameters on each one
-                int grout;
                 int ecount;
                 int tmpxdots;
                 int tmpydots;
@@ -411,8 +417,8 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
                     g_evolve_image_grid_size = g_evolve_info.image_grid_size;
                     g_evolve_this_generation_random_seed = g_evolve_info.this_generation_random_seed;
                     g_evolve_max_random_mutation = g_evolve_info.max_random_mutation;
-                    g_evolving     = g_evolve_info.evolving;
-                    g_view_window = g_evolving != 0;
+                    g_evolving = static_cast<evolution_mode_flags>(g_evolve_info.evolving);
+                    g_view_window = g_evolving != evolution_mode_flags::NONE;
                     ecount       = g_evolve_info.ecount;
                     g_have_evolve_info = false;
                 }
@@ -435,7 +441,7 @@ main_state big_while_loop(bool *const kbdmore, bool *const stacked, bool const r
                 g_evolve_param_box_count = 0;
                 g_evolve_dist_per_x = g_evolve_x_parameter_range /(g_evolve_image_grid_size -1);
                 g_evolve_dist_per_y = g_evolve_y_parameter_range /(g_evolve_image_grid_size -1);
-                grout  = !((g_evolving & NOGROUT)/NOGROUT);
+                const int grout = bit_set(g_evolving, evolution_mode_flags::NOGROUT) ? 0 : 1;
                 tmpxdots = g_logical_screen_x_dots+grout;
                 tmpydots = g_logical_screen_y_dots+grout;
                 gridsqr = g_evolve_image_grid_size * g_evolve_image_grid_size;
@@ -480,7 +486,7 @@ done:
                     g_evolve_info.image_grid_size = (short) g_evolve_image_grid_size;
                     g_evolve_info.this_generation_random_seed = (short) g_evolve_this_generation_random_seed;
                     g_evolve_info.max_random_mutation = g_evolve_max_random_mutation;
-                    g_evolve_info.evolving        = (short)g_evolving;
+                    g_evolve_info.evolving        = (short) +g_evolving;
                     g_evolve_info.ecount          = (short) ecount;
                     g_have_evolve_info = true;
                 }
@@ -637,7 +643,7 @@ resumeloop:                             // return here on failed overlays
             {
                 kbdchar = std::tolower(kbdchar);
             }
-            if (g_evolving)
+            if (g_evolving != evolution_mode_flags::NONE)
             {
                 mms_value = evolver_menu_switch(&kbdchar, &frommandel, kbdmore, stacked);
             }
@@ -749,8 +755,6 @@ void move_zoombox(int keynum)
 }
 
 // displays differences between current image file and new image
-static std::FILE *cmp_fp;
-static int errcount;
 static int cmp_line(BYTE *pixels, int linelen)
 {
     int row;
@@ -758,8 +762,8 @@ static int cmp_line(BYTE *pixels, int linelen)
     row = g_row_count++;
     if (row == 0)
     {
-        errcount = 0;
-        cmp_fp = dir_fopen(g_working_dir.c_str(), "cmperr", (g_init_batch != batch_modes::NONE) ? "a" : "w");
+        s_err_count = 0;
+        s_cmp_fp = dir_fopen(g_working_dir.c_str(), "cmperr", (g_init_batch != batch_modes::NONE) ? "a" : "w");
         g_out_line_cleanup = cmp_line_cleanup;
     }
     if (g_potential_16bit)
@@ -784,11 +788,11 @@ static int cmp_line(BYTE *pixels, int linelen)
             {
                 g_put_color(col, row, 1);
             }
-            ++errcount;
+            ++s_err_count;
             if (g_init_batch == batch_modes::NONE)
             {
-                std::fprintf(cmp_fp, "#%5d col %3d row %3d old %3d new %3d\n",
-                        errcount, col, row, oldcolor, pixels[col]);
+                std::fprintf(s_cmp_fp, "#%5d col %3d row %3d old %3d new %3d\n",
+                        s_err_count, col, row, oldcolor, pixels[col]);
             }
         }
     }
@@ -804,10 +808,10 @@ static void cmp_line_cleanup()
         time(&ltime);
         timestring = ctime(&ltime);
         timestring[24] = 0; //clobber newline in time string
-        std::fprintf(cmp_fp, "%s compare to %s has %5d errs\n",
-                timestring, g_read_filename.c_str(), errcount);
+        std::fprintf(s_cmp_fp, "%s compare to %s has %5d errs\n",
+                timestring, g_read_filename.c_str(), s_err_count);
     }
-    std::fclose(cmp_fp);
+    std::fclose(s_cmp_fp);
 }
 
 void clear_zoombox()
@@ -825,7 +829,7 @@ void reset_zoom_corners()
     g_y_max = g_save_y_max;
     g_y_min = g_save_y_min;
     g_y_3rd = g_save_y_3rd;
-    if (bf_math != bf_math_type::NONE)
+    if (g_bf_math != bf_math_type::NONE)
     {
         copy_bf(g_bf_x_min, g_bf_save_x_min);
         copy_bf(g_bf_x_max, g_bf_save_x_max);

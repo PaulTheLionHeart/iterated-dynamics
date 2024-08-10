@@ -12,28 +12,28 @@
 #include "parser.h"
 #include "pixel_grid.h"
 
-LDBL g_b_const;
+LDBL g_b_const{};
 
 int dividebrot5bn_per_pixel()
 {
     /* parm.x = xxmin + g_col*delx + g_row*delx2 */
-    mult_bn_int(bnparm.x, bnxdel, (U16) g_col);
-    mult_bn_int(bntmp, bnxdel2, (U16) g_row);
+    mult_bn_int(g_param_z_bn.x, g_delta_x_bn, (U16) g_col);
+    mult_bn_int(g_bn_tmp, g_delta2_x_bn, (U16) g_row);
 
-    add_a_bn(bnparm.x, bntmp);
-    add_a_bn(bnparm.x, bnxmin);
+    add_a_bn(g_param_z_bn.x, g_bn_tmp);
+    add_a_bn(g_param_z_bn.x, g_x_min_bn);
 
     /* parm.y = yymax - g_row*dely - g_col*dely2; */
-    /* note: in next four lines, bnold is just used as a temporary variable */
-    mult_bn_int(bnold.x, bnydel, (U16) g_row);
-    mult_bn_int(bnold.y, bnydel2, (U16) g_col);
-    add_a_bn(bnold.x, bnold.y);
-    sub_bn(bnparm.y, bnymax, bnold.x);
+    /* note: in next four lines, g_old_z_bn is just used as a temporary variable */
+    mult_bn_int(g_old_z_bn.x, g_delta_y_bn, (U16) g_row);
+    mult_bn_int(g_old_z_bn.y, g_delta2_y_bn, (U16) g_col);
+    add_a_bn(g_old_z_bn.x, g_old_z_bn.y);
+    sub_bn(g_param_z_bn.y, g_y_max_bn, g_old_z_bn.x);
 
-    clear_bn(bntmpsqrx);
-    clear_bn(bntmpsqry);
-    clear_bn(bnold.x);
-    clear_bn(bnold.y);
+    clear_bn(g_tmp_sqr_x_bn);
+    clear_bn(g_tmp_sqr_y_bn);
+    clear_bn(g_old_z_bn.x);
+    clear_bn(g_old_z_bn.y);
 
     return 0; /* 1st iteration has NOT been done */
 }
@@ -41,23 +41,23 @@ int dividebrot5bn_per_pixel()
 int dividebrot5bf_per_pixel()
 {
     /* parm.x = xxmin + g_col*delx + g_row*delx2 */
-    mult_bf_int(bfparm.x, bfxdel, (U16) g_col);
-    mult_bf_int(bftmp, bfxdel2, (U16) g_row);
+    mult_bf_int(g_parm_z_bf.x, g_delta_x_bf, (U16) g_col);
+    mult_bf_int(g_bf_tmp, g_delta2_x_bf, (U16) g_row);
 
-    add_a_bf(bfparm.x, bftmp);
-    add_a_bf(bfparm.x, g_bf_x_min);
+    add_a_bf(g_parm_z_bf.x, g_bf_tmp);
+    add_a_bf(g_parm_z_bf.x, g_bf_x_min);
 
     /* parm.y = yymax - g_row*dely - g_col*dely2; */
-    /* note: in next four lines, bfold is just used as a temporary variable */
-    mult_bf_int(bfold.x, bfydel, (U16) g_row);
-    mult_bf_int(bfold.y, bfydel2, (U16) g_col);
-    add_a_bf(bfold.x, bfold.y);
-    sub_bf(bfparm.y, g_bf_y_max, bfold.x);
+    /* note: in next four lines, g_old_z_bf is just used as a temporary variable */
+    mult_bf_int(g_old_z_bf.x, g_delta_y_bf, (U16) g_row);
+    mult_bf_int(g_old_z_bf.y, g_delta2_y_bf, (U16) g_col);
+    add_a_bf(g_old_z_bf.x, g_old_z_bf.y);
+    sub_bf(g_parm_z_bf.y, g_bf_y_max, g_old_z_bf.x);
 
-    clear_bf(bftmpsqrx);
-    clear_bf(bftmpsqry);
-    clear_bf(bfold.x);
-    clear_bf(bfold.y);
+    clear_bf(g_tmp_sqr_x_bf);
+    clear_bf(g_tmp_sqr_y_bf);
+    clear_bf(g_old_z_bf.x);
+    clear_bf(g_old_z_bf.y);
 
     return 0; /* 1st iteration has NOT been done */
 }
@@ -69,43 +69,43 @@ int DivideBrot5bnFractal()
     int saved;
     saved = save_stack();
 
-    bntmpnew.x = alloc_stack(rlength);
-    bntmpnew.y = alloc_stack(rlength);
-    bnnumer.x = alloc_stack(rlength);
-    bnnumer.y = alloc_stack(rlength);
-    bnc_exp.x = alloc_stack(bnlength);
-    bnc_exp.y = alloc_stack(bnlength);
-    tmp1 = alloc_stack(bnlength);
-    tmp2 = alloc_stack(rlength);
+    bntmpnew.x = alloc_stack(g_r_length);
+    bntmpnew.y = alloc_stack(g_r_length);
+    bnnumer.x = alloc_stack(g_r_length);
+    bnnumer.y = alloc_stack(g_r_length);
+    bnc_exp.x = alloc_stack(g_bn_length);
+    bnc_exp.y = alloc_stack(g_bn_length);
+    tmp1 = alloc_stack(g_bn_length);
+    tmp2 = alloc_stack(g_r_length);
 
-    /* bntmpsqrx and bntmpsqry were previously squared before getting to */
+    /* g_tmp_sqr_x_bn and g_tmp_sqr_y_bn were previously squared before getting to */
     /* this function, so they must be shifted.                           */
 
     /* sqr(z) */
-    /* bnnumer.x = bntmpsqrx - bntmpsqry;   */
-    sub_bn(bnnumer.x, bntmpsqrx + shiftfactor, bntmpsqry + shiftfactor);
+    /* bnnumer.x = g_tmp_sqr_x_bn - g_tmp_sqr_y_bn;   */
+    sub_bn(bnnumer.x, g_tmp_sqr_x_bn + g_shift_factor, g_tmp_sqr_y_bn + g_shift_factor);
 
-    /* bnnumer.y = 2 * bnold.x * bnold.y; */
-    mult_bn(tmp2, bnold.x, bnold.y);
-    double_a_bn(tmp2 + shiftfactor);
-    copy_bn(bnnumer.y, tmp2 + shiftfactor);
+    /* bnnumer.y = 2 * g_old_z_bn.x * g_old_z_bn.y; */
+    mult_bn(tmp2, g_old_z_bn.x, g_old_z_bn.y);
+    double_a_bn(tmp2 + g_shift_factor);
+    copy_bn(bnnumer.y, tmp2 + g_shift_factor);
 
     /* z^(a) */
     inttobn(bnc_exp.x, g_c_exponent);
     clear_bn(bnc_exp.y);
-    ComplexPower_bn(&bntmpnew, &bnold, &bnc_exp);
+    ComplexPower_bn(&bntmpnew, &g_old_z_bn, &bnc_exp);
     /* then add b */
     floattobn(tmp1, g_b_const);
-    add_bn(bntmpnew.x, tmp1, bntmpnew.x + shiftfactor);
-    /* need to shiftfactor bntmpnew.y */
-    copy_bn(tmp2, bntmpnew.y + shiftfactor);
+    add_bn(bntmpnew.x, tmp1, bntmpnew.x + g_shift_factor);
+    /* need to g_shift_factor bntmpnew.y */
+    copy_bn(tmp2, bntmpnew.y + g_shift_factor);
     copy_bn(bntmpnew.y, tmp2);
 
     /* sqr(z)/(z^(a)+b) */
-    cplxdiv_bn(&bnnew, &bnnumer, &bntmpnew);
+    cplxdiv_bn(&g_new_z_bn, &bnnumer, &bntmpnew);
 
-    add_a_bn(bnnew.x, bnparm.x);
-    add_a_bn(bnnew.y, bnparm.y);
+    add_a_bn(g_new_z_bn.x, g_param_z_bn.x);
+    add_a_bn(g_new_z_bn.y, g_param_z_bn.y);
 
     restore_stack(saved);
     return g_bailout_bignum();
@@ -118,35 +118,35 @@ int DivideBrot5bfFractal()
     int saved;
     saved = save_stack();
 
-    bftmpnew.x = alloc_stack(rbflength + 2);
-    bftmpnew.y = alloc_stack(rbflength + 2);
-    bfnumer.x = alloc_stack(rbflength + 2);
-    bfnumer.y = alloc_stack(rbflength + 2);
-    bfc_exp.x = alloc_stack(bflength + 2);
-    bfc_exp.y = alloc_stack(bflength + 2);
-    tmp1 = alloc_stack(bflength + 2);
+    bftmpnew.x = alloc_stack(g_r_bf_length + 2);
+    bftmpnew.y = alloc_stack(g_r_bf_length + 2);
+    bfnumer.x = alloc_stack(g_r_bf_length + 2);
+    bfnumer.y = alloc_stack(g_r_bf_length + 2);
+    bfc_exp.x = alloc_stack(g_bf_length + 2);
+    bfc_exp.y = alloc_stack(g_bf_length + 2);
+    tmp1 = alloc_stack(g_bf_length + 2);
 
     /* sqr(z) */
-    /* bfnumer.x = bftmpsqrx - bftmpsqry;   */
-    sub_bf(bfnumer.x, bftmpsqrx, bftmpsqry);
+    /* bfnumer.x = g_tmp_sqr_x_bf - g_tmp_sqr_y_bf;   */
+    sub_bf(bfnumer.x, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
 
-    /* bfnumer.y = 2 * bfold.x * bfold.y; */
-    mult_bf(bfnumer.y, bfold.x, bfold.y);
+    /* bfnumer.y = 2 * g_old_z_bf.x * g_old_z_bf.y; */
+    mult_bf(bfnumer.y, g_old_z_bf.x, g_old_z_bf.y);
     double_a_bf(bfnumer.y);
 
     /* z^(a) */
     inttobf(bfc_exp.x, g_c_exponent);
     clear_bf(bfc_exp.y);
-    ComplexPower_bf(&bftmpnew, &bfold, &bfc_exp);
+    ComplexPower_bf(&bftmpnew, &g_old_z_bf, &bfc_exp);
     /* then add b */
     floattobf(tmp1, g_b_const);
     add_a_bf(bftmpnew.x, tmp1);
 
     /* sqr(z)/(z^(a)+b) */
-    cplxdiv_bf(&bfnew, &bfnumer, &bftmpnew);
+    cplxdiv_bf(&g_new_z_bf, &bfnumer, &bftmpnew);
 
-    add_a_bf(bfnew.x, bfparm.x);
-    add_a_bf(bfnew.y, bfparm.y);
+    add_a_bf(g_new_z_bf.x, g_parm_z_bf.x);
+    add_a_bf(g_new_z_bf.y, g_parm_z_bf.y);
 
     restore_stack(saved);
     return g_bailout_bigfloat();

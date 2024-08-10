@@ -22,93 +22,75 @@
 #include "starfield.h"
 #include "stop_msg.h"
 
-struct Perspective
+template <typename T>
+struct PerspectiveT
 {
-    long x;
-    long y;
-    long zx;
-    long zy;
+    T x;
+    T y;
+    T zx;
+    T zy;
 };
 
-struct Perspectivefp
+using Perspective = PerspectiveT<long>;
+using Perspectivefp = PerspectiveT<double>;
+
+template <typename T>
+struct JuliBrot
 {
-    double x;
-    double y;
-    double zx;
-    double zy;
+    T x_per_inch{};
+    T y_per_inch{};
+    T inch_per_x_dot{};
+    T inch_per_y_dot{};
+    T x_pixel{};
+    T y_pixel{};
+    T init_z{};
+    T delta_jx{};
+    T delta_jy{};
+    T delta_mx{};
+    T delta_my{};
+    T jx{};
+    T jy{};
+    T mx{};
+    T my{};
+    T x_offset{};
+    T y_offset{};
+    PerspectiveT<T> left_eye{};
+    PerspectiveT<T> right_eye{};
+    PerspectiveT<T> *per{};
+    id::Complex<T> jb_c{};
 };
 
-static long mxmin{};
-static long mymin{};
-static long x_per_inch{};
-static long y_per_inch{};
-static long inch_per_xdot{};
-static long inch_per_ydot{};
-static double x_per_inchfp{};
-static double y_per_inchfp{};
-static double inch_per_xdotfp{};
-static double inch_per_ydotfp{};
-static int bbase{};
-static long xpixel{};
-static long ypixel{};
-static double xpixelfp{};
-static double ypixelfp{};
-static long initz{};
-static long djx{};
-static long djy{};
-static long dmx{};
-static long dmy{};
-static double initzfp{};
-static double djxfp{};
-static double djyfp{};
-static double dmxfp{};
-static double dmyfp{};
-static long jx{};
-static long jy{};
-static long mx{};
-static long my{};
-static long xoffset{};
-static long yoffset{};
-static double jxfp{};
-static double jyfp{};
-static double mxfp{};
-static double myfp{};
-static double xoffsetfp{};
-static double yoffsetfp{};
-static Perspective LeftEye{};
-static Perspective RightEye{};
-static Perspective *Per{};
-static Perspectivefp LeftEyefp{};
-static Perspectivefp RightEyefp{};
-static Perspectivefp *Perfp{};
-static LComplex jbc{};
-static DComplex jbcfp{};
-static double fg{};
-static double fg16{};
-static float brratiofp = 1.0F;
-static long width{};
-static long dist{};
-static long depth{};
-static long brratio{};
-static long eyes{};
+static JuliBrot<long> s_jb{};
+static JuliBrot<double> s_jb_fp{};
+static long s_mx_min{};
+static long s_my_min{};
+static int s_b_base{};
+static double s_fg{};
+static double s_fg16{};
+static float s_br_ratio_fp{1.0f};
+static long s_width{};
+static long s_dist{};
+static long s_depth{};
+static long s_br_ratio{};
+static long s_eyes{};
 
 bool g_julibrot{}; // flag for julibrot
 
 // these need to be accessed elsewhere for saving data
-double g_julibrot_x_min = -.83;
-double g_julibrot_y_min = -.25;
-double g_julibrot_x_max = -.83;
-double g_julibrot_y_max =  .25;
+double g_julibrot_x_min{-.83};
+double g_julibrot_y_min{-.25};
+double g_julibrot_x_max{-.83};
+double g_julibrot_y_max{.25};
 //
-int g_julibrot_z_dots = 128;
-float g_julibrot_origin_fp  = 8.0F;
-float g_julibrot_height_fp  = 7.0F;
-float g_julibrot_width_fp   = 10.0F;
-float g_julibrot_dist_fp    = 24.0F;
-float g_eyes_fp    = 2.5F;
-float g_julibrot_depth_fp   = 8.0F;
+int g_julibrot_z_dots{128};
+float g_julibrot_origin_fp{8.0f};
+float g_julibrot_height_fp{7.0f};
+float g_julibrot_width_fp{10.0f};
+float g_julibrot_dist_fp{24.0f};
+float g_eyes_fp{2.5f};
+float g_julibrot_depth_fp{8.0f};
 julibrot_3d_mode g_julibrot_3d_mode{};
-fractal_type g_new_orbit_type = fractal_type::JULIA;
+fractal_type g_new_orbit_type{fractal_type::JULIA};
 const char *g_julibrot_3d_options[]{
     to_string(julibrot_3d_mode::MONOCULAR), //
     to_string(julibrot_3d_mode::LEFT_EYE),  //
@@ -118,7 +100,6 @@ const char *g_julibrot_3d_options[]{
 
 bool JulibrotSetup()
 {
-    int r = 0;
     char const *mapname;
 
     if (g_colors < 255)
@@ -127,32 +108,32 @@ bool JulibrotSetup()
         return false;
     }
 
-    xoffsetfp = (g_x_max + g_x_min) / 2;     // Calculate average
-    yoffsetfp = (g_y_max + g_y_min) / 2;     // Calculate average
-    dmxfp = (g_julibrot_x_max - g_julibrot_x_min) / g_julibrot_z_dots;
-    dmyfp = (g_julibrot_y_max - g_julibrot_y_min) / g_julibrot_z_dots;
-    g_float_param = &jbcfp;
-    x_per_inchfp = (g_x_min - g_x_max) / g_julibrot_width_fp;
-    y_per_inchfp = (g_y_max - g_y_min) / g_julibrot_height_fp;
-    inch_per_xdotfp = g_julibrot_width_fp / g_logical_screen_x_dots;
-    inch_per_ydotfp = g_julibrot_height_fp / g_logical_screen_y_dots;
-    initzfp = g_julibrot_origin_fp - (g_julibrot_depth_fp / 2);
+    s_jb_fp.x_offset = (g_x_max + g_x_min) / 2;     // Calculate average
+    s_jb_fp.y_offset = (g_y_max + g_y_min) / 2;     // Calculate average
+    s_jb_fp.delta_mx = (g_julibrot_x_max - g_julibrot_x_min) / g_julibrot_z_dots;
+    s_jb_fp.delta_my = (g_julibrot_y_max - g_julibrot_y_min) / g_julibrot_z_dots;
+    g_float_param = &s_jb_fp.jb_c;
+    s_jb_fp.x_per_inch = (g_x_min - g_x_max) / g_julibrot_width_fp;
+    s_jb_fp.y_per_inch = (g_y_max - g_y_min) / g_julibrot_height_fp;
+    s_jb_fp.inch_per_x_dot = g_julibrot_width_fp / g_logical_screen_x_dots;
+    s_jb_fp.inch_per_y_dot = g_julibrot_height_fp / g_logical_screen_y_dots;
+    s_jb_fp.init_z = g_julibrot_origin_fp - (g_julibrot_depth_fp / 2);
     if (g_julibrot_3d_mode == julibrot_3d_mode::MONOCULAR)
     {
-        RightEyefp.x = 0.0;
+        s_jb_fp.right_eye.x = 0.0;
     }
     else
     {
-        RightEyefp.x = g_eyes_fp / 2;
+        s_jb_fp.right_eye.x = g_eyes_fp / 2;
     }
-    LeftEyefp.x = -RightEyefp.x;
-    RightEyefp.y = 0;
-    LeftEyefp.y = RightEyefp.y;
-    RightEyefp.zx = g_julibrot_dist_fp;
-    LeftEyefp.zx = RightEyefp.zx;
-    RightEyefp.zy = g_julibrot_dist_fp;
-    LeftEyefp.zy = RightEyefp.zy;
-    bbase = 128;
+    s_jb_fp.left_eye.x = -s_jb_fp.right_eye.x;
+    s_jb_fp.right_eye.y = 0;
+    s_jb_fp.left_eye.y = s_jb_fp.right_eye.y;
+    s_jb_fp.right_eye.zx = g_julibrot_dist_fp;
+    s_jb_fp.left_eye.zx = s_jb_fp.right_eye.zx;
+    s_jb_fp.right_eye.zy = g_julibrot_dist_fp;
+    s_jb_fp.left_eye.zy = s_jb_fp.right_eye.zy;
+    s_b_base = 128;
 
     if (g_fractal_specific[+g_fractal_type].isinteger > 0)
     {
@@ -170,49 +151,49 @@ bool JulibrotSetup()
         {
             g_bit_shift = g_fractal_specific[+g_new_orbit_type].isinteger;
         }
-        fg = (double)(1L << g_bit_shift);
-        fg16 = (double)(1L << 16);
-        jxmin = (long)(g_x_min * fg);
-        jxmax = (long)(g_x_max * fg);
-        xoffset = (jxmax + jxmin) / 2;    // Calculate average
-        jymin = (long)(g_y_min * fg);
-        jymax = (long)(g_y_max * fg);
-        yoffset = (jymax + jymin) / 2;    // Calculate average
-        mxmin = (long)(g_julibrot_x_min * fg);
-        mxmax = (long)(g_julibrot_x_max * fg);
-        mymin = (long)(g_julibrot_y_min * fg);
-        mymax = (long)(g_julibrot_y_max * fg);
-        long origin = (long)(g_julibrot_origin_fp * fg16);
-        depth = (long)(g_julibrot_depth_fp * fg16);
-        width = (long)(g_julibrot_width_fp * fg16);
-        dist = (long)(g_julibrot_dist_fp * fg16);
-        eyes = (long)(g_eyes_fp * fg16);
-        brratio = (long)(brratiofp * fg16);
-        dmx = (mxmax - mxmin) / g_julibrot_z_dots;
-        dmy = (mymax - mymin) / g_julibrot_z_dots;
-        g_long_param = &jbc;
+        s_fg = (double)(1L << g_bit_shift);
+        s_fg16 = (double)(1L << 16);
+        jxmin = (long)(g_x_min * s_fg);
+        jxmax = (long)(g_x_max * s_fg);
+        s_jb.x_offset = (jxmax + jxmin) / 2;    // Calculate average
+        jymin = (long)(g_y_min * s_fg);
+        jymax = (long)(g_y_max * s_fg);
+        s_jb.y_offset = (jymax + jymin) / 2;    // Calculate average
+        s_mx_min = (long)(g_julibrot_x_min * s_fg);
+        mxmax = (long)(g_julibrot_x_max * s_fg);
+        s_my_min = (long)(g_julibrot_y_min * s_fg);
+        mymax = (long)(g_julibrot_y_max * s_fg);
+        long origin = (long)(g_julibrot_origin_fp * s_fg16);
+        s_depth = (long)(g_julibrot_depth_fp * s_fg16);
+        s_width = (long)(g_julibrot_width_fp * s_fg16);
+        s_dist = (long)(g_julibrot_dist_fp * s_fg16);
+        s_eyes = (long)(g_eyes_fp * s_fg16);
+        s_br_ratio = (long)(s_br_ratio_fp * s_fg16);
+        s_jb.delta_mx = (mxmax - s_mx_min) / g_julibrot_z_dots;
+        s_jb.delta_my = (mymax - s_my_min) / g_julibrot_z_dots;
+        g_long_param = &s_jb.jb_c;
 
-        x_per_inch = (long)((g_x_min - g_x_max) / g_julibrot_width_fp * fg);
-        y_per_inch = (long)((g_y_max - g_y_min) / g_julibrot_height_fp * fg);
-        inch_per_xdot = (long)((g_julibrot_width_fp / g_logical_screen_x_dots) * fg16);
-        inch_per_ydot = (long)((g_julibrot_height_fp / g_logical_screen_y_dots) * fg16);
-        initz = origin - (depth / 2);
+        s_jb.x_per_inch = (long)((g_x_min - g_x_max) / g_julibrot_width_fp * s_fg);
+        s_jb.y_per_inch = (long)((g_y_max - g_y_min) / g_julibrot_height_fp * s_fg);
+        s_jb.inch_per_x_dot = (long)((g_julibrot_width_fp / g_logical_screen_x_dots) * s_fg16);
+        s_jb.inch_per_y_dot = (long)((g_julibrot_height_fp / g_logical_screen_y_dots) * s_fg16);
+        s_jb.init_z = origin - (s_depth / 2);
         if (g_julibrot_3d_mode == julibrot_3d_mode::MONOCULAR)
         {
-            RightEye.x = 0L;
+            s_jb.right_eye.x = 0L;
         }
         else
         {
-            RightEye.x = eyes / 2;
+            s_jb.right_eye.x = s_eyes / 2;
         }
-        LeftEye.x = -RightEye.x;
-        RightEye.y = 0L;
-        LeftEye.y = RightEye.y;
-        RightEye.zx = dist;
-        LeftEye.zx = RightEye.zx;
-        RightEye.zy = dist;
-        LeftEye.zy = RightEye.zy;
-        bbase = (int)(128.0 * brratiofp);
+        s_jb.left_eye.x = -s_jb.right_eye.x;
+        s_jb.right_eye.y = 0L;
+        s_jb.left_eye.y = s_jb.right_eye.y;
+        s_jb.right_eye.zx = s_dist;
+        s_jb.left_eye.zx = s_jb.right_eye.zx;
+        s_jb.right_eye.zy = s_dist;
+        s_jb.left_eye.zy = s_jb.right_eye.zy;
+        s_b_base = (int)(128.0 * s_br_ratio_fp);
     }
 
     if (g_julibrot_3d_mode == julibrot_3d_mode::RED_BLUE)
@@ -222,7 +203,7 @@ bool JulibrotSetup()
     }
     else
     {
-        mapname = g_altern_map_file.c_str();
+        mapname = g_altern_map_file.data();
     }
     if (g_save_dac != 1)
     {
@@ -236,40 +217,40 @@ bool JulibrotSetup()
             g_save_dac = 1;
         }
     }
-    return r >= 0;
+    return true;
 }
 
 
 int jb_per_pixel()
 {
-    jx = multiply(Per->x - xpixel, initz, 16);
-    jx = divide(jx, dist, 16) - xpixel;
-    jx = multiply(jx << (g_bit_shift - 16), x_per_inch, g_bit_shift);
-    jx += xoffset;
-    djx = divide(depth, dist, 16);
-    djx = multiply(djx, Per->x - xpixel, 16) << (g_bit_shift - 16);
-    djx = multiply(djx, x_per_inch, g_bit_shift) / g_julibrot_z_dots;
+    s_jb.jx = multiply(s_jb.per->x - s_jb.x_pixel, s_jb.init_z, 16);
+    s_jb.jx = divide(s_jb.jx, s_dist, 16) - s_jb.x_pixel;
+    s_jb.jx = multiply(s_jb.jx << (g_bit_shift - 16), s_jb.x_per_inch, g_bit_shift);
+    s_jb.jx += s_jb.x_offset;
+    s_jb.delta_jx = divide(s_depth, s_dist, 16);
+    s_jb.delta_jx = multiply(s_jb.delta_jx, s_jb.per->x - s_jb.x_pixel, 16) << (g_bit_shift - 16);
+    s_jb.delta_jx = multiply(s_jb.delta_jx, s_jb.x_per_inch, g_bit_shift) / g_julibrot_z_dots;
 
-    jy = multiply(Per->y - ypixel, initz, 16);
-    jy = divide(jy, dist, 16) - ypixel;
-    jy = multiply(jy << (g_bit_shift - 16), y_per_inch, g_bit_shift);
-    jy += yoffset;
-    djy = divide(depth, dist, 16);
-    djy = multiply(djy, Per->y - ypixel, 16) << (g_bit_shift - 16);
-    djy = multiply(djy, y_per_inch, g_bit_shift) / g_julibrot_z_dots;
+    s_jb.jy = multiply(s_jb.per->y - s_jb.y_pixel, s_jb.init_z, 16);
+    s_jb.jy = divide(s_jb.jy, s_dist, 16) - s_jb.y_pixel;
+    s_jb.jy = multiply(s_jb.jy << (g_bit_shift - 16), s_jb.y_per_inch, g_bit_shift);
+    s_jb.jy += s_jb.y_offset;
+    s_jb.delta_jy = divide(s_depth, s_dist, 16);
+    s_jb.delta_jy = multiply(s_jb.delta_jy, s_jb.per->y - s_jb.y_pixel, 16) << (g_bit_shift - 16);
+    s_jb.delta_jy = multiply(s_jb.delta_jy, s_jb.y_per_inch, g_bit_shift) / g_julibrot_z_dots;
 
     return 1;
 }
 
 int jbfp_per_pixel()
 {
-    jxfp = ((Perfp->x - xpixelfp) * initzfp / g_julibrot_dist_fp - xpixelfp) * x_per_inchfp;
-    jxfp += xoffsetfp;
-    djxfp = (g_julibrot_depth_fp / g_julibrot_dist_fp) * (Perfp->x - xpixelfp) * x_per_inchfp / g_julibrot_z_dots;
+    s_jb_fp.jx = ((s_jb_fp.per->x - s_jb_fp.x_pixel) * s_jb_fp.init_z / g_julibrot_dist_fp - s_jb_fp.x_pixel) * s_jb_fp.x_per_inch;
+    s_jb_fp.jx += s_jb_fp.x_offset;
+    s_jb_fp.delta_jx = (g_julibrot_depth_fp / g_julibrot_dist_fp) * (s_jb_fp.per->x - s_jb_fp.x_pixel) * s_jb_fp.x_per_inch / g_julibrot_z_dots;
 
-    jyfp = ((Perfp->y - ypixelfp) * initzfp / g_julibrot_dist_fp - ypixelfp) * y_per_inchfp;
-    jyfp += yoffsetfp;
-    djyfp = g_julibrot_depth_fp / g_julibrot_dist_fp * (Perfp->y - ypixelfp) * y_per_inchfp / g_julibrot_z_dots;
+    s_jb_fp.jy = ((s_jb_fp.per->y - s_jb_fp.y_pixel) * s_jb_fp.init_z / g_julibrot_dist_fp - s_jb_fp.y_pixel) * s_jb_fp.y_per_inch;
+    s_jb_fp.jy += s_jb_fp.y_offset;
+    s_jb_fp.delta_jy = g_julibrot_depth_fp / g_julibrot_dist_fp * (s_jb_fp.per->y - s_jb_fp.y_pixel) * s_jb_fp.y_per_inch / g_julibrot_z_dots;
 
     return 1;
 }
@@ -280,37 +261,37 @@ static long n;
 
 int zline(long x, long y)
 {
-    xpixel = x;
-    ypixel = y;
-    mx = mxmin;
-    my = mymin;
+    s_jb.x_pixel = x;
+    s_jb.y_pixel = y;
+    s_jb.mx = s_mx_min;
+    s_jb.my = s_my_min;
     switch (g_julibrot_3d_mode)
     {
     case julibrot_3d_mode::MONOCULAR:
     case julibrot_3d_mode::LEFT_EYE:
-        Per = &LeftEye;
+        s_jb.per = &s_jb.left_eye;
         break;
     case julibrot_3d_mode::RIGHT_EYE:
-        Per = &RightEye;
+        s_jb.per = &s_jb.right_eye;
         break;
     case julibrot_3d_mode::RED_BLUE:
         if ((g_row + g_col) & 1)
         {
-            Per = &LeftEye;
+            s_jb.per = &s_jb.left_eye;
         }
         else
         {
-            Per = &RightEye;
+            s_jb.per = &s_jb.right_eye;
         }
         break;
     }
     jb_per_pixel();
     for (zpixel = 0; zpixel < g_julibrot_z_dots; zpixel++)
     {
-        g_l_old_z.x = jx;
-        g_l_old_z.y = jy;
-        jbc.x = mx;
-        jbc.y = my;
+        g_l_old_z.x = s_jb.jx;
+        g_l_old_z.y = s_jb.jy;
+        s_jb.jb_c.x = s_jb.mx;
+        s_jb.jb_c.y = s_jb.my;
         if (driver_key_pressed())
         {
             return -1;
@@ -336,7 +317,7 @@ int zline(long x, long y)
                 }
                 else
                 {
-                    g_color = (int)(multiply((long) g_color << 16, brratio, 16) >> 16);
+                    g_color = (int)(multiply((long) g_color << 16, s_br_ratio, 16) >> 16);
                     if (g_color < 1)
                     {
                         g_color = 1;
@@ -345,7 +326,7 @@ int zline(long x, long y)
                     {
                         g_color = 127;
                     }
-                    (*g_plot)(g_col, g_row, 127 + bbase - g_color);
+                    (*g_plot)(g_col, g_row, 127 + s_b_base - g_color);
                 }
             }
             else
@@ -356,37 +337,37 @@ int zline(long x, long y)
             plotted = 1;
             break;
         }
-        mx += dmx;
-        my += dmy;
-        jx += djx;
-        jy += djy;
+        s_jb.mx += s_jb.delta_mx;
+        s_jb.my += s_jb.delta_my;
+        s_jb.jx += s_jb.delta_jx;
+        s_jb.jy += s_jb.delta_jy;
     }
     return 0;
 }
 
 int zlinefp(double x, double y)
 {
-    xpixelfp = x;
-    ypixelfp = y;
-    mxfp = g_julibrot_x_min;
-    myfp = g_julibrot_y_min;
+    s_jb_fp.x_pixel = x;
+    s_jb_fp.y_pixel = y;
+    s_jb_fp.mx = g_julibrot_x_min;
+    s_jb_fp.my = g_julibrot_y_min;
     switch (g_julibrot_3d_mode)
     {
     case julibrot_3d_mode::MONOCULAR:
     case julibrot_3d_mode::LEFT_EYE:
-        Perfp = &LeftEyefp;
+        s_jb_fp.per = &s_jb_fp.left_eye;
         break;
     case julibrot_3d_mode::RIGHT_EYE:
-        Perfp = &RightEyefp;
+        s_jb_fp.per = &s_jb_fp.right_eye;
         break;
     case julibrot_3d_mode::RED_BLUE:
         if ((g_row + g_col) & 1)
         {
-            Perfp = &LeftEyefp;
+            s_jb_fp.per = &s_jb_fp.left_eye;
         }
         else
         {
-            Perfp = &RightEyefp;
+            s_jb_fp.per = &s_jb_fp.right_eye;
         }
         break;
     }
@@ -398,23 +379,23 @@ int zlinefp(double x, double y)
         {
             g_old_z.x = 0.0;
             g_old_z.y = 0.0;
-            jbcfp.x = 0.0;
-            jbcfp.y = 0.0;
-            g_quaternion_c = jxfp;
-            g_quaternion_ci = jyfp;
-            g_quaternion_cj = mxfp;
-            g_quaternino_ck = myfp;
+            s_jb_fp.jb_c.x = 0.0;
+            s_jb_fp.jb_c.y = 0.0;
+            g_quaternion_c = s_jb_fp.jx;
+            g_quaternion_ci = s_jb_fp.jy;
+            g_quaternion_cj = s_jb_fp.mx;
+            g_quaternion_ck = s_jb_fp.my;
         }
         else
         {
-            g_old_z.x = jxfp;
-            g_old_z.y = jyfp;
-            jbcfp.x = mxfp;
-            jbcfp.y = myfp;
+            g_old_z.x = s_jb_fp.jx;
+            g_old_z.y = s_jb_fp.jy;
+            s_jb_fp.jb_c.x = s_jb_fp.mx;
+            s_jb_fp.jb_c.y = s_jb_fp.my;
             g_quaternion_c = g_params[0];
             g_quaternion_ci = g_params[1];
             g_quaternion_cj = g_params[2];
-            g_quaternino_ck = g_params[3];
+            g_quaternion_ck = g_params[3];
         }
         if (driver_key_pressed())
         {
@@ -441,7 +422,7 @@ int zlinefp(double x, double y)
                 }
                 else
                 {
-                    g_color = (int)(g_color * brratiofp);
+                    g_color = (int)(g_color * s_br_ratio_fp);
                     if (g_color < 1)
                     {
                         g_color = 1;
@@ -450,7 +431,7 @@ int zlinefp(double x, double y)
                     {
                         g_color = 127;
                     }
-                    (*g_plot)(g_col, g_row, 127 + bbase - g_color);
+                    (*g_plot)(g_col, g_row, 127 + s_b_base - g_color);
                 }
             }
             else
@@ -461,10 +442,10 @@ int zlinefp(double x, double y)
             plotted = 1;
             break;
         }
-        mxfp += dmxfp;
-        myfp += dmyfp;
-        jxfp += djxfp;
-        jyfp += djyfp;
+        s_jb_fp.mx += s_jb_fp.delta_mx;
+        s_jb_fp.my += s_jb_fp.delta_my;
+        s_jb_fp.jx += s_jb_fp.delta_jx;
+        s_jb_fp.jy += s_jb_fp.delta_jy;
     }
     return 0;
 }
@@ -490,11 +471,11 @@ int Std4dFractal()
     }
 
     long y = 0;
-    for (int ydot = (g_logical_screen_y_dots >> 1) - 1; ydot >= 0; ydot--, y -= inch_per_ydot)
+    for (int ydot = (g_logical_screen_y_dots >> 1) - 1; ydot >= 0; ydot--, y -= s_jb.inch_per_y_dot)
     {
         plotted = 0;
-        x = -(width >> 1);
-        for (int xdot = 0; xdot < g_logical_screen_x_dots; xdot++, x += inch_per_xdot)
+        x = -(s_width >> 1);
+        for (int xdot = 0; xdot < g_logical_screen_x_dots; xdot++, x += s_jb.inch_per_x_dot)
         {
             g_col = xdot;
             g_row = ydot;
@@ -543,11 +524,11 @@ int Std4dfpFractal()
     }
 
     double y = 0.0;
-    for (int ydot = (g_logical_screen_y_dots >> 1) - 1; ydot >= 0; ydot--, y -= inch_per_ydotfp)
+    for (int ydot = (g_logical_screen_y_dots >> 1) - 1; ydot >= 0; ydot--, y -= s_jb_fp.inch_per_y_dot)
     {
         plotted = 0;
         x = -g_julibrot_width_fp / 2;
-        for (int xdot = 0; xdot < g_logical_screen_x_dots; xdot++, x += inch_per_xdotfp)
+        for (int xdot = 0; xdot < g_logical_screen_x_dots; xdot++, x += s_jb_fp.inch_per_x_dot)
         {
             g_col = xdot;
             g_row = ydot;

@@ -8,22 +8,6 @@ add_library(libid
     3d.cpp include/3d.h
     line3d.cpp include/line3d.h
     plot3d.cpp include/plot3d.h
-    Complex.cpp include/Complex.h
-    BigComplex.cpp include/BigComplex.h
-    BigDouble.cpp include/BigDouble.h
-    PertEngine.cpp include/PertEngine.h
-    PertFn.cpp
-    Perturbation.cpp
-    MandelDerivatives.cpp
-    BigManDerivatives.cpp
-    TierazonFunctions.cpp
-    BigTZ.cpp
-    ArtMatrix.cpp
-    BigArtMatrix.cpp
-    fourier.cpp
-
-    include/Point.h
-    include/gmp.h
 
     boundary_trace.cpp include/boundary_trace.h
     calc_frac_init.cpp include/calc_frac_init.h
@@ -103,6 +87,7 @@ add_library(libid
     parser.cpp include/parser.h
     rotate.cpp include/rotate.h
     slideshw.cpp include/slideshw.h
+    special_dirs.cpp include/special_dirs.h
     stereo.cpp include/stereo.h
     text_screen.cpp include/text_screen.h
 
@@ -395,6 +380,7 @@ source_group("Header Files/IO" FILES
     include/rotate.h
     include/slideshw.h
     include/sound.h
+    include/special_dirs.h
     include/stereo.h
 )
 source_group("Source Files/IO" FILES
@@ -417,6 +403,7 @@ source_group("Source Files/IO" FILES
     rotate.cpp
     slideshw.cpp
     sound.cpp
+    special_dirs.cpp
     stereo.cpp
 )
 source_group("Header Files/math" FILES
@@ -455,6 +442,7 @@ source_group("Header Files/plumbing" FILES
     include/put_color_a.h
     include/read_ticker.h
     include/set_null_video.h
+    include/special_dirs.h
     include/stack_avail.h
     include/value_saver.h
 )
@@ -640,8 +628,5 @@ target_compile_options(libid PUBLIC ${ID_TARGET_OPTIONS})
 target_include_directories(libid PUBLIC include)
 target_link_libraries(libid PRIVATE helpcom os)
 target_link_libraries(libid PUBLIC help-defs config Boost::boost GIF::GIF cpuid::cpuid)
-add_library(mpfr STATIC IMPORTED)
-set_target_properties(mpfr PROPERTIES IMPORTED_LOCATION_DEBUG C:/Github/id/mpfr/build.vc15/lib/x64/Debug/mpfr.lib)
-set_target_properties(mpfr PROPERTIES IMPORTED_LOCATION_RELEASE C:/Github/id/mpfr/build.vc15/lib/x64/Release/mpfr.lib)
-target_link_libraries(libid PUBLIC mpfr)
+set_target_properties(libid PROPERTIES FOLDER Libraries)
 add_dependencies(libid native-help)

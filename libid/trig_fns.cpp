@@ -14,9 +14,9 @@
 #include <string>
 
 // The index into this array must correspond to enum trig_fn
-trig_funct_lst g_trig_fn[] =
-// changing the order of these alters meaning of *.fra file
+// changing the order of these alters meaning of GIF extensions
 // maximum 6 characters in function names or recheck all related code
+trig_funct_lst g_trig_fn[] =
 // clang-format off
 {
     {"sin",   dStkSin,   dStkSin,   dStkSin   },
@@ -53,26 +53,24 @@ trig_funct_lst g_trig_fn[] =
 };
 // clang-format on
 
-#define NUMTRIGFN  sizeof(g_trig_fn)/sizeof(trig_funct_lst)
-
-const int g_num_trig_functions = NUMTRIGFN;
+const int g_num_trig_functions{std::size(g_trig_fn)};
 
 trig_fn g_trig_index[] =
 {
     trig_fn::SIN, trig_fn::SQR, trig_fn::SINH, trig_fn::COSH
 };
-void (*ltrig0)() = lStkSin;
-void (*ltrig1)() = lStkSqr;
-void (*ltrig2)() = lStkSinh;
-void (*ltrig3)() = lStkCosh;
-void (*mtrig0)() = mStkSin;
-void (*mtrig1)() = mStkSqr;
-void (*mtrig2)() = mStkSinh;
-void (*mtrig3)() = mStkCosh;
-void (*dtrig0)() = dStkSin;
-void (*dtrig1)() = dStkSqr;
-void (*dtrig2)() = dStkSinh;
-void (*dtrig3)() = dStkCosh;
+void (*g_ltrig0)(){lStkSin};
+void (*g_ltrig1)(){lStkSqr};
+void (*g_ltrig2)(){lStkSinh};
+void (*g_ltrig3)(){lStkCosh};
+void (*g_mtrig0)(){mStkSin};
+void (*g_mtrig1)(){mStkSqr};
+void (*g_mtrig2)(){mStkSinh};
+void (*g_mtrig3)(){mStkCosh};
+void (*g_dtrig0)(){dStkSin};
+void (*g_dtrig1)(){dStkSqr};
+void (*g_dtrig2)(){dStkSinh};
+void (*g_dtrig3)(){dStkCosh};
 
 // return display form of active trig functions
 std::string showtrig()
@@ -143,30 +141,31 @@ int set_trig_array(int k, char const *name)
     }
     return 0;
 }
+
 void set_trig_pointers(int which)
 {
     // set trig variable functions to avoid array lookup time
     switch (which)
     {
     case 0:
-        ltrig0 = g_trig_fn[+g_trig_index[0]].lfunct;
-        mtrig0 = g_trig_fn[+g_trig_index[0]].mfunct;
-        dtrig0 = g_trig_fn[+g_trig_index[0]].dfunct;
+        g_ltrig0 = g_trig_fn[+g_trig_index[0]].lfunct;
+        g_mtrig0 = g_trig_fn[+g_trig_index[0]].mfunct;
+        g_dtrig0 = g_trig_fn[+g_trig_index[0]].dfunct;
         break;
     case 1:
-        ltrig1 = g_trig_fn[+g_trig_index[1]].lfunct;
-        mtrig1 = g_trig_fn[+g_trig_index[1]].mfunct;
-        dtrig1 = g_trig_fn[+g_trig_index[1]].dfunct;
+        g_ltrig1 = g_trig_fn[+g_trig_index[1]].lfunct;
+        g_mtrig1 = g_trig_fn[+g_trig_index[1]].mfunct;
+        g_dtrig1 = g_trig_fn[+g_trig_index[1]].dfunct;
         break;
     case 2:
-        ltrig2 = g_trig_fn[+g_trig_index[2]].lfunct;
-        mtrig2 = g_trig_fn[+g_trig_index[2]].mfunct;
-        dtrig2 = g_trig_fn[+g_trig_index[2]].dfunct;
+        g_ltrig2 = g_trig_fn[+g_trig_index[2]].lfunct;
+        g_mtrig2 = g_trig_fn[+g_trig_index[2]].mfunct;
+        g_dtrig2 = g_trig_fn[+g_trig_index[2]].dfunct;
         break;
     case 3:
-        ltrig3 = g_trig_fn[+g_trig_index[3]].lfunct;
-        mtrig3 = g_trig_fn[+g_trig_index[3]].mfunct;
-        dtrig3 = g_trig_fn[+g_trig_index[3]].dfunct;
+        g_ltrig3 = g_trig_fn[+g_trig_index[3]].lfunct;
+        g_mtrig3 = g_trig_fn[+g_trig_index[3]].mfunct;
+        g_dtrig3 = g_trig_fn[+g_trig_index[3]].dfunct;
         break;
     default: // do 'em all
         for (int i = 0; i < 4; i++)

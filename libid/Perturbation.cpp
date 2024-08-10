@@ -100,7 +100,7 @@ bool	InitPerturbation(void)
 //    xBigCentre.ChangePrecision(1600);
 //    yBigCentre.ChangePrecision(1600);
 
-    if (bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
+    if (g_bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
         {
         BigCvtcentermag(&xBigCentre, &yBigCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);              // have to make a mpfr version of this
         }
@@ -112,7 +112,7 @@ bool	InitPerturbation(void)
         yBigCentre = yCentre;
         }
 
-    if (bf_math == bf_math_type::NONE) 
+    if (g_bf_math == bf_math_type::NONE) 
         mandel_width = g_y_max - g_y_min;
     else
         {

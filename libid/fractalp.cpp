@@ -148,9 +148,9 @@ MOREPARAMS g_more_fractal_params[] =
     {fractal_type::PHOENIXFPCPLX    , { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::MANDPHOENIXCPLX  , { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::MANDPHOENIXFPCPLX, { degreeZ, "",          "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::FORMULA          , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::FFORMULA         , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
-    {fractal_type::ANT              , {"+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
+    {fractal_type::FORMULA  , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::FFORMULA , { p3real, p3imag, p4real, p4imag, p5real, p5imag}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::ANT              , { "+Wrap?", s_randomseed, "", "", "", ""}, {1, 0, 0, 0, 0, 0}},
     {fractal_type::PERTURBATION     , {"Positive? 1=yes,0=no (for subtype 53)", "", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},                       // PHD 240706
     {fractal_type::MANDELDERIVATIVES, {"Bailout Test ", "Rotated? (1=yes 0=no) ", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},                         // PHD 240709
     {fractal_type::TIERAZON         , {"Bailout Test ", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},     // PHD 240710
@@ -158,7 +158,7 @@ MOREPARAMS g_more_fractal_params[] =
 //    {fractal_type::TIERAZON         , {"Bailout Test (mod, real, imag, or, and, manh, manr)", "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},       // PHD 240710
     {fractal_type::ARTMATRIX        , {imagz0, "", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},                                                        // PHD 240714
     {fractal_type::FOURIER          , {"move wave? (1 = yes)", "plot circles? (1 = yes)", "", "", "", ""}, {1, 0, 0, 0, 0, 0}},             // PHD 240722
-    {fractal_type::MANDELBROTMIX4   , {p3real, p3imag, "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
+    {fractal_type::MANDELBROTMIX4   , { p3real, p3imag,        "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
     {fractal_type::NOFRACTAL        , { nullptr, nullptr, nullptr, nullptr, nullptr, nullptr    }, {0, 0, 0, 0, 0, 0}}
 };
 
@@ -176,7 +176,7 @@ AlternateMath g_alternate_math[] =
     {fractal_type::MANDELFP, bf_math_type::BIGFLT, JuliabfFractal, mandelbf_per_pixel, MandelbfSetup},
 #endif
     /*
-    NOTE: The default precision for bf_math=BIGNUM is not high enough
+    NOTE: The default precision for g_bf_math=BIGNUM is not high enough
           for JuliaZpowerbnFractal.  If you want to test BIGNUM (1) instead
           of the usual BIGFLT (2), then set bfdigits on the command to
           increase the precision.
@@ -188,7 +188,8 @@ AlternateMath g_alternate_math[] =
     {fractal_type::MANDELDERIVATIVES, bf_math_type::BIGFLT, run_big_mand_derivatives, init_big_mand_derivatives, MandelbfSetup},
     {fractal_type::TIERAZON, bf_math_type::BIGFLT, run_big_tierazon, init_big_tierazon, MandelbfSetup},
     {fractal_type::ARTMATRIX, bf_math_type::BIGFLT, run_big_art_matrix, init_big_art_matrix, MandelbfSetup},
-    {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}};
+    {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}
+};
 
 // These are only needed for types with both integer and float variations
 const char *const t_barnsleyj1{"*barnsleyj1"};
@@ -407,11 +408,11 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "test",
         {
-        "(testpt Param #1)",
-        "(testpt Param #2)",
-        "(testpt param #3)",
-        "(testpt param #4)"
-       },
+            "(testpt Param #1)",
+            "(testpt param #2)",
+            "(testpt param #3)",
+            "(testpt param #4)"
+        },
         {0, 0, 0, 0},
         help_labels::HT_TEST, help_labels::HF_TEST, fractal_flags::NONE,
         -2.0F, 2.0F, -1.5F, 1.5F,

@@ -24,6 +24,7 @@
 #include "spindac.h"
 #include "stop_msg.h"
 #include "temp_msg.h"
+#include "value_saver.h"
 
 #include <cstdlib>
 #include <cstring>
@@ -31,15 +32,14 @@
 #include <vector>
 
 std::string g_stereo_map_filename;
-int g_auto_stereo_depth = 100;
-double g_auto_stereo_width = 10;
-bool g_gray_flag = false;          // flag to use gray value rather than color number
-char g_calibrate = 1;             // add calibration bars to image
-bool g_image_map = false;
+int g_auto_stereo_depth{100};
+double g_auto_stereo_width{10};
+bool g_gray_flag{};  // flag to use gray value rather than color number
+char g_calibrate{1}; // add calibration bars to image
+bool g_image_map{};
 
-/* this structure permits variables to be temporarily static and visible
-   to routines in this file without permanently hogging memory */
-
+// this structure permits variables to be temporarily static and visible
+// to routines in this file without permanently hogging memory
 struct static_vars
 {
     long avg;
@@ -62,7 +62,7 @@ struct static_vars
     int ycen;
     BYTE *savedac;
 };
-static static_vars *pv = nullptr;
+static static_vars *pv{};
 
 #define AVG         (pv->avg)
 #define AVGCT       (pv->avgct)
@@ -91,7 +91,7 @@ static static_vars *pv = nullptr;
    0 to 255.
 */
 
-typedef BYTE(*DACBOX)[256][3];
+using DACBOX = BYTE (*)[256][3];
 #define dac   (*((DACBOX)(pv->savedac)))
 
 static int getdepth(int xd, int yd)
@@ -264,8 +264,7 @@ bool do_AutoStereo()
     std::time(&ltime);
     srand((unsigned int)ltime);
 
-    help_labels const old_help_mode = g_help_mode;
-    g_help_mode = help_labels::HELP_RDS_KEYS;
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_RDS_KEYS};
     driver_save_graphics();                      // save graphics image
     std::memcpy(savedacbox, g_dac_box, 256 * 3);  // save colors
 
@@ -399,7 +398,6 @@ bool do_AutoStereo()
     }
 
 exit_stereo:
-    g_help_mode = old_help_mode;
     driver_restore_graphics();
     std::memcpy(g_dac_box, savedacbox, 256 * 3);
     spindac(0, 1);

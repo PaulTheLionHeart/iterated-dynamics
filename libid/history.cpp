@@ -136,12 +136,12 @@ struct HISTORY
 
 } // namespace
 
-int historyptr = -1;      // user pointer into history tbl
-int saveptr = 0;          // save ptr into history tbl
-bool historyflag = false; // are we backing off in history?
+int g_history_ptr{-1};       // user pointer into history tbl
+bool g_history_flag{};       // are we backing off in history?
+int g_max_image_history{10}; //
 
+static int s_save_ptr{}; // save ptr into history tbl
 static std::vector<HISTORY> s_history;
-int g_max_image_history = 10;
 
 void history_init()
 {
@@ -150,11 +150,11 @@ void history_init()
 
 void save_history_info()
 {
-    if (g_max_image_history <= 0 || bf_math != bf_math_type::NONE)
+    if (g_max_image_history <= 0 || g_bf_math != bf_math_type::NONE)
     {
         return;
     }
-    HISTORY last = s_history[saveptr];
+    HISTORY last = s_history[s_save_ptr];
 
     HISTORY current{};
     current.image_fractal_type = g_fractal_type;
@@ -186,22 +186,27 @@ void save_history_info()
     current.decomp = g_decomp[0];
     current.biomorph = g_biomorph;
     current.force_symmetry = g_force_symmetry;
-    current.init_3d[0] = g_init_3d[0];
-    current.init_3d[1] = g_init_3d[1];
-    current.init_3d[2] = g_init_3d[2];
-    current.init_3d[3] = g_init_3d[3];
-    current.init_3d[4] = g_init_3d[4];
-    current.init_3d[5] = g_init_3d[5];
-    current.init_3d[6] = g_init_3d[6];
-    current.init_3d[7] = g_init_3d[7];
-    current.init_3d[8] = g_init_3d[8];
-    current.init_3d[9] = g_init_3d[9];
-    current.init_3d[10] = g_init_3d[10];
-    current.init_3d[11] = g_init_3d[12];
-    current.init_3d[12] = g_init_3d[13];
-    current.init_3d[13] = g_init_3d[14];
-    current.init_3d[14] = g_init_3d[15];
-    current.init_3d[15] = g_init_3d[16];
+    current.init_3d[0] = g_sphere ? 1 : 0;   // sphere? 1 = yes, 0 = no
+    current.init_3d[1] = g_x_rot;            // rotate x-axis 60 degrees
+    current.init_3d[2] = g_y_rot;            // rotate y-axis 90 degrees
+    current.init_3d[3] = g_z_rot;            // rotate x-axis  0 degrees
+    current.init_3d[4] = g_x_scale;          // scale x-axis, 90 percent
+    current.init_3d[5] = g_y_scale;          // scale y-axis, 90 percent
+    current.init_3d[1] = g_sphere_phi_min;   // longitude start, 180
+    current.init_3d[2] = g_sphere_phi_max;   // longitude end ,   0
+    current.init_3d[3] = g_sphere_theta_min; // latitude start,-90 degrees
+    current.init_3d[4] = g_sphere_theta_max; // latitude stop,  90 degrees
+    current.init_3d[5] = g_sphere_radius;    // should be user input
+    current.init_3d[6] = g_rough;            // scale z-axis, 30 percent
+    current.init_3d[7] = g_water_line;       // water level
+    current.init_3d[8] = +g_fill_type;       // fill type
+    current.init_3d[9] = g_viewer_z;         // perspective view point
+    current.init_3d[10] = g_shift_x;         // x shift
+    current.init_3d[11] = g_shift_y;         // y shift
+    current.init_3d[12] = g_light_x;         // x light vector coordinate
+    current.init_3d[13] = g_light_y;         // y light vector coordinate
+    current.init_3d[14] = g_light_z;         // z light vector coordinate
+    current.init_3d[15] = g_light_avg;       // number of points to average
     current.preview_factor = g_preview_factor;
     current.adjust_3d_x = g_adjust_3d_x;
     current.adjust_3d_y = g_adjust_3d_y;
@@ -299,37 +304,37 @@ void save_history_info()
         current.file_item_name.clear();
         break;
     }
-    if (historyptr == -1)        // initialize the history file
+    if (g_history_ptr == -1)        // initialize the history file
     {
         for (int i = 0; i < g_max_image_history; i++)
         {
             s_history[i] = current;
         }
-        historyflag = false;
-        historyptr = 0;
-        saveptr = 0;   // initialize history ptr
+        g_history_flag = false;
+        g_history_ptr = 0;
+        s_save_ptr = 0;   // initialize history ptr
     }
-    else if (historyflag)
+    else if (g_history_flag)
     {
-        historyflag = false;            // coming from user history command, don't save
+        g_history_flag = false;            // coming from user history command, don't save
     }
     else if (std::memcmp(&current, &last, sizeof(HISTORY)))
     {
-        if (++saveptr >= g_max_image_history)    // back to beginning of circular buffer
+        if (++s_save_ptr >= g_max_image_history)    // back to beginning of circular buffer
         {
-            saveptr = 0;
+            s_save_ptr = 0;
         }
-        if (++historyptr >= g_max_image_history)    // move user pointer in parallel
+        if (++g_history_ptr >= g_max_image_history)    // move user pointer in parallel
         {
-            historyptr = 0;
+            g_history_ptr = 0;
         }
-        s_history[saveptr] = current;
+        s_history[s_save_ptr] = current;
     }
 }
 
 void restore_history_info(int i)
 {
-    if (g_max_image_history <= 0 || bf_math != bf_math_type::NONE)
+    if (g_max_image_history <= 0 || g_bf_math != bf_math_type::NONE)
     {
         return;
     }
@@ -367,22 +372,27 @@ void restore_history_info(int i)
     g_user_biomorph_value = last.biomorph;
     g_biomorph = last.biomorph;
     g_force_symmetry = last.force_symmetry;
-    g_init_3d[0] = last.init_3d[0];
-    g_init_3d[1] = last.init_3d[1];
-    g_init_3d[2] = last.init_3d[2];
-    g_init_3d[3] = last.init_3d[3];
-    g_init_3d[4] = last.init_3d[4];
-    g_init_3d[5] = last.init_3d[5];
-    g_init_3d[6] = last.init_3d[6];
-    g_init_3d[7] = last.init_3d[7];
-    g_init_3d[8] = last.init_3d[8];
-    g_init_3d[9] = last.init_3d[9];
-    g_init_3d[10] = last.init_3d[10];
-    g_init_3d[12] = last.init_3d[11];
-    g_init_3d[13] = last.init_3d[12];
-    g_init_3d[14] = last.init_3d[13];
-    g_init_3d[15] = last.init_3d[14];
-    g_init_3d[16] = last.init_3d[15];
+    g_sphere = last.init_3d[0] != 0;                       // sphere? 1 = yes, 0 = no
+    g_x_rot = last.init_3d[1];                             // rotate x-axis 60 degrees
+    g_y_rot = last.init_3d[2];                             // rotate y-axis 90 degrees
+    g_z_rot = last.init_3d[3];                             // rotate x-axis  0 degrees
+    g_x_scale = last.init_3d[4];                           // scale x-axis, 90 percent
+    g_y_scale = last.init_3d[5];                           // scale y-axis, 90 percent
+    g_sphere_phi_min = last.init_3d[1];                    // longitude start, 180
+    g_sphere_phi_max = last.init_3d[2];                    // longitude end ,   0
+    g_sphere_theta_min = last.init_3d[3];                  // latitude start,-90 degrees
+    g_sphere_theta_max = last.init_3d[4];                  // latitude stop,  90 degrees
+    g_sphere_radius = last.init_3d[5];                     // should be user input
+    g_rough = last.init_3d[6];                             // scale z-axis, 30 percent
+    g_water_line = last.init_3d[7];                        // water level
+    g_fill_type = static_cast<fill_type>(last.init_3d[8]); // fill type
+    g_viewer_z = last.init_3d[9];                          // perspective view point
+    g_shift_x = last.init_3d[10];                          // x shift
+    g_shift_y = last.init_3d[11];                          // y shift
+    g_light_x = last.init_3d[12];                          // x light vector coordinate
+    g_light_y = last.init_3d[13];                          // y light vector coordinate
+    g_light_z = last.init_3d[14];                          // z light vector coordinate
+    g_light_avg = last.init_3d[15];                        // number of points to average
     g_preview_factor = last.preview_factor;
     g_adjust_3d_x = last.adjust_3d_x;
     g_adjust_3d_y = last.adjust_3d_y;

@@ -63,6 +63,13 @@
 namespace
 {
 
+enum
+{
+    MAX_WINDOWS_OPEN = 450
+};
+
+constexpr double MINDIF{0.001};
+
 struct ext_blk_2
 {
     bool got_data;
@@ -128,8 +135,21 @@ struct dblcoords
     double y;
 };
 
+struct window
+{
+    // for fgetwindow on screen browser
+    coords      itl;      // screen coordinates
+    coords      ibl;      //
+    coords      itr;      //
+    coords      ibr;      //
+    double      win_size; // box size for drawindow()
+    std::string name;     // for filename
+    int         boxcount; // bytes of saved screen info
+};
+
 } // namespace
 
+// prototypes
 static int  find_fractal_info(const std::string &gif_file, FRACTAL_INFO *info,
     ext_blk_2 *blk_2_info,
     ext_blk_3 *blk_3_info,
@@ -142,17 +162,47 @@ static void skip_ext_blk(int *, int *);
 static void backwardscompat(FRACTAL_INFO *info);
 static bool fix_bof();
 static bool fix_period_bof();
+static void drawindow(int colour, window const *info);
+static bool is_visible_window(window *list, FRACTAL_INFO const *info, ext_blk_5 const *blk_5_info);
+static void transform(dblcoords *);
+static bool paramsOK(FRACTAL_INFO const *info);
+static bool typeOK(FRACTAL_INFO const *info, ext_blk_3 const *blk_3_info);
+static bool functionOK(FRACTAL_INFO const *info, int numfn);
+static void check_history(char const *oldname, char const *newname);
+static void bfsetup_convert_to_screen();
+static void bftransform(bf_t, bf_t, dblcoords *);
 
-bool g_loaded_3d = false;
-static std::FILE *fp;
-int g_file_y_dots;
-int g_file_x_dots;
-int g_file_colors;
-float g_file_aspect_ratio;
-short g_skip_x_dots;
-short g_skip_y_dots;      // for decoder, when reducing image
-bool g_bad_outside = false;
-bool g_ld_check = false;
+static std::FILE *s_fp{};
+static std::vector<window> browse_windows;
+static std::vector<int> browse_box_x;
+static std::vector<int> browse_box_y;
+static std::vector<int> browse_box_values;
+// here because must be visible inside several routines
+static affine *cvt{};
+static bf_t bt_a{};
+static bf_t bt_b{};
+static bf_t bt_c{};
+static bf_t bt_d{};
+static bf_t bt_e{};
+static bf_t bt_f{};
+static bf_t n_a{};
+static bf_t n_b{};
+static bf_t n_c{};
+static bf_t n_d{};
+static bf_t n_e{};
+static bf_t n_f{};
+static bf_math_type oldbf_math{};
+
+bool g_loaded_3d{};
+int g_file_y_dots{};
+int g_file_x_dots{};
+int g_file_colors{};
+float g_file_aspect_ratio{};
+short g_skip_x_dots{};
+short g_skip_y_dots{};      // for decoder, when reducing image
+bool g_bad_outside{};
+bool g_ld_check{};
+std::string g_browse_name; // name for browse file
 
 inline bool within_eps(float lhs, float rhs)
 {
@@ -283,7 +333,7 @@ bool operator==(const FRACTAL_INFO &lhs, const FRACTAL_INFO &rhs)
         && lhs.bailoutest == rhs.bailoutest               //
         && lhs.iterations == rhs.iterations               //
         && lhs.bf_math == rhs.bf_math                     //
-        && lhs.bflength == rhs.bflength                   //
+        && lhs.g_bf_length == rhs.g_bf_length                   //
         && lhs.yadjust == rhs.yadjust                     //
         && lhs.old_demm_colors == rhs.old_demm_colors     //
         && lhs.logmap == rhs.logmap                       //
@@ -411,10 +461,27 @@ int read_overlay()      // read overlay/3D files, if reqr'd
                    || read_info.display_3d > 0     //
                    || bit_set(g_cur_fractal_specific->flags, fractal_flags::PARMS3D)))
         {
-            for (int i = 0; i < 16; i++)
-            {
-                g_init_3d[i] = read_info.init3d[i];
-            }
+            g_sphere = read_info.init3d[0] != 0;                       // sphere? 1 = yes, 0 = no
+            g_x_rot = read_info.init3d[1];                             // rotate x-axis 60 degrees
+            g_y_rot = read_info.init3d[2];                             // rotate y-axis 90 degrees
+            g_z_rot = read_info.init3d[3];                             // rotate x-axis  0 degrees
+            g_x_scale = read_info.init3d[4];                           // scale x-axis, 90 percent
+            g_y_scale = read_info.init3d[5];                           // scale y-axis, 90 percent
+            g_sphere_phi_min = read_info.init3d[1];                    // longitude start, 180
+            g_sphere_phi_max = read_info.init3d[2];                    // longitude end ,   0
+            g_sphere_theta_min = read_info.init3d[3];                  // latitude start,-90 degrees
+            g_sphere_theta_max = read_info.init3d[4];                  // latitude stop,  90 degrees
+            g_sphere_radius = read_info.init3d[5];                     // should be user input
+            g_rough = read_info.init3d[6];                             // scale z-axis, 30 percent
+            g_water_line = read_info.init3d[7];                        // water level
+            g_fill_type = static_cast<fill_type>(read_info.init3d[8]); // fill type
+            g_viewer_z = read_info.init3d[9];                          // perspective view point
+            g_shift_x = read_info.init3d[10];                          // x shift
+            g_shift_y = read_info.init3d[11];                          // y shift
+            g_light_x = read_info.init3d[12];                          // x light vector coordinate
+            g_light_y = read_info.init3d[13];                          // y light vector coordinate
+            g_light_z = read_info.init3d[14];                          // z light vector coordinate
+            g_light_avg = read_info.init3d[15];                        // number of points to average
             g_preview_factor   = read_info.previewfactor;
             g_adjust_3d_x          = read_info.xtrans;
             g_adjust_3d_y          = read_info.ytrans;
@@ -768,13 +835,13 @@ int read_overlay()      // read overlay/3D files, if reqr'd
 
     if (blk_5_info.got_data)
     {
-        bf_math = bf_math_type::BIGNUM;
-        init_bf_length(read_info.bflength);
+        g_bf_math = bf_math_type::BIGNUM;
+        init_bf_length(read_info.g_bf_length);
         std::memcpy(g_bf_x_min, blk_5_info.apm_data.data(), blk_5_info.apm_data.size());
     }
     else
     {
-        bf_math = bf_math_type::NONE;
+        g_bf_math = bf_math_type::NONE;
     }
 
     if (blk_6_info.got_data)
@@ -834,8 +901,8 @@ int read_overlay()      // read overlay/3D files, if reqr'd
         g_evolve_image_grid_size = blk_6_info.image_grid_size;
         g_evolve_this_generation_random_seed = blk_6_info.this_generation_random_seed;
         g_evolve_max_random_mutation = blk_6_info.max_random_mutation;
-        g_evolving = (int) blk_6_info.evolving;
-        g_view_window = g_evolving != 0;
+        g_evolving = static_cast<evolution_mode_flags>(blk_6_info.evolving);
+        g_view_window = g_evolving != evolution_mode_flags::NONE;
         g_evolve_dist_per_x = g_evolve_x_parameter_range /(g_evolve_image_grid_size - 1);
         g_evolve_dist_per_y = g_evolve_y_parameter_range /(g_evolve_image_grid_size - 1);
         if (read_info.version > 14)
@@ -865,7 +932,7 @@ int read_overlay()      // read overlay/3D files, if reqr'd
     }
     else
     {
-        g_evolving = 0;
+        g_evolving = evolution_mode_flags::NONE;
     }
 
     if (blk_7_info.got_data)
@@ -896,7 +963,6 @@ inline void freader(void *ptr, size_t size, size_t nmemb, std::FILE *stream)
     }
 }
 
-
 static int find_fractal_info(const std::string &gif_file, //
     FRACTAL_INFO *info,                                   //
     ext_blk_2 *blk_2_info,                                //
@@ -923,16 +989,16 @@ static int find_fractal_info(const std::string &gif_file, //
     blk_6_info->got_data = false;
     blk_7_info->got_data = false;
 
-    fp = std::fopen(gif_file.c_str(), "rb");
-    if (fp == nullptr)
+    s_fp = std::fopen(gif_file.c_str(), "rb");
+    if (s_fp == nullptr)
     {
         return -1;
     }
-    freader(gifstart, 13, 1, fp);
+    freader(gifstart, 13, 1, s_fp);
     if (std::strncmp((char *)gifstart, "GIF", 3) != 0)
     {
         // not GIF, maybe old .tga?
-        std::fclose(fp);
+        std::fclose(s_fp);
         return -1;
     }
 
@@ -963,7 +1029,7 @@ static int find_fractal_info(const std::string &gif_file, //
             int k = 0;
             for (int j = 0; j < 3; j++)
             {
-                k = getc(fp);
+                k = getc(s_fp);
                 if (k < 0)
                 {
                     break;
@@ -1006,10 +1072,10 @@ static int find_fractal_info(const std::string &gif_file, //
 
     std::memset(info, 0, sizeof(FRACTAL_INFO));
     fractinf_len = sizeof(FRACTAL_INFO) + (sizeof(FRACTAL_INFO)+254)/255;
-    std::fseek(fp, (long)(-1-fractinf_len), SEEK_END);
+    std::fseek(s_fp, (long)(-1-fractinf_len), SEEK_END);
     /* TODO: revise this to read members one at a time so we get natural alignment
        of fields within the FRACTAL_INFO structure for the platform */
-    freader(info, 1, sizeof(FRACTAL_INFO), fp);
+    freader(info, 1, sizeof(FRACTAL_INFO), s_fp);
     if (std::strcmp(INFO_ID, info->info_id) == 0)
     {
         decode_fractal_info(info, 1);
@@ -1026,18 +1092,18 @@ static int find_fractal_info(const std::string &gif_file, //
         {
             // allow 512 garbage at eof
             offset += 100; // go back 100 bytes at a time
-            std::fseek(fp, (long)(0-offset), SEEK_END);
-            freader(tmpbuf, 1, 110, fp); // read 10 extra for string compare
+            std::fseek(s_fp, (long)(0-offset), SEEK_END);
+            freader(tmpbuf, 1, 110, s_fp); // read 10 extra for string compare
             for (int i = 0; i < 100; ++i)
             {
                 if (!std::strcmp(INFO_ID, &tmpbuf[i]))
                 {
                     // found header?
                     std::strcpy(info->info_id, INFO_ID);
-                    std::fseek(fp, (long)(hdr_offset = i-offset), SEEK_END);
+                    std::fseek(s_fp, (long)(hdr_offset = i-offset), SEEK_END);
                     /* TODO: revise this to read members one at a time so we get natural alignment
                         of fields within the FRACTAL_INFO structure for the platform */
-                    freader(info, 1, sizeof(FRACTAL_INFO), fp);
+                    freader(info, 1, sizeof(FRACTAL_INFO), s_fp);
                     decode_fractal_info(info, 1);
                     offset = 10000; // force exit from outer loop
                     break;
@@ -1056,12 +1122,12 @@ static int find_fractal_info(const std::string &gif_file, //
                  might be over 255 chars, and thus earlier load might be bad
                  find exact endpoint, so scan back to start of ext blks works
                */
-            fseek(fp, (long)(hdr_offset-15), SEEK_END);
+            fseek(s_fp, (long)(hdr_offset-15), SEEK_END);
             int scan_extend = 1;
             while (scan_extend)
             {
-                if (fgetc(fp) != '!' // if not what we expect just give up
-                    || std::fread(temp1, 1, 13, fp) != 13
+                if (fgetc(s_fp) != '!' // if not what we expect just give up
+                    || std::fread(temp1, 1, 13, s_fp) != 13
                     || std::strncmp(&temp1[2], "fractint", 8))
                 {
                     break;
@@ -1080,12 +1146,12 @@ static int find_fractal_info(const std::string &gif_file, //
                     decode_fractal_info(info, 1);
                     scan_extend = 2;
                     // now we know total extension len, back up to first block
-                    fseek(fp, 0L-info->tot_extend_len, SEEK_CUR);
+                    fseek(s_fp, 0L-info->tot_extend_len, SEEK_CUR);
                     break;
                 case 2: // resume info
                     skip_ext_blk(&block_len, &data_len); // once to get lengths
                     blk_2_info->resume_data.resize(data_len);
-                    fseek(fp, (long)(0-block_len), SEEK_CUR);
+                    fseek(s_fp, (long)(0-block_len), SEEK_CUR);
                     load_ext_blk((char *)g_block, data_len);
                     std::copy(&g_block[0], &g_block[data_len], &blk_2_info->resume_data[0]);
                     blk_2_info->length = data_len;
@@ -1094,7 +1160,7 @@ static int find_fractal_info(const std::string &gif_file, //
                 case 3: // formula info
                     skip_ext_blk(&block_len, &data_len); // once to get lengths
                     // check data_len for backward compatibility
-                    fseek(fp, (long)(0-block_len), SEEK_CUR);
+                    fseek(s_fp, (long)(0-block_len), SEEK_CUR);
                     load_ext_blk((char *)&fload_info, data_len);
                     std::strcpy(blk_3_info->form_name, fload_info.form_name);
                     blk_3_info->length = data_len;
@@ -1126,7 +1192,7 @@ static int find_fractal_info(const std::string &gif_file, //
                     assert(data_len % 2 == 0);  // should specify an integral number of 16-bit ints
                     blk_4_info->length = data_len/2;
                     blk_4_info->range_data.resize(blk_4_info->length);
-                    fseek(fp, (long) -block_len, SEEK_CUR);
+                    fseek(s_fp, (long) -block_len, SEEK_CUR);
                     {
                         std::vector<char> buffer(data_len, 0);
                         load_ext_blk(&buffer[0], data_len);
@@ -1141,13 +1207,13 @@ static int find_fractal_info(const std::string &gif_file, //
                 case 5: // extended precision parameters
                     skip_ext_blk(&block_len, &data_len); // once to get lengths
                     blk_5_info->apm_data.resize(data_len);
-                    fseek(fp, (long)(0-block_len), SEEK_CUR);
+                    fseek(s_fp, (long)(0-block_len), SEEK_CUR);
                     load_ext_blk(blk_5_info->apm_data.data(), data_len);
                     blk_5_info->got_data = true;
                     break;
                 case 6: // evolver params
                     skip_ext_blk(&block_len, &data_len); // once to get lengths
-                    fseek(fp, (long)(0-block_len), SEEK_CUR);
+                    fseek(s_fp, (long)(0-block_len), SEEK_CUR);
                     load_ext_blk((char *)&eload_info, data_len);
                     decode_evolver_info(&eload_info, 1);
                     blk_6_info->length = data_len;
@@ -1177,7 +1243,7 @@ static int find_fractal_info(const std::string &gif_file, //
                     break;
                 case 7: // orbits parameters
                     skip_ext_blk(&block_len, &data_len); // once to get lengths
-                    fseek(fp, (long)(0-block_len), SEEK_CUR);
+                    fseek(s_fp, (long)(0-block_len), SEEK_CUR);
                     load_ext_blk((char *)&oload_info, data_len);
                     decode_orbits_info(&oload_info, 1);
                     blk_7_info->length = data_len;
@@ -1197,7 +1263,7 @@ static int find_fractal_info(const std::string &gif_file, //
             }
         }
 
-        std::fclose(fp);
+        std::fclose(s_fp);
         g_file_aspect_ratio = g_screen_aspect; // if not >= v15, this is correct
         return 0;
     }
@@ -1225,24 +1291,24 @@ static int find_fractal_info(const std::string &gif_file, //
     info->version = 0; // this forces lots more init at calling end too
 
     // zero means we won
-    std::fclose(fp);
+    std::fclose(s_fp);
     return 0;
 }
 
 static void load_ext_blk(char *loadptr, int loadlen)
 {
     int len;
-    while ((len = fgetc(fp)) > 0)
+    while ((len = fgetc(s_fp)) > 0)
     {
         while (--len >= 0)
         {
             if (--loadlen >= 0)
             {
-                *(loadptr++) = (char)fgetc(fp);
+                *(loadptr++) = (char)fgetc(s_fp);
             }
             else
             {
-                fgetc(fp); // discard excess characters
+                fgetc(s_fp); // discard excess characters
             }
         }
     }
@@ -1253,14 +1319,13 @@ static void skip_ext_blk(int *block_len, int *data_len)
     int len;
     *data_len = 0;
     *block_len = 1;
-    while ((len = fgetc(fp)) > 0)
+    while ((len = fgetc(s_fp)) > 0)
     {
-        fseek(fp, (long)len, SEEK_CUR);
+        fseek(s_fp, (long)len, SEEK_CUR);
         *data_len += len;
         *block_len += len + 1;
     }
 }
-
 
 // switch obsolete fractal types to new generalizations
 static void backwardscompat(FRACTAL_INFO *info)
@@ -1461,43 +1526,6 @@ static bool fix_period_bof()
 
 // browse code RB
 
-#define MAX_WINDOWS_OPEN 450
-
-namespace
-{
-
-struct window
-{
-    // for fgetwindow on screen browser
-    coords      itl;      // screen coordinates
-    coords      ibl;      //
-    coords      itr;      //
-    coords      ibr;      //
-    double      win_size; // box size for drawindow()
-    std::string name;     // for filename
-    int         boxcount; // bytes of saved screen info
-};
-
-} // namespace
-
-// prototypes
-static void drawindow(int colour, window const *info);
-static bool is_visible_window(window *list, FRACTAL_INFO const *info, ext_blk_5 const *blk_5_info);
-static void transform(dblcoords *);
-static bool paramsOK(FRACTAL_INFO const *info);
-static bool typeOK(FRACTAL_INFO const *info, ext_blk_3 const *blk_3_info);
-static bool functionOK(FRACTAL_INFO const *info, int numfn);
-static void check_history(char const *oldname, char const *newname);
-static void bfsetup_convert_to_screen();
-static void bftransform(bf_t, bf_t, dblcoords *);
-
-std::string g_browse_name; // name for browse file
-
-static std::vector<window> browse_windows;
-static std::vector<int> browse_box_x;
-static std::vector<int> browse_box_y;
-static std::vector<int> browse_box_values;
-
 inline void save_box(int num_dots, int which)
 {
     std::copy(&g_box_x[0], &g_box_x[num_dots], &browse_box_x[num_dots*which]);
@@ -1511,22 +1539,6 @@ inline void restore_box(int num_dots, int which)
     std::copy(&browse_box_y[num_dots*which], &browse_box_y[num_dots*(which + 1)], &g_box_y[0]);
     std::copy(&browse_box_values[num_dots*which], &browse_box_values[num_dots*(which + 1)], &g_box_values[0]);
 }
-
-// here because must be visible inside several routines
-static affine *cvt;
-static bf_t bt_a;
-static bf_t bt_b;
-static bf_t bt_c;
-static bf_t bt_d;
-static bf_t bt_e;
-static bf_t bt_f;
-static bf_t n_a;
-static bf_t n_b;
-static bf_t n_c;
-static bf_t n_d;
-static bf_t n_e;
-static bf_t n_f;
-static bf_math_type oldbf_math;
 
 // fgetwindow reads all .GIF files and draws window outlines on the screen
 int fgetwindow()
@@ -1551,8 +1563,8 @@ int fgetwindow()
     int vid_too_big = 0;
     int saved;
 
-    oldbf_math = bf_math;
-    bf_math = bf_math_type::BIGFLT;
+    oldbf_math = g_bf_math;
+    g_bf_math = bf_math_type::BIGFLT;
     if (oldbf_math == bf_math_type::NONE)
     {
         calc_status_value oldcalc_status = g_calc_status; // kludge because next sets it = 0
@@ -1560,12 +1572,12 @@ int fgetwindow()
         g_calc_status = oldcalc_status;
     }
     saved = save_stack();
-    bt_a = alloc_stack(rbflength+2);
-    bt_b = alloc_stack(rbflength+2);
-    bt_c = alloc_stack(rbflength+2);
-    bt_d = alloc_stack(rbflength+2);
-    bt_e = alloc_stack(rbflength+2);
-    bt_f = alloc_stack(rbflength+2);
+    bt_a = alloc_stack(g_r_bf_length+2);
+    bt_b = alloc_stack(g_r_bf_length+2);
+    bt_c = alloc_stack(g_r_bf_length+2);
+    bt_d = alloc_stack(g_r_bf_length+2);
+    bt_e = alloc_stack(g_r_bf_length+2);
+    bt_f = alloc_stack(g_r_bf_length+2);
 
     int const num_dots = g_screen_x_dots + g_screen_y_dots;
     browse_windows.resize(MAX_WINDOWS_OPEN);
@@ -1609,7 +1621,7 @@ rescan:  // entry for changed browse parms
             driver_get_key();
             break;
         }
-        split_fname_ext(DTA.filename, fname, ext);
+        split_fname_ext(g_dta.filename, fname, ext);
         make_path(tmpmask, drive, dir, fname, ext);
         FRACTAL_INFO read_info;
         ext_blk_2 blk_2_info;
@@ -1622,11 +1634,11 @@ rescan:  // entry for changed browse parms
                 tmpmask, &read_info, &blk_2_info, &blk_3_info, &blk_4_info, &blk_5_info, &blk_6_info, &blk_7_info) //
             && (typeOK(&read_info, &blk_3_info) || !g_browse_check_fractal_type)                                   //
             && (paramsOK(&read_info) || !g_browse_check_fractal_params)                                            //
-            && stricmp(g_browse_name.c_str(), DTA.filename.c_str()) != 0                                           //
+            && stricmp(g_browse_name.c_str(), g_dta.filename.c_str()) != 0                                           //
             && !blk_6_info.got_data                                                                                //
             && is_visible_window(&winlist, &read_info, &blk_5_info))                                               //
         {
-            winlist.name = DTA.filename;
+            winlist.name = g_dta.filename;
             drawindow(color_of_box, &winlist);
             winlist.boxcount = g_box_count;
             browse_windows[wincount] = winlist;
@@ -1898,7 +1910,7 @@ rescan:  // entry for changed browse parms
     {
         free_bf_vars();
     }
-    bf_math = oldbf_math;
+    g_bf_math = oldbf_math;
     g_float_flag = g_user_float_flag;
 
     return c;
@@ -1976,19 +1988,19 @@ static bool is_visible_window(
 
     saved = save_stack();
     // Save original values.
-    orig_bflength      = bflength;
-    orig_bnlength      = bnlength;
-    orig_padding       = padding;
-    orig_rlength       = rlength;
-    orig_shiftfactor   = shiftfactor;
-    orig_rbflength     = rbflength;
+    orig_bflength      = g_bf_length;
+    orig_bnlength      = g_bn_length;
+    orig_padding       = g_padding;
+    orig_rlength       = g_r_length;
+    orig_shiftfactor   = g_shift_factor;
+    orig_rbflength     = g_r_bf_length;
     /*
-       if (oldbf_math && info->bf_math && (bnlength+4 < info->bflength)) {
-          bnlength = info->bflength;
+       if (oldbf_math && info->bf_math && (g_bn_length+4 < info->g_bf_length)) {
+          g_bn_length = info->g_bf_length;
           calc_lengths();
        }
     */
-    two_len = bflength + 2;
+    two_len = g_bf_length + 2;
     bt_x = alloc_stack(two_len);
     bt_y = alloc_stack(two_len);
     bt_xmin = alloc_stack(two_len);
@@ -2000,9 +2012,9 @@ static bool is_visible_window(
 
     if (info->bf_math)
     {
-        const int di_bflength = info->bflength + bnstep;
+        const int di_bflength = info->g_bf_length + g_bn_step;
         const int two_di_len = di_bflength + 2;
-        const int two_rbf = rbflength + 2;
+        const int two_rbf = g_r_bf_length + 2;
 
         n_a     = alloc_stack(two_rbf);
         n_b     = alloc_stack(two_rbf);
@@ -2011,12 +2023,12 @@ static bool is_visible_window(
         n_e     = alloc_stack(two_rbf);
         n_f     = alloc_stack(two_rbf);
 
-        convert_bf(n_a, bt_a, rbflength, orig_rbflength);
-        convert_bf(n_b, bt_b, rbflength, orig_rbflength);
-        convert_bf(n_c, bt_c, rbflength, orig_rbflength);
-        convert_bf(n_d, bt_d, rbflength, orig_rbflength);
-        convert_bf(n_e, bt_e, rbflength, orig_rbflength);
-        convert_bf(n_f, bt_f, rbflength, orig_rbflength);
+        convert_bf(n_a, bt_a, g_r_bf_length, orig_rbflength);
+        convert_bf(n_b, bt_b, g_r_bf_length, orig_rbflength);
+        convert_bf(n_c, bt_c, g_r_bf_length, orig_rbflength);
+        convert_bf(n_d, bt_d, g_r_bf_length, orig_rbflength);
+        convert_bf(n_e, bt_e, g_r_bf_length, orig_rbflength);
+        convert_bf(n_f, bt_f, g_r_bf_length, orig_rbflength);
 
         bf_t bt_t1 = alloc_stack(two_di_len);
         bf_t bt_t2 = alloc_stack(two_di_len);
@@ -2141,12 +2153,12 @@ static bool is_visible_window(
     }
 
     // restore original values
-    bflength      = orig_bflength;
-    bnlength      = orig_bnlength;
-    padding       = orig_padding;
-    rlength       = orig_rlength;
-    shiftfactor   = orig_shiftfactor;
-    rbflength     = orig_rbflength;
+    g_bf_length      = orig_bflength;
+    g_bn_length   = orig_bnlength;
+    g_padding     = orig_padding;
+    g_r_length    = orig_rlength;
+    g_shift_factor = orig_shiftfactor;
+    g_r_bf_length = orig_rbflength;
 
     restore_stack(saved);
     if (cant_see)   // do it this way so bignum stack is released
@@ -2185,7 +2197,6 @@ static bool paramsOK(FRACTAL_INFO const *info)
     double tmpparm5, tmpparm6;
     double tmpparm7, tmpparm8;
     double tmpparm9, tmpparm10;
-#define MINDIF 0.001
 
     if (info->version > 6)
     {
@@ -2310,20 +2321,20 @@ static void check_history(char const *oldname, char const *newname)
 
 static void bfsetup_convert_to_screen()
 {
-    // setup_convert_to_screen() in LORENZ.C, converted to bf_math
+    // setup_convert_to_screen() in LORENZ.C, converted to g_bf_math
     // Call only from within fgetwindow()
     bf_t   bt_det, bt_xd, bt_yd, bt_tmp1, bt_tmp2;
     bf_t   bt_inter1, bt_inter2;
     int saved;
 
     saved = save_stack();
-    bt_inter1 = alloc_stack(rbflength+2);
-    bt_inter2 = alloc_stack(rbflength+2);
-    bt_det = alloc_stack(rbflength+2);
-    bt_xd  = alloc_stack(rbflength+2);
-    bt_yd  = alloc_stack(rbflength+2);
-    bt_tmp1 = alloc_stack(rbflength+2);
-    bt_tmp2 = alloc_stack(rbflength+2);
+    bt_inter1 = alloc_stack(g_r_bf_length+2);
+    bt_inter2 = alloc_stack(g_r_bf_length+2);
+    bt_det = alloc_stack(g_r_bf_length+2);
+    bt_xd  = alloc_stack(g_r_bf_length+2);
+    bt_yd  = alloc_stack(g_r_bf_length+2);
+    bt_tmp1 = alloc_stack(g_r_bf_length+2);
+    bt_tmp2 = alloc_stack(g_r_bf_length+2);
 
     // xx3rd-xxmin
     sub_bf(bt_inter1, g_bf_x_3rd, g_bf_x_min);
@@ -2403,8 +2414,8 @@ static void bftransform(bf_t bt_x, bf_t bt_y, dblcoords *point)
     int saved;
 
     saved = save_stack();
-    bt_tmp1 = alloc_stack(rbflength+2);
-    bt_tmp2 = alloc_stack(rbflength+2);
+    bt_tmp1 = alloc_stack(g_r_bf_length+2);
+    bt_tmp2 = alloc_stack(g_r_bf_length+2);
 
     //  point->x = cvt->a * point->x + cvt->b * point->y + cvt->e;
     mult_bf(bt_tmp1, n_a, bt_x);

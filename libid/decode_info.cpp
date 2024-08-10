@@ -38,23 +38,10 @@ static void get_double(double *dst, unsigned char **src, int dir);
 void decode_fractal_info_big_endian(FRACTAL_INFO *info, int dir)
 {
     std::vector<unsigned char> info_buff;
-    unsigned char *buf;
-    unsigned char *bufPtr;
-
-    if (dir == 1)
-    {
-        info_buff.resize(sizeof(FRACTAL_INFO));
-        buf = &info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(FRACTAL_INFO));
-    }
-    else
-    {
-        info_buff.resize(sizeof(FRACTAL_INFO));
-        buf = &info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(FRACTAL_INFO));
-    }
+    info_buff.resize(sizeof(FRACTAL_INFO));
+    unsigned char *buf = &info_buff[0];
+    unsigned char *bufPtr = buf;
+    std::memcpy(buf, info, sizeof(FRACTAL_INFO));
 
     if (dir == 1)
     {
@@ -182,7 +169,7 @@ void decode_fractal_info_big_endian(FRACTAL_INFO *info, int dir)
     get_int16(&info->bailoutest, &bufPtr, dir);
     get_int32(&info->iterations, &bufPtr, dir);
     get_int16(&info->bf_math, &bufPtr, dir);
-    get_int16(&info->bflength, &bufPtr, dir);
+    get_int16(&info->g_bf_length, &bufPtr, dir);
     get_int16(&info->yadjust, &bufPtr, dir);
     get_int16(&info->old_demm_colors, &bufPtr, dir);
     get_int32(&info->logmap, &bufPtr, dir);
@@ -212,7 +199,7 @@ void decode_fractal_info_big_endian(FRACTAL_INFO *info, int dir)
     }
     if (dir == 0)
     {
-        std::memcpy((char *)info, (char *)buf, sizeof(FRACTAL_INFO));
+        std::memcpy(info, buf, sizeof(FRACTAL_INFO));
     }
 }
 
@@ -234,21 +221,21 @@ static void get_uint8(std::uint8_t *dst, unsigned char **src, int dir)
 }
 
 /*
- * This routine gets an int out of the buffer.
+ * This routine gets an int16_t out of the buffer.
  * It updates the buffer pointer accordingly.
  */
 static void get_int16(std::int16_t *dst, unsigned char **src, int dir)
 {
     if (dir == 1)
     {
-        *dst = (*src)[0] + ((((char *)(*src))[1]) << 8);
+        *dst = static_cast<std::int16_t>((*src)[0] + (((char *) *src)[1] << 8));
     }
     else
     {
-        (*src)[0] = (*dst)&0xff;
-        (*src)[1] = ((*dst)&0xff00) >> 8;
+        (*src)[0] = *dst & 0xff;
+        (*src)[1] = (*dst & 0xff00) >> 8;
     }
-    (*src) += 2; // sizeof(int) in MS_DOS
+    *src += 2; // sizeof(std::uint16_t)
 }
 
 /*
@@ -447,20 +434,10 @@ void decode_evolver_info_big_endian(EVOLUTION_INFO *info, int dir)
     unsigned char *buf;
     unsigned char *bufPtr;
 
-    if (dir == 1)
-    {
-        evolution_info_buff.resize(sizeof(EVOLUTION_INFO));
-        buf = &evolution_info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(EVOLUTION_INFO));
-    }
-    else
-    {
-        evolution_info_buff.resize(sizeof(EVOLUTION_INFO));
-        buf = &evolution_info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(EVOLUTION_INFO));
-    }
+    evolution_info_buff.resize(sizeof(EVOLUTION_INFO));
+    buf = &evolution_info_buff[0];
+    bufPtr = buf;
+    std::memcpy((char *)buf, (char *)info, sizeof(EVOLUTION_INFO));
 
     get_int16((short *) &info->evolving, &bufPtr, dir);
     get_int16(&info->image_grid_size, &bufPtr, dir);
@@ -506,20 +483,10 @@ void decode_orbits_info_big_endian(ORBITS_INFO *info, int dir)
     unsigned char *buf;
     unsigned char *bufPtr;
 
-    if (dir == 1)
-    {
-        orbits_info_buff.resize(sizeof(ORBITS_INFO));
-        buf = &orbits_info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(ORBITS_INFO));
-    }
-    else
-    {
-        orbits_info_buff.resize(sizeof(ORBITS_INFO));
-        buf = &orbits_info_buff[0];
-        bufPtr = buf;
-        std::memcpy((char *)buf, (char *)info, sizeof(ORBITS_INFO));
-    }
+    orbits_info_buff.resize(sizeof(ORBITS_INFO));
+    buf = &orbits_info_buff[0];
+    bufPtr = buf;
+    std::memcpy((char *)buf, (char *)info, sizeof(ORBITS_INFO));
 
     get_double(&info->oxmin, &bufPtr, dir);
     get_double(&info->oxmax, &bufPtr, dir);

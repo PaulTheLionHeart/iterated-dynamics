@@ -33,22 +33,21 @@ static void set_palette(BYTE start[3], BYTE finish[3]);
 static void set_palette2(BYTE start[3], BYTE finish[3]);
 static void set_palette3(BYTE start[3], BYTE middle[3], BYTE finish[3]);
 
-static bool paused = false;             // rotate-is-paused flag
-static BYTE Red[3]    = {63, 0, 0};     // for shifted-Fkeys
-static BYTE Green[3]  = { 0, 63, 0};
-static BYTE Blue[3]   = { 0, 0, 63};
-static BYTE Black[3]  = { 0, 0, 0};
-static BYTE White[3]  = {63, 63, 63};
-static BYTE Yellow[3] = {63, 63, 0};
-static BYTE Brown[3]  = {31, 31, 0};
+static bool s_paused{};         // rotate-is-paused flag
+static BYTE s_red[3]{63, 0, 0}; // for shifted-Fkeys
+static BYTE s_green[3]{0, 63, 0};
+static BYTE s_blue[3]{0, 0, 63};
+static BYTE s_black[3]{0, 0, 0};
+static BYTE s_white[3]{63, 63, 63};
+static BYTE s_yellow[3]{63, 63, 0};
+static BYTE s_brown[3]{31, 31, 0};
 
 std::string g_map_name;
-bool g_map_set = false;
-char mapmask[13] = {"*.map"};
-BYTE g_dac_box[256][3];
-BYTE g_old_dac_box[256][3];
-bool g_dac_learn = false;
-bool g_got_real_dac = false;            // true if loaddac has a dacbox
+bool g_map_set{};
+BYTE g_dac_box[256][3]{};
+BYTE g_old_dac_box[256][3]{};
+bool g_dac_learn{};
+bool g_got_real_dac{}; // true if loaddac has a dacbox
 
 void rotate(int direction)      // rotate-the-palette routine
 {
@@ -69,7 +68,6 @@ void rotate(int direction)      // rotate-the-palette routine
     int togreen = 0;
     int changecolor;
     int changedirection;
-    help_labels old_help_mode;
     int rotate_max;
     int rotate_size;
 
@@ -87,10 +85,9 @@ void rotate(int direction)      // rotate-the-palette routine
         return;
     }
 
-    old_help_mode = g_help_mode;              // save the old help mode
-    g_help_mode = help_labels::HELP_CYCLING;              // new help mode
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_CYCLING};
 
-    paused = false;                      // not paused
+    s_paused = false;                      // not paused
     fkey = 0;                            // no random coloring
     step = 1;
     oldstep = step;                      // single-step
@@ -122,7 +119,7 @@ void rotate(int direction)      // rotate-the-palette routine
     {
         if (driver_diskp())
         {
-            if (!paused)
+            if (!s_paused)
             {
                 pauserotate();
             }
@@ -175,13 +172,13 @@ void rotate(int direction)      // rotate-the-palette routine
             step = oldstep;
         }
         kbdchar = driver_get_key();
-        if (paused
+        if (s_paused
             && (kbdchar != ' '
                 && kbdchar != 'c'
                 && kbdchar != ID_KEY_HOME
                 && kbdchar != 'C'))
         {
-            paused = false;                 // clear paused condition
+            s_paused = false;                 // clear paused condition
         }
         switch (kbdchar)
         {
@@ -344,7 +341,7 @@ void rotate(int direction)      // rotate-the-palette routine
             }
             changecolor    = -1;        // clear flags for next time
             changedirection = 0;
-            paused          = false;    // clear any pause
+            s_paused          = false;    // clear any pause
         case ' ':                      // use the spacebar as a "pause" toggle
         case 'c':                      // for completeness' sake, the 'c' too
         case 'C':
@@ -370,7 +367,7 @@ void rotate(int direction)      // rotate-the-palette routine
             }
             fkey = 0;
             spindac(direction, 1);
-            if (! paused)
+            if (! s_paused)
             {
                 pauserotate();           // pause
             }
@@ -418,137 +415,135 @@ void rotate(int direction)      // rotate-the-palette routine
             fkey = 0;                   // disable random generation
             if (kbdchar == ID_KEY_SF1)
             {
-                set_palette(Black, White);
+                set_palette(s_black, s_white);
             }
             if (kbdchar == ID_KEY_SF2)
             {
-                set_palette(Red, Yellow);
+                set_palette(s_red, s_yellow);
             }
             if (kbdchar == ID_KEY_SF3)
             {
-                set_palette(Blue, Green);
+                set_palette(s_blue, s_green);
             }
             if (kbdchar == ID_KEY_SF4)
             {
-                set_palette(Black, Yellow);
+                set_palette(s_black, s_yellow);
             }
             if (kbdchar == ID_KEY_SF5)
             {
-                set_palette(Black, Red);
+                set_palette(s_black, s_red);
             }
             if (kbdchar == ID_KEY_SF6)
             {
-                set_palette(Black, Blue);
+                set_palette(s_black, s_blue);
             }
             if (kbdchar == ID_KEY_SF7)
             {
-                set_palette(Black, Green);
+                set_palette(s_black, s_green);
             }
             if (kbdchar == ID_KEY_SF8)
             {
-                set_palette(Blue, Yellow);
+                set_palette(s_blue, s_yellow);
             }
             if (kbdchar == ID_KEY_SF9)
             {
-                set_palette(Red, Green);
+                set_palette(s_red, s_green);
             }
             if (kbdchar == ID_KEY_SF10)
             {
-                set_palette(Green, White);
+                set_palette(s_green, s_white);
             }
             if (kbdchar == ID_KEY_CTL_F1)
             {
-                set_palette2(Black, White);
+                set_palette2(s_black, s_white);
             }
             if (kbdchar == ID_KEY_CTL_F2)
             {
-                set_palette2(Red, Yellow);
+                set_palette2(s_red, s_yellow);
             }
             if (kbdchar == ID_KEY_CTL_F3)
             {
-                set_palette2(Blue, Green);
+                set_palette2(s_blue, s_green);
             }
             if (kbdchar == ID_KEY_CTL_F4)
             {
-                set_palette2(Black, Yellow);
+                set_palette2(s_black, s_yellow);
             }
             if (kbdchar == ID_KEY_CTL_F5)
             {
-                set_palette2(Black, Red);
+                set_palette2(s_black, s_red);
             }
             if (kbdchar == ID_KEY_CTL_F6)
             {
-                set_palette2(Black, Blue);
+                set_palette2(s_black, s_blue);
             }
             if (kbdchar == ID_KEY_CTL_F7)
             {
-                set_palette2(Black, Green);
+                set_palette2(s_black, s_green);
             }
             if (kbdchar == ID_KEY_CTL_F8)
             {
-                set_palette2(Blue, Yellow);
+                set_palette2(s_blue, s_yellow);
             }
             if (kbdchar == ID_KEY_CTL_F9)
             {
-                set_palette2(Red, Green);
+                set_palette2(s_red, s_green);
             }
             if (kbdchar == ID_KEY_CTL_F10)
             {
-                set_palette2(Green, White);
+                set_palette2(s_green, s_white);
             }
             if (kbdchar == ID_KEY_ALT_F1)
             {
-                set_palette3(Blue, Green, Red);
+                set_palette3(s_blue, s_green, s_red);
             }
             if (kbdchar == ID_KEY_ALT_F2)
             {
-                set_palette3(Blue, Yellow, Red);
+                set_palette3(s_blue, s_yellow, s_red);
             }
             if (kbdchar == ID_KEY_ALT_F3)
             {
-                set_palette3(Red, White, Blue);
+                set_palette3(s_red, s_white, s_blue);
             }
             if (kbdchar == ID_KEY_ALT_F4)
             {
-                set_palette3(Red, Yellow, White);
+                set_palette3(s_red, s_yellow, s_white);
             }
             if (kbdchar == ID_KEY_ALT_F5)
             {
-                set_palette3(Black, Brown, Yellow);
+                set_palette3(s_black, s_brown, s_yellow);
             }
             if (kbdchar == ID_KEY_ALT_F6)
             {
-                set_palette3(Blue, Brown, Green);
+                set_palette3(s_blue, s_brown, s_green);
             }
             if (kbdchar == ID_KEY_ALT_F7)
             {
-                set_palette3(Blue, Green, Green);
+                set_palette3(s_blue, s_green, s_green);
             }
             if (kbdchar == ID_KEY_ALT_F8)
             {
-                set_palette3(Blue, Green, White);
+                set_palette3(s_blue, s_green, s_white);
             }
             if (kbdchar == ID_KEY_ALT_F9)
             {
-                set_palette3(Green, Green, White);
+                set_palette3(s_green, s_green, s_white);
             }
             if (kbdchar == ID_KEY_ALT_F10)
             {
-                set_palette3(Red, Blue, White);
+                set_palette3(s_red, s_blue, s_white);
             }
             pauserotate();  // update palette and pause
             break;
         }
     }
-
-    g_help_mode = old_help_mode;              // return to previous help mode
 }
 
 static void pauserotate()               // pause-the-rotate routine
 {
-    if (paused)                            // if already paused , just clear
+    if (s_paused)                            // if already paused , just clear
     {
-        paused = false;
+        s_paused = false;
     }
     else
     {
@@ -577,7 +572,7 @@ static void pauserotate()               // pause-the-rotate routine
         g_dac_box[0][2] = olddac2;
         spindac(0, 1);                     // show black border
         g_dac_count = olddaccount;
-        paused = true;
+        s_paused = true;
     }
 }
 
@@ -626,17 +621,15 @@ static void set_palette3(BYTE start[3], BYTE middle[3], BYTE finish[3])
     }
 }
 
-
 void save_palette()
 {
     char palname[FILE_MAX_PATH];
     std::FILE *dacfile;
     int i;
     std::strcpy(palname, g_map_name.c_str());
-    help_labels const old_help_mode = g_help_mode;
     driver_stack_screen();
     char filename[256] = { 0 };
-    g_help_mode = help_labels::HELP_COLORMAP;
+    ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_COLORMAP};
     i = field_prompt("Name of map file to write", nullptr, filename, 60, nullptr);
     driver_unstack_screen();
     if (i != -1 && filename[0])
@@ -670,16 +663,14 @@ void save_palette()
         }
         std::fclose(dacfile);
     }
-    g_help_mode = old_help_mode;
 }
-
 
 bool load_palette()
 {
     ValueSaver saved_help_mode{g_help_mode, help_labels::HELP_COLORMAP};
     std::string filename{g_map_name};
     driver_stack_screen();
-    const bool i = getafilename("Select a MAP File", mapmask, filename);
+    const bool i = getafilename("Select a MAP File", "*.map", filename);
     driver_unstack_screen();
     if (!i)
     {
