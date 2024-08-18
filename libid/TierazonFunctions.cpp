@@ -28,6 +28,7 @@ extern double g_magnitude_limit;
 extern DComplex g_old_z, g_new_z;
 extern long g_max_iterations; // try this many iterations
 extern long g_color_iter;   
+extern int g_periodicity_check;
 
 bool juliaflag = false; // for the time being
 
@@ -40,11 +41,171 @@ extern  bool BailoutTest(Complex *z, Complex SqrZ);
 bool FractintBailoutTest(Complex *z);
 
 /**************************************************************************
+        Setup some Tierazon defaults
+        Normally these would be setup in fractalp.cpp so the user can still modify them
+        This is a cludge to help get ID working with Tierazon and give the same fractal
+**************************************************************************/
+
+void        TierzonDefaults(int subtype)
+    {
+    switch (subtype)
+        {
+        case 4: // Talis, z=((z*z)/(1+z))+c
+            g_magnitude_limit = 400.0;
+            break;
+        case 10: // z=z*z*z+c
+            degree = 3;
+            break;
+        case 11: // z=z*z*z*z+c
+            degree = 4;
+            break;
+        case 12: // z=z*z*z*z*z+c
+            degree = 5;
+            break;
+        case 13: // z=z*z*z*z*z*z+c
+            degree = 6;
+            break;
+        case 26:  // Newton/Mandel, 5th order Newton Mset
+            degree = 5;
+            break;
+        case 27:  // Newton/Mandel, 7th order Newton Mset
+            degree = 7;
+            break;
+        case 28:  // Newton/Mandel, 9th order Newton Mset
+            degree = 9;
+            break;
+        case 29:  // Newton/Mandel, 13th order Newton Mset
+            degree = 13;
+            break;
+        case 30:  // Newton/Mandel, 8th order Newton Mset
+            degree = 8;
+            break;
+        case 31:  // Newton/Mandel, Newton Diamond
+            degree = 5;
+            break;
+        case 32:  // Newton/Mandel, Newton Pentagon
+            degree = 6;
+            break;
+        case 33:  // Newton/Mandel, Newton Hexagon
+            degree = 7;
+            break;
+        case 34:  // Newton/Mandel, Newton Octagon
+            degree = 9;
+            break;
+        case 35:  // Newton/Mandel, 9th order Newton Flower
+            degree = 13;
+            break;
+        case 52:  // Newton/Mandel, 8th order Newton flower
+            degree = 8;
+            break;
+        case 53:  // Newton/Mandel, 6th order Newton Mset
+            degree = 6;
+            break;
+        case 54:  // More Newton Msets, 15th order Newton Mset flower
+            degree = 15;
+            break;
+        case 55:  // More Newton Msets, 4th order Newton's apple
+            degree = 4;
+            break;
+        case 56:  // More Newton Msets, 25th order Newton Mset flower
+            degree = 25;
+            break;
+        case 57:  // More Newton Msets, 38th order Newton Mset flower
+            degree = 38;
+            break;
+        case 58:  // More Newton Msets, 50th order Newton Mset flower
+            degree = 50;
+            break;
+        case 59:  // More Newton Msets, 5th order Newton   Mset
+            degree = 6;
+            break;
+        case 84:  // Quartets, t=0; z1=z; z=z*z*z*z-t*t*t*t+c; t=z1
+            degree = 4;
+            break;
+        case 85:  // Quartets, z2=z; z=(z^4)+c; c=z2
+            degree = 4;
+            break;
+        case 96:  // Quartets, z1=z; z=z*z*z*z+z2/2+c;; z2=z1
+            degree = 4;
+            break;
+        case 106: // More Fractals, 5th order N/Mset
+            degree = 5;
+            break;
+        case 120: // Flarium 07, Polynomial: z = (z*z+c)^(cn+c)
+        case 121: // Flarium 08, Sharon Webb: z = z*z*z*z+1/c; [Sharon Star]
+        case 122: // Flarium 09, Sharon Webb: z = (z*z/2+c)*(z*z/2+c); [Sharon's Space Probe]
+        case 123: // Flarium 10, Sharon Webb: z = z*z*z*z+((c/2)^2)+c; [Sharon08]
+        case 124: // Flarium 11, Sharon Webb: z = z*z*z*z+(z^(z+cn))+c
+        case 125: // Flarium 12, Sharon Webb: z = (z+z*z/2)+c
+        case 126: // Flarium 13, Sharon Webb: z=(z*z*z*z-z2*z2*z2*z2+c)^2
+        case 130: // Flarium 21, Sharon Webb: z=(1/z*z-c)*(z*z*z*z+c); [Sharon03]
+        case 131: // Flarium 25, Newton Variations: z=z-(z*z*z*z-z)/(4*z*z*z-z); z=z*c
+        case 132: // Flarium 27, Polynomial: z=z*z*(cn+z)/(cn+z+c)+c
+        case 134: // Flarium 29, Derbyshire / Newton: c = (z*z*z-1)/(3*z*z); z -= (z*z*z-1)/(3*z*z)*c
+        case 135: // Flarium 30, Derbyshire / Newton: z -= (z*z*z-1)/(3*z*z)*c
+        case 136: // Flarium 31, Polynomial: z = z*z*z-aa3*z+b
+        case 137: // Flarium 32, Derbyshire / Newton: 3rd Order Nova in a M-Set (Try single pass)
+        case 138: // Flarium 34, Sharon Webb: z1= z*(z*z).csin()/2; z=z1*z1 + c; [Sharon14]
+        case 139: // Flarium 35, Polynomial: z=c*(z.csin())
+        case 140: // Flarium 36, Polynomial: z=(c*z).csin()
+        case 141: // Flarium 37, Polynomial: z=(z*z*z-1)/(3*z*z); z = c*(z.csin() + z.ccos())
+        case 142: // Flarium 38, Polynomial: z = z*z+c; z.set_real(z.real()*z.real()); [Variation real]
+        case 143: // Flarium 40, Polynomial: z1 = z*z*z*z; z = c*z1/4*z1 + z
+        case 144: // Flarium 41, Polynomial: z = c*(z*z*z*z).csin()
+        case 145: // Flarium 43, Polynomial: z = z*z*z*z + (z*c).csin() + c
+        case 146: // Flarium 44, Polynomial: z=(z*z*z*z-z)/(4*z*z*z); z=c*z.csin()
+        case 147: // Flarium 45, Polynomial: z=(z*z*z*z-1)/(4*z*z*z); z=c*z.csin()
+        case 148: // Flarium 46, Sharon Webb: z1= z*(z*z).csin()/2; z=z1*z1 + c; [Sharon14 N-Method]
+        case 149: // Flarium 49, Polynomial: z=(z*z*z*z-z)/((4*z*z*z)-z); z=c*z.csin()
+        case 150: // Flarium 50, Sharon Webb: z = z*z*z*z+1/c; [Sharon's Star M-Set]
+        case 151: // Flarium 51, Sharon Webb: z = (z*z/2+c)*(z*z/2+c); [Space Probe M-Set]
+        case 152: // Flarium 52, Sharon Webb: z = z*z*z*z+t+c; [Sharon08 M-Set]
+        case 153: // Flarium 53, Sharon Webb: z = (z+z*z/2)+c; [M-Set]
+        case 154: // Flarium 54, Polynomial: z = z*z*c+c; [M-Set]
+        case 155: // Flarium 55, Polynomial: z = (z*z).csin()*z*z*c+c; [M-Set]
+        case 156: // Flarium 56, Polynomial: z = (z*z+c)/(z*z-c); [M-Set]
+        case 157: // Flarium 57, Derbyshire / Newton: z=z-(z*z1-z)/((5*z1)-z)+c; [5th Order Nova Variation]
+        case 158: // Flarium 58, Derbyshire / Newton: z=z-(z*z1-z)/((3*z1)-z)+c; [3rd Order Nova Variation]
+        case 159: // Flarium 59, Derbyshire / Newton: z=z-(z*z1-z)/((3*z1)-1)+c; [3rd Order Nova Variation]
+        case 160: // Flarium 60, Derbyshire / Newton: z=z-(z*z1-z)/((5*z1)-1)+c; [5th Order Nova Variation]
+        case 161: // Flarium 61, Polynomial: z=z*z*z*z+(c+(c/pi))
+        case 162: // Flarium 62, Polynomial: z=z*z*(1+z)/(1+z+c)+c
+        case 163: // Flarium 64, PHOENIX: z1=z; z=z*z*z*z+c.real()*z2/2+c.imag()*z2/2+c; z2=z1
+        case 164: // Flarium 66, Newton Variations: z = ((z-(((z^2)-1)/(2*z)))^2)*c
+        case 165: // Flarium 67-69, Newton Variations: z = ((z-(((z^n)-1)/(n*(z^(n-1)))))^2)*c
+        case 166: // Flarium 80, Newton Variations: z=((z*z*z*z-1)/(1-(3*z*z*z)))*c
+        case 167: // Flarium 90, Sharon Webb: z = (z*(z*z).csin()/2).csin()+c; [Sharon15]
+        case 168: // Flarium 91, Sharon Webb: z = (z*(z+z).ccos()/2); z = z*z+c; [Sharon16]
+        case 169: // Flarium 92, Sharon Webb: z = (z*(z+z).csin()/2); z = z*z+c; [Sharon17]
+        case 170: // Flarium 93, Sharon Webb: z = (z*(z+z*z).csin()/2); z = z*z+c; [Sharon18]
+        case 171: // Flarium 111, Sharon Webb: z1= z*(z*z).csin()/2; z=z1*z1 + c; [Alden's Ray Method]
+        case 172: // Flarium 112-116, Polynomials: z=z^n*c+z*c; Dragon curve variations
+        case 173: // Flarium 117, Newton Variations: z = z-(z*z*z-z*c-1)/(3*z*z+c-1)
+        case 174: // Flarium 118, Sharon Webb: z = (z*z*z*z*z).csin() + c; [Sharon19]
+        case 175: // Flarium 119, Sharon Webb: z = (z+(z*z)/.192).csin() + c; [Sharon's Butterfly]
+        case 176: // Flarium 125, Sharon Webb: z = z+z*z*z/4 + c; [Sharon21]
+            g_magnitude_limit = 1000.0;
+            break;
+        case 133: // Flarium 28, Derbyshire / Newton: z=z - (z*z*z-1)/(3*z*z)+c; [Nova-Mandelbrot-MultiFract]
+            g_magnitude_limit = 1000.0;
+            g_periodicity_check = 0;            // no periodicity checking
+            break;
+        case 177: // Flarium 145, Polynomial: z=z^2+c [Jaenisch method]
+            degree = 2;
+            g_magnitude_limit = 1000.0;
+            g_periodicity_check = 0;    		// no periodicity checking
+            break;
+
+        }
+    }
+
+/**************************************************************************
 	Initialise functions for each pixel
 **************************************************************************/
 
 int	InitTierazonFunctions(int subtype, Complex *z, Complex *q)
     {
+    TierzonDefaults(subtype);
     switch (subtype)
 	    {
 	    case 0:						// Mandelbrot
@@ -563,8 +724,9 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 132:					// Flarium 27, Polynomial: z=z*z*(cn+z)/(cn+z+c)+c
     	    if (!juliaflag)
 		        *z = *q;
-	        z2.x = g_params[2];
-	        z2.y = g_params[3];
+//	        z2.x = g_params[2];
+//	        z2.y = g_params[3];
+            z2 = degree;
 	        break;
 
 	    case 123:					// Flarium 10, Sharon Webb: z = z*z*z*z+((c/2)^2)+c; [Sharon08]
@@ -1819,7 +1981,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	        int		i;
 	
 	        z1 = *z;
-	        if (g_color_iter >= g_max_iterations)
+	        if (g_color_iter >= g_max_iterations - 1)
 		        {
 		        // Inside
 		        *q = *z;
@@ -2184,12 +2346,12 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	        int		i, rzflag, jrw;
 	        int		nFF = 1;
 	        long	NMAX = (g_max_iterations * 2) / 3;
-	        double	r, rz;
+	        double	r, rz = 0;
 	        long	LocalIteration;
 	        //    BOOL	b_MAX;
 
 	        z1 = *z;
-	        if (g_color_iter >= g_max_iterations)
+	        if (g_color_iter >= g_max_iterations - 1)
 		        {
 		        // Inside
 		        *z = z2;
