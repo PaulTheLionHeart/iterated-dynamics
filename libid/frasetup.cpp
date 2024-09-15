@@ -13,6 +13,7 @@
 #include "fractalp.h"
 #include "fractals.h"
 #include "fractype.h"
+#include "miscfrac.h"
 #include "get_julia_attractor.h"
 #include "id_data.h"
 #include "magnet.h"
@@ -31,6 +32,8 @@
 bool
 MandelSetup()           // Mandelbrot Routine
 {
+    if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return InitPerturbation();
     if (g_debug_flag != debug_flags::force_standard_fractal
         && (g_invert == 0)
         && g_decomp[0] == 0
@@ -124,6 +127,8 @@ MandelfpSetup()
            calcmandfp() can currently handle invert, any rqlim, potflag
            zmag, epsilon cross, and all the current outside options
         */
+ //       if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+            return InitPerturbation();
         if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
             && g_decomp[0] == 0

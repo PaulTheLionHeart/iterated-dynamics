@@ -200,11 +200,7 @@ enum class fractal_type
     LATOO                       = 171,
     DIVIDE_BROT5                = 172,
     MANDELBROTMIX4              = 173,
-    PERTURBATION                = 174,      // PHD240709
-    MANDELDERIVATIVES           = 175,
-    TIERAZON                    = 176,      // PHD240710
-    ARTMATRIX                   = 177,
-    FOURIER                     = 178
+    BURNINGSHIP                 = 174
 };
 
 inline int operator+(fractal_type rhs)

@@ -2222,12 +2222,6 @@ plot_pixel:
         }
     }
 
-    if (g_fractal_type == fractal_type::ARTMATRIX && (g_params[0] == 1.0 || g_params[0] == 2.0))            // PHD 240711
-        {
-        if (!IsInside)
-            g_color += (g_phaseflag * (int) g_params[2]);                                                   // plot different colours for different phases
-        }
-        
     (*g_plot)(g_col, g_row, g_color);
 
     g_max_iterations = savemaxit;

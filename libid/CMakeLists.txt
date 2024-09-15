@@ -14,13 +14,6 @@ add_library(libid
     PertEngine.cpp include/PertEngine.h
     PertFn.cpp
     Perturbation.cpp
-    MandelDerivatives.cpp
-    BigManDerivatives.cpp
-    TierazonFunctions.cpp
-    BigTZ.cpp
-    ArtMatrix.cpp
-    BigArtMatrix.cpp
-    fourier.cpp
 
     include/Point.h
     include/gmp.h
@@ -626,7 +619,7 @@ source_group("Source Files/ui" FILES
     version.cpp
     video_mode.cpp
     zoom.cpp
-)
+    )
 
 set_src_dir(help.cpp)
 set_src_dir(id_main.cpp)
