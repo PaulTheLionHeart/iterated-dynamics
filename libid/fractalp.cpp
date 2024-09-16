@@ -2296,6 +2296,16 @@ fractalspecificstuff g_fractal_specific[] =
         MandelbrotMix4fpFractal, MandelbrotMix4fp_per_pixel, MandelbrotMix4Setup, standard_fractal,
         STDBAILOUT
     },
+    {
+        "burningship",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 3, 0},
+        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::PERTURB,
+        -2.5F, 1.5F, -1.5F, 1.5F,
+        1, fractal_type::BURNINGSHIP, fractal_type::NOFRACTAL, fractal_type::BURNINGSHIP, symmetry_type::NONE,
+        JuliafpFractal, burningshipfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
 
     {
         nullptr,            // marks the END of the list

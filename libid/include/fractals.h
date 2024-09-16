@@ -62,6 +62,7 @@ int long_mandel_per_pixel();
 int julia_per_pixel();
 int mandel_per_pixel();
 int mandelfp_per_pixel();
+int burningshipfp_per_pixel();
 int juliafp_per_pixel();
 int othermandelfp_per_pixel();
 int otherjuliafp_per_pixel();

@@ -55,7 +55,7 @@ static	CTZfilter	TZfilter;		// Tierazon filters
 CPertEngine PertEngine;
 char		PertStatus[200];
 
-int         DoPerturbation();
+int         DoPerturbation(int);
 void        BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
 void        bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern void cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
@@ -79,7 +79,7 @@ void ConvertBignum2String(char *s, mpfr_t num)                                //
 	Initialise Perturbation engine
 **************************************************************************/
 
-bool	InitPerturbation(void)
+bool	InitPerturbation(int subtype)
     {
     double  mandel_width;    // width of display
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
@@ -130,7 +130,7 @@ bool	InitPerturbation(void)
 	    mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
     */
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
-    DoPerturbation();
+    DoPerturbation(subtype);
     return false;
     }
 
@@ -138,24 +138,24 @@ bool	InitPerturbation(void)
 	The Perturbation engine
 **************************************************************************/
 
-int	DoPerturbation(void)
+int DoPerturbation(int subtype)
     {
     int (*UserData)() = driver_key_pressed;
-    Complex a = {0, 0};
+    Complex a = {0, 0};             // future TheRedshiftRider
     bool    IsPositive = false;
     int     degree;  // power
-    BYTE    subtype; // subtype
+//    BYTE    subtype; // subtype
 
-    subtype = (int) g_params[0];
-    degree = (int) g_params[1];
-        
-    if (subtype == 53)      // TheRedshiftRider
+//    subtype = (int) g_params[0];
+    degree = (int) g_params[2];
+/*        
+    if (subtype == 53)              // future TheRedshiftRider
 	    {
 	    a.x = g_params[2];
 	    a.y = g_params[3];
 	    IsPositive = (g_params[4] == 1.0);
 	    }
-
+*/
     if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, g_inside_color, g_outside_color, g_biomorph, subtype, a, IsPositive, UserData, g_plot, potential/*, &TZfilter, &TrueCol*/) < 0)
         //    if (frameCalculator.calculateOneFrame(rqlim, PertStatus, degree, method, biomorph, subtype, a, IsPositive, UserData, plot, potential) < 0)
 	    return -1;

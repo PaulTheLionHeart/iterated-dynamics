@@ -678,8 +678,8 @@ bool MandelbnSetup()
 
 bool MandelbfSetup()
 {
-//       if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-        return InitPerturbation();
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return InitPerturbation(0);
     // this should be set up dynamically based on corners
     bf_t bftemp1;
     bf_t bftemp2;
@@ -773,8 +773,8 @@ bool MandelbfSetup()
 
 int mandelbn_per_pixel()
 {
-//       if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-        return InitPerturbation();
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return true;
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bn_int(g_param_z_bn.x, g_delta_x_bn, (U16)g_col);
     mult_bn_int(g_bn_tmp, g_delta2_x_bn, (U16)g_row);

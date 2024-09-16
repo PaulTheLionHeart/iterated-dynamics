@@ -32,8 +32,8 @@
 bool
 MandelSetup()           // Mandelbrot Routine
 {
-    if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-        return InitPerturbation();
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return InitPerturbation(0);
     if (g_debug_flag != debug_flags::force_standard_fractal
         && (g_invert == 0)
         && g_decomp[0] == 0
@@ -121,14 +121,20 @@ MandelfpSetup()
         }
         break;
     case fractal_type::MANDELFP:
+    case fractal_type::BURNINGSHIP:
         /*
            floating point code could probably be altered to handle many of
            the situations that otherwise are using standard_fractal().
            calcmandfp() can currently handle invert, any rqlim, potflag
            zmag, epsilon cross, and all the current outside options
         */
- //       if (bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-            return InitPerturbation();
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        {
+            if (g_fractal_type == fractal_type::MANDELFP)
+                return InitPerturbation(0);
+            else if (g_fractal_type == fractal_type::BURNINGSHIP)
+                return InitPerturbation(2);
+        }
         if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
             && g_decomp[0] == 0
@@ -150,6 +156,7 @@ MandelfpSetup()
             g_calc_type = standard_fractal;
         }
         break;
+
     case fractal_type::FPMANDELZPOWER:
         if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
         {

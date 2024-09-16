@@ -591,6 +591,9 @@ int mandelfp_per_pixel()
     }
     switch (g_fractal_type)
     {
+    case fractal_type::BURNINGSHIP:
+        burningshipfp_per_pixel();
+        return 1;
     case fractal_type::MAGNET2M:
         FloatPreCalcMagnet2();
     case fractal_type::MAGNET1M:
@@ -693,4 +696,42 @@ int otherjuliafp_per_pixel()
         g_old_z.y = g_dy_pixel();
     }
     return 0;
+}
+
+int burningshipfp_per_pixel()
+{
+    DComplex square, q;
+    double real_imag;
+/*
+    if (g_invert != 0)
+    {
+        invertz2(&g_init);
+    }
+    else
+    {
+        g_init.x = g_dx_pixel();
+        g_init.y = g_dy_pixel();
+    }
+*/
+// Burning Ship
+//    g_old_z = g_init;
+    q.x = g_dx_pixel();
+    q.y = g_dy_pixel();
+    square.x = g_old_z.x * g_old_z.x;
+    square.y = g_old_z.y * g_old_z.y;
+    real_imag = fabs(g_old_z.x * g_old_z.y);
+    g_old_z.x = square.x - square.y + q.x;
+    g_old_z.y = real_imag + real_imag - q.y;
+//    return BailoutTest(z, sqr);
+/*
+// Burning Ship to higher power
+    z->x = fabs(z->x);
+    z->y = -fabs(z->y);
+    *z = z->CPolynomial(*degree);
+    *z = *z + *q;
+    return FractintBailoutTest(z);
+*/
+    return g_bailout_float();
+
+//    return 1; // 1st iteration has been done
 }
