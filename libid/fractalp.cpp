@@ -314,8 +314,8 @@ fractalspecificstuff g_fractal_specific[] =
     {
         t_mandel,
         {realz0, imagz0, "", ""},
-        {0, 0, 0, 0},
-        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::BF_MATH,
+        {0, 0, 0, 0}, help_labels::HT_MANDEL, help_labels::HF_MANDEL,
+        fractal_flags::BAILTEST | fractal_flags::BF_MATH | fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         0, fractal_type::JULIAFP, fractal_type::NOFRACTAL, fractal_type::MANDEL, symmetry_type::X_AXIS_NO_PARAM,
         JuliafpFractal, mandelfp_per_pixel, MandelfpSetup, standard_fractal,
@@ -2299,8 +2299,9 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "burningship",
         {realz0, imagz0, "degree", ""},
-        {0, 0, 3, 0},
+        {0, 0, 2, 0},
         help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::PERTURB,
+//        help_labels::HT_BURNINGSHIP, help_labels::HF_BURNINGSHIP, fractal_flags::BAILTEST|fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         1, fractal_type::BURNINGSHIP, fractal_type::NOFRACTAL, fractal_type::BURNINGSHIP, symmetry_type::NONE,
         JuliafpFractal, burningshipfp_per_pixel, MandelfpSetup, standard_fractal,

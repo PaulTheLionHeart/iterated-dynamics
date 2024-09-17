@@ -1209,6 +1209,10 @@ static void perform_worklist()
         case 'o':
             sticky_orbits();
             break;
+        case 'p':
+            if (bit_set (g_cur_fractal_specific->flags, fractal_flags::PERTURB))    // we already finished perturbation, so let's get outa here
+                return;
+            break;
         default:
             one_or_two_pass();
         }

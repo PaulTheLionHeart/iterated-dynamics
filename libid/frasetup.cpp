@@ -133,7 +133,15 @@ MandelfpSetup()
             if (g_fractal_type == fractal_type::MANDELFP)
                 return InitPerturbation(0);
             else if (g_fractal_type == fractal_type::BURNINGSHIP)
-                return InitPerturbation(2);
+            {
+                int degree = g_params[2];
+                if (degree == 2)
+                    return InitPerturbation(2);
+                else if (degree <= 5)
+                    return InitPerturbation(degree);
+                else
+                    return InitPerturbation(2);
+            }
         }
         if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
