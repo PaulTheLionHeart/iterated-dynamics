@@ -54,6 +54,7 @@ an appropriate setup, per_image, per_pixel, and orbit routines.
 #include "mpmath_c.h"
 #include "newton.h"
 #include "parser.h"
+#include "complex.h"
 #include "pixel_grid.h"
 
 #include <cfloat>
@@ -592,8 +593,12 @@ int mandelfp_per_pixel()
     switch (g_fractal_type)
     {
     case fractal_type::BURNINGSHIP:
-        burningshipfp_per_pixel();
-        return 1;
+        g_old_z.x = 0.0;
+        g_old_z.y = 0.0;
+
+        //        burningshipfp_per_pixel();
+        break;
+//        return 1;
     case fractal_type::MAGNET2M:
         FloatPreCalcMagnet2();
     case fractal_type::MAGNET1M:
@@ -698,11 +703,37 @@ int otherjuliafp_per_pixel()
     return 0;
 }
 
+int burningshipfpOrbit()
+{
+    Complex z, q;
+    double real_imag;
+    int degree = (int)g_params[2];
+//    q = g_init;
+//    g_old_z = g_init;
+    q.x = g_dx_pixel();
+    q.y = g_dy_pixel();
+    if (degree == 2)                // Burning Ship
+    {
+        g_temp_sqr_x = sqr(g_old_z.x); 
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = fabs(g_old_z.x * g_old_z.y);
+        g_new_z.x = g_temp_sqr_x - g_temp_sqr_y + q.x;
+        g_new_z.y = real_imag + real_imag - q.y;
+    }
+    else if (degree > 2)            // Burning Ship to higher power
+    {
+        z.x = fabs(g_old_z.x);
+        z.y = -fabs(g_old_z.y);
+        z = z.CPolynomial(degree);
+        g_new_z.x = z.x + q.x;
+        g_new_z.y = z.y + q.y;
+    }
+    return g_bailout_float();
+
+}
+/*
 int burningshipfp_per_pixel()
 {
-    DComplex square, q;
-    double real_imag;
-/*
     if (g_invert != 0)
     {
         invertz2(&g_init);
@@ -712,26 +743,6 @@ int burningshipfp_per_pixel()
         g_init.x = g_dx_pixel();
         g_init.y = g_dy_pixel();
     }
-*/
-// Burning Ship
-//    g_old_z = g_init;
-    q.x = g_dx_pixel();
-    q.y = g_dy_pixel();
-    square.x = g_old_z.x * g_old_z.x;
-    square.y = g_old_z.y * g_old_z.y;
-    real_imag = fabs(g_old_z.x * g_old_z.y);
-    g_old_z.x = square.x - square.y + q.x;
-    g_old_z.y = real_imag + real_imag - q.y;
-//    return BailoutTest(z, sqr);
-/*
-// Burning Ship to higher power
-    z->x = fabs(z->x);
-    z->y = -fabs(z->y);
-    *z = z->CPolynomial(*degree);
-    *z = *z + *q;
-    return FractintBailoutTest(z);
-*/
-    return g_bailout_float();
-
-//    return 1; // 1st iteration has been done
+    return 1; // 1st iteration has been done
 }
+*/

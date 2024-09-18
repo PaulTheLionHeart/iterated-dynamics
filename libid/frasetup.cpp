@@ -143,7 +143,12 @@ MandelfpSetup()
                     return InitPerturbation(2);
             }
         }
-        if (g_debug_flag != debug_flags::force_standard_fractal
+        if (g_fractal_type == fractal_type::BURNINGSHIP)
+        {
+            mandelfp_per_pixel();
+            g_calc_type = standard_fractal; // Is this the best place to do this?
+        }
+        else if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
             && g_decomp[0] == 0
             && g_biomorph == -1

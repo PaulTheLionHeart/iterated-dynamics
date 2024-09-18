@@ -2304,7 +2304,7 @@ fractalspecificstuff g_fractal_specific[] =
 //        help_labels::HT_BURNINGSHIP, help_labels::HF_BURNINGSHIP, fractal_flags::BAILTEST|fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         1, fractal_type::BURNINGSHIP, fractal_type::NOFRACTAL, fractal_type::BURNINGSHIP, symmetry_type::NONE,
-        JuliafpFractal, burningshipfp_per_pixel, MandelfpSetup, standard_fractal,
+        burningshipfpOrbit, otherjuliafp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
 
