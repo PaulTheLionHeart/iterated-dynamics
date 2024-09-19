@@ -2304,7 +2304,26 @@ fractalspecificstuff g_fractal_specific[] =
 //        help_labels::HT_BURNINGSHIP, help_labels::HF_BURNINGSHIP, fractal_flags::BAILTEST|fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         1, fractal_type::BURNINGSHIP, fractal_type::NOFRACTAL, fractal_type::BURNINGSHIP, symmetry_type::NONE,
-        burningshipfpOrbit, otherjuliafp_per_pixel, MandelfpSetup, standard_fractal,
+        burningshipfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "mandelbar", {realz0, imagz0, "degree", "orientation (deg > 2)"},
+        {0, 0, 2, 0},
+        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST | fractal_flags::PERTURB,
+        -2.5F, 1.5F, -1.5F, 1.5F, 1,
+        fractal_type::MANDELBAR, fractal_type::NOFRACTAL, fractal_type::MANDELBAR, symmetry_type::NONE,
+        mandelbarfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "celtic",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 2, 0},
+        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::PERTURB,
+        -2.5F, 1.5F, -1.5F, 1.5F, 1,
+        fractal_type::CELTIC, fractal_type::NOFRACTAL, fractal_type::CELTIC, symmetry_type::NONE,
+        celticfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
 

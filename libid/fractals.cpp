@@ -580,6 +580,7 @@ int mandelfp_per_pixel()
 {
     // floating point mandelbrot
     // mandelfp
+    // mandelbrot derivatives
 
     if (g_invert != 0)
     {
@@ -592,13 +593,12 @@ int mandelfp_per_pixel()
     }
     switch (g_fractal_type)
     {
-    case fractal_type::BURNINGSHIP:
+    case fractal_type::BURNINGSHIP: // a bunch of mandelbrot derivatives
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
         g_old_z.x = 0.0;
         g_old_z.y = 0.0;
-
-        //        burningshipfp_per_pixel();
         break;
-//        return 1;
     case fractal_type::MAGNET2M:
         FloatPreCalcMagnet2();
     case fractal_type::MAGNET1M:
@@ -708,10 +708,8 @@ int burningshipfpOrbit()
     Complex z, q;
     double real_imag;
     int degree = (int)g_params[2];
-//    q = g_init;
-//    g_old_z = g_init;
-    q.x = g_dx_pixel();
-    q.y = g_dy_pixel();
+    q.x = g_init.x;
+    q.y = g_init.y;
     if (degree == 2)                // Burning Ship
     {
         g_temp_sqr_x = sqr(g_old_z.x); 
@@ -729,20 +727,56 @@ int burningshipfpOrbit()
         g_new_z.y = z.y + q.y;
     }
     return g_bailout_float();
+}
 
-}
-/*
-int burningshipfp_per_pixel()
+int mandelbarfpOrbit()
 {
-    if (g_invert != 0)
+    Complex z, q;
+    double real_imag;
+    int degree = (int) g_params[2];
+    q.x = g_init.x;
+    q.y = g_init.y;
+    if (degree == 2)                        // Mandelbar
     {
-        invertz2(&g_init);
+        g_temp_sqr_x = sqr(g_old_z.x);
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = g_old_z.x * g_old_z.y;
+        g_new_z.x = g_temp_sqr_x - g_temp_sqr_y + q.x;
+        g_new_z.y = -real_imag - real_imag + q.y;
     }
-    else
+    else if(degree > 2)                     // Mandelbar to higher power
     {
-        g_init.x = g_dx_pixel();
-        g_init.y = g_dy_pixel();
+        z.x = g_old_z.x;
+        z.y = g_old_z.y;
+        z = z.CPolynomial(degree);
+        g_new_z.x = (g_params[3] == 1.0 ? -z.x : z.x) + q.x;
+        g_new_z.y = (g_params[3] == 1.0 ? z.y : -z.y) + q.y;
     }
-    return 1; // 1st iteration has been done
+    return g_bailout_float();
 }
-*/
+
+int celticfpOrbit()
+{
+    Complex z, q;
+    double real_imag;
+    int degree = (int) g_params[2];
+    q.x = g_init.x;
+    q.y = g_init.y;
+    if (degree == 2)                        // Celtic
+    {
+        g_temp_sqr_x = sqr(g_old_z.x);
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = g_old_z.x * g_old_z.y;
+        g_new_z.y = -real_imag - real_imag - q.y;
+        g_new_z.x = -fabs(g_temp_sqr_x - g_temp_sqr_y) - q.x;
+    }
+    else if(degree > 2)                     // Celtic to higher power
+    {
+        z.x = g_old_z.x;
+        z.y = g_old_z.y;
+        z = z.CPolynomial(degree);
+        g_new_z.x = fabs(z.x) + q.x;
+        g_new_z.y = z.y + q.y;
+    }
+    return g_bailout_float();
+}

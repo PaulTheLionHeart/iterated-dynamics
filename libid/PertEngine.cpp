@@ -421,44 +421,54 @@ int CPertEngine::calculatePoint(int x, int y, double magnifiedRadius, int window
 			            }
 		            break;
 		        }
-	        switch (InsideMethod)
-		        {
-		        case ZMAG:
-		            if (iteration == MaxIteration)			// Zmag
-			            index = (int)((w.CSumSqr()) * (MaxIteration >> 1) + 1);
-//		            else
-//			            index = iteration;
-//			        index = iteration % 256;
-		            break;
-		        case BOF60:
-		            if (iteration == MaxIteration)
-			            index = (int)(sqrt(min_orbit) * 75.0);
-//		            else
-//			            index = iteration;
-		            break;
-		        case BOF61:
-		            if (iteration == MaxIteration)
-			            index = min_index;
-//		            else
-//			            index = iteration;
-		            break;
+            if (InsideMethod >= 0) // no filter
+                {
+		        if (iteration == MaxIteration)
+                    index = InsideMethod;
+		        else
+			        index = iteration % 256;
+                }
+            else
+                {
+	            switch (InsideMethod)
+		            {
+		            case ZMAG:
+		                if (iteration == MaxIteration)			// Zmag
+			                index = (int)((w.CSumSqr()) * (MaxIteration >> 1) + 1);
+//		                else
+//			                index = iteration;
+//			            index = iteration % 256;
+		                break;
+		            case BOF60:
+		                if (iteration == MaxIteration)
+			                index = (int)(sqrt(min_orbit) * 75.0);
+//		                else
+//			                index = iteration;
+		                break;
+		            case BOF61:
+		                if (iteration == MaxIteration)
+			                index = min_index;
+//		                else
+//			                index = iteration;
+		                break;
 /*
-		        case POTENTIAL:
-		            magnitude = sqr(w.x) + sqr(w.y);
-		            index = Pot.potential(magnitude, iteration, MaxIteration, TrueCol, 256, potparam);
-		            break;
-		        default:
-		            if (InsideMethod >= TIERAZONFILTERS)		// suite of Tierazon filters and colouring schemes
-			            {
-			            TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
-			            index = iteration;
-			            }
-		            break;
+		            case POTENTIAL:
+		                magnitude = sqr(w.x) + sqr(w.y);
+		                index = Pot.potential(magnitude, iteration, MaxIteration, TrueCol, 256, potparam);
+		                break;
+		            default:
+		                if (InsideMethod >= TIERAZONFILTERS)		// suite of Tierazon filters and colouring schemes
+			                {
+			                TZfilter->EndTierazonFilter(w, (long *)&iteration, TrueCol);
+			                index = iteration;
+			                }
+		                break;
 */
-		        }
-	        }
-	    plot(x, height - 1 - y, index);
-//        DoPlot.redraw();              // how do I update the screen?
+		            }
+	            }
+	        plot(x, height - 1 - y, index);
+//          DoPlot.redraw();              // how do I update the screen?
+            }
 	    }
     return 0;
     }

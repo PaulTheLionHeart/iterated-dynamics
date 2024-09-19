@@ -200,7 +200,9 @@ enum class fractal_type
     LATOO                       = 171,
     DIVIDE_BROT5                = 172,
     MANDELBROTMIX4              = 173,
-    BURNINGSHIP                 = 174
+    BURNINGSHIP                 = 174,
+    MANDELBAR                   = 175,
+    CELTIC                      = 176
 };
 
 inline int operator+(fractal_type rhs)
