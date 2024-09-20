@@ -636,7 +636,9 @@ bool MandelbnSetup()
         }
     }
 
-    g_c_exponent = (int)g_params[2];
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return InitPerturbation(0);
+    g_c_exponent = (int) g_params[2];
     switch (g_fractal_type)
     {
     case fractal_type::JULIAFP:

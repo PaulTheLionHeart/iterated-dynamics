@@ -6,7 +6,7 @@
 
 #include "fractalp.h"
 #include "PertEngine.h"
-//#include "Big.h"
+#include "drivers.h"
 
 // some early tests
 //const char* xZoomPointString = "-1.25736802846652839265383159384773654166836713857126000896912753375688559878664765114255696457015368246531973104439755978333044015506759938503739206829441575363669402497147343368904702066174408250247081855416385744218741909521990441308969603994513271641284298225323509381146075334937409491188";
@@ -26,7 +26,7 @@ const char* yZoomPointString = "0.01";
 //const char* xZoomPointString = "-1.6129965373041952026071917970859685";
 //const char* yZoomPointString = "1.70637685183811519151570457965e-6";
 
-extern  int     driver_key_pressed();
+//extern  int     driver_key_pressed();
 extern  void    (*g_plot)(int, int, int); // function pointer
 extern	int	    potential(double, long);
 extern  int     g_screen_x_dots, g_screen_y_dots; // # of dots on the physical screen
