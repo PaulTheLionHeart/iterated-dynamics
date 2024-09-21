@@ -637,7 +637,13 @@ bool MandelbnSetup()
     }
 
     if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-        return InitPerturbation(0);
+    {
+        InitPerturbation(0);
+        restore_stack(saved);
+        g_std_calc_mode = 'g';      // better return calc mode back to guessing (default) or we get a nice little crash
+        g_calc_status = calc_status_value::COMPLETED;   // don't want to redo fractal using guessing
+        return true;
+    }
     g_c_exponent = (int) g_params[2];
     switch (g_fractal_type)
     {
@@ -680,8 +686,6 @@ bool MandelbnSetup()
 
 bool MandelbfSetup()
 {
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-        return InitPerturbation(0);
     // this should be set up dynamically based on corners
     bf_t bftemp1;
     bf_t bftemp2;
@@ -692,6 +696,14 @@ bool MandelbfSetup()
 
     g_bf_math = bf_math_type::BIGFLT;
 
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+    {
+        InitPerturbation(0);
+        restore_stack(saved);
+        g_std_calc_mode = 'g';      // better return calc mode back to guessing (default) or we get a nice little crash
+        g_calc_status = calc_status_value::COMPLETED; // don't want to redo fractal using guessing
+        return true;
+    }
     // g_delta_x_bf = (g_bf_x_max - g_bf_x_3rd)/(xdots-1)
     sub_bf(g_delta_x_bf, g_bf_x_max, g_bf_x_3rd);
     div_a_bf_int(g_delta_x_bf, (U16)(g_logical_screen_x_dots - 1));

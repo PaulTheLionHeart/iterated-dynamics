@@ -7,6 +7,7 @@
 #include "fractalp.h"
 #include "PertEngine.h"
 #include "drivers.h"
+#include "id_data.h"
 
 // some early tests
 //const char* xZoomPointString = "-1.25736802846652839265383159384773654166836713857126000896912753375688559878664765114255696457015368246531973104439755978333044015506759938503739206829441575363669402497147343368904702066174408250247081855416385744218741909521990441308969603994513271641284298225323509381146075334937409491188";
@@ -30,6 +31,7 @@ const char* yZoomPointString = "0.01";
 extern  void    (*g_plot)(int, int, int); // function pointer
 extern	int	    potential(double, long);
 extern  int     g_screen_x_dots, g_screen_y_dots; // # of dots on the physical screen
+extern calc_status_value g_calc_status;
 
 extern	long	g_max_iterations;
 extern  double  g_x_max, g_x_min, g_y_max, g_y_min;
@@ -131,6 +133,7 @@ bool	InitPerturbation(int subtype)
     */
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
     DoPerturbation(subtype);
+    g_calc_status = calc_status_value::COMPLETED;
     return false;
     }
 

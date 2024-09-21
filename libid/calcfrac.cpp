@@ -168,8 +168,6 @@ int g_attractor_period[MAX_NUM_ATTRACTORS]{};    // period of the finite attract
 int g_inside_color{};                            // inside color: 1=blue
 int g_outside_color{};                           // outside color
 
-extern unsigned char g_phaseflag;               // used for phase colours in Art Matrix fractals    // PHD 240711
-
 // --------------------------------------------------------------------
 //              These variables are external for speed's sake only
 // --------------------------------------------------------------------
@@ -1201,7 +1199,9 @@ static void perform_worklist()
             boundary_trace();
             break;
         case 'g':
-            solid_guess();
+            if (g_calc_status != calc_status_value::COMPLETED)      // horrible cludge preventing crash when
+                                                                    // coming back from perturbation and math = bignum/bigflt in fractalb.cpp
+                solid_guess();
             break;
         case 'd':
             diffusion_scan();
