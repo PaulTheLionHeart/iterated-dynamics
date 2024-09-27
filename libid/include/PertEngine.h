@@ -1,11 +1,13 @@
 #pragma once
 #include <windows.h>
 #include <stdio.h>
-//#include "Big.h"
+#include "Big.h"
 #include "Point.h"
 #include "filter.h"
 #include "Complex.h"
 #include "id_keys.h"
+#include "fractalb.h"
+#include "biginit.h"
 /*
 #include "Dib.h"
 #include "colour.h"
@@ -19,17 +21,17 @@
 class CPertEngine 
     {
     public:
-    int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, BigDouble xZoomPointin, BigDouble yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
+    int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xZoomPointin, bf_t yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
     int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
     int     calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
             Point *glitchPoints, int user_data(), void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
-    int     ReferenceZoomPoint(BigComplex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
+    int     ReferenceZoomPoint(BFComplex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
 	void	LoadPascal(long PascalArray[], int n);
 	double	DiffAbs(const double c, const double d);
 	void	PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *DeltaSub0);
-    void    RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZTimes2);
+    void    RefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2);
 	void	CloseTheDamnPointers(void);
 
 	Complex *XSubN = NULL;
@@ -54,7 +56,7 @@ class CPertEngine
 	int	    OutsideMethod;			// the number of the outside filter
 	long	GlitchPointCount;
 	long	RemainingPointCount;
-    mpfr_t	xZoomPt, yZoomPt;
+    bf_t	xZoomPt, yZoomPt;
 	double	ZoomRadius;
 	bool	calculateGlitches = true;
 	bool	seriesApproximation = false;
@@ -63,6 +65,7 @@ class CPertEngine
 	double	percentGlitchTolerance = 0.1;
 	int	    referencePoints = 0;
     int     kbdchar;            // keyboard character
+    int     saved;              // keep track of bigflt memory
 
     };
 

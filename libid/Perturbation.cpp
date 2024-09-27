@@ -58,7 +58,7 @@ CPertEngine PertEngine;
 char		PertStatus[200];
 
 int         DoPerturbation(int);
-void        BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
+void        BigCvtcentermag(bf_t *Xctr, bf_t *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
 void        bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern void cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
 
@@ -86,7 +86,11 @@ bool	InitPerturbation(int subtype)
     double  mandel_width;    // width of display
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
     char s[1200];
+    bf_math_type TempMathType = g_bf_math;
 
+    g_bf_math = bf_math_type::BIGFLT;       // pert engine needs this (for the moment)
+
+/*
     int bitcount = decimals * 5;
     if (bitcount < 30)
         bitcount = 30;
@@ -94,15 +98,21 @@ bool	InitPerturbation(int subtype)
         bitcount = SIZEOF_BF_VARS - 10;
 
 //    mpfr_set_default_prec(bitcount);
+        mpfr_set_default_prec(1600);
+        xBigCentre.ChangePrecision(1600);
+        yBigCentre.ChangePrecision(1600);
+    */
+    bf_t xBigCentre, yBigCentre, BigTmp;
+    int saved;
+    saved = save_stack();
+    xBigCentre = alloc_stack(g_bf_length + 2);
+    yBigCentre = alloc_stack(g_bf_length + 2);
+    BigTmp = alloc_stack(g_bf_length + 2);
 
-    BigDouble xBigCentre, yBigCentre;
     double  Magnification;
 
-//    mpfr_set_default_prec(1600);
-//    xBigCentre.ChangePrecision(1600);
-//    yBigCentre.ChangePrecision(1600);
 
-    if (g_bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
+    if (TempMathType != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
         {
         BigCvtcentermag(&xBigCentre, &yBigCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);              // have to make a mpfr version of this
         }
@@ -110,19 +120,16 @@ bool	InitPerturbation(int subtype)
         {
         LDBL LDMagnification;
         cvtcentermag(&xCentre, &yCentre, &LDMagnification, &Xmagfactor, &Rotation, &Skew);
-        xBigCentre = xCentre;
-        yBigCentre = yCentre;
+        floattobf(xBigCentre, xCentre);
+        floattobf(yBigCentre, yCentre);
         }
 
-    if (g_bf_math == bf_math_type::NONE) 
+    if (TempMathType == bf_math_type::NONE) 
         mandel_width = g_y_max - g_y_min;
     else
         {
-        BigDouble   t1, t2, t3;
-        bf2BigNum(&t1, g_bf_y_max);
-        bf2BigNum(&t2, g_bf_y_min);
-        t3 = t1 - t2;
-        mandel_width = t3.BigDoubleToDouble();
+        sub_bf(BigTmp, g_bf_y_max, g_bf_y_min);
+        mandel_width = bftofloat(BigTmp);
         }
 
     /*
@@ -131,7 +138,10 @@ bool	InitPerturbation(int subtype)
     if (BigNumFlag)
 	    mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
     */
-    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, -yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
+    neg_bf(yBigCentre, yBigCentre);
+    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
+    restore_stack(saved);
+    g_bf_math = TempMathType;               // better restore it before we return
     DoPerturbation(subtype);
     g_calc_status = calc_status_value::COMPLETED;
     return false;
@@ -215,20 +225,19 @@ void BigNum2bf(bf_t *bfNum, BigDouble BigNum)
 	Convert corners to centre/mag using BigNum
 **************************************************************************/
 
-void BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew)
+void BigCvtcentermag(bf_t *Xctr, bf_t *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew)
     {
     // needs to be LDBL or won't work past 307 (-DBL_MIN_10_EXP) or so digits
     double      Height;
-    BigDouble   BigWidth;
-    BigDouble   BigHeight;
-    BigDouble   BigTmpx;
-    BigDouble   BigXmax, BigXmin, BigYmax, BigYmin;
-    char s[1200];
+    bf_t BigWidth;
+    bf_t BigHeight;
+    bf_t BigTmpx;
 
-    bf2BigNum(&BigXmax, g_bf_x_max);
-    bf2BigNum(&BigXmin, g_bf_x_min);
-    bf2BigNum(&BigYmax, g_bf_y_max);
-    bf2BigNum(&BigYmin, g_bf_y_min);
+    int saved;
+    saved = save_stack();
+    BigWidth = alloc_stack(g_bf_length + 2);
+    BigHeight = alloc_stack(g_bf_length + 2);
+    BigTmpx = alloc_stack(g_bf_length + 2);
 
     // simple normal case first
     // if (g_x_3rd == g_x_min && g_y_3rd == g_y_min)
@@ -236,15 +245,17 @@ void BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, do
         {
         // no rotation or skewing, but stretching is allowed
         // Width  = g_x_max - g_x_min;
-        BigWidth = BigXmax - BigXmin;
-        double Width = BigWidth.BigDoubleToDouble();
+        sub_bf(BigWidth, g_bf_x_max, g_bf_x_min);
+        double Width = bftofloat(BigWidth);
         // Height = g_y_max - g_y_min;
-        BigHeight = BigYmax - BigYmin;
-        Height = BigHeight.BigDoubleToDouble();
+        sub_bf(BigHeight, g_bf_y_max, g_bf_y_min);
+        Height = bftofloat(BigHeight);
         // *Xctr = (g_x_min + g_x_max)/2;
-        *Xctr = (BigXmin + BigXmax) / 2;
+        add_bf(BigTmpx, g_bf_x_max, g_bf_x_min);
+        half_bf(*Xctr, BigTmpx);
         // *Yctr = (g_y_min + g_y_max)/2;
-        *Yctr = (BigYmin + BigYmax) / 2;
+        add_bf(BigTmpx, g_bf_y_max, g_bf_y_min);
+        half_bf(*Yctr, BigTmpx);
         *Magnification = 2 / Height;
         *Xmagfactor = (double) (Height / (DEFAULT_ASPECT * Width));
         *Rotation = 0.0;
@@ -328,8 +339,8 @@ void BigCvtcentermag(BigDouble *Xctr, BigDouble *Yctr, double *Magnification, do
             *Magnification = -*Magnification;
             *Rotation += 180;
         }
-        restore_stack(saved);
 */
+        restore_stack(saved);
     }
 
 

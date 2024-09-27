@@ -663,32 +663,43 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 // Code is written in raw MPFR code to optimise speedy
 //////////////////////////////////////////////////////////////////////
 
-void CPertEngine::RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZTimes2)
+void CPertEngine::RefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2)
     {
-    mpfr_t	    TempReal, TempImag, SqrReal, SqrImag, RealImag;
-    BigDouble	zisqr, zrsqr, realimag, temp, RealImagSqr;
-    BigComplex	sqrsqr, zabsBig, tempzBig, sqrtzBig;
-    BigComplex	aBig;
+    bf_t	TempReal, TempImag, SqrReal, SqrImag, RealImag;
+    bf_t	zisqr, zrsqr, realimag, temp, RealImagSqr;
+//    BFComplex sqrsqr, zabsBig, tempzBig, sqrtzBig;
+//    BFComplex aBig;
+    int cplxsaved;
 
+    cplxsaved = save_stack();
+
+    TempReal = alloc_stack(g_r_bf_length + 2);
+    TempImag = alloc_stack(g_r_bf_length + 2);
+    SqrReal = alloc_stack(g_r_bf_length + 2);
+    SqrImag = alloc_stack(g_r_bf_length + 2);
+    RealImag = alloc_stack(g_r_bf_length + 2);
+
+/*
     mpfr_init(TempReal);
     mpfr_init(TempImag);
     mpfr_init(SqrReal);
     mpfr_init(SqrImag);
     mpfr_init(RealImag);
-
+*/
     switch (subtype)
 	{
 	case 0:							// optimise for Mandelbrot by taking out as many steps as possible
 	    //	    Z = Z.CSqr() + centre;
-	    mpfr_sqr(SqrReal, Z->x.x, MPFR_RNDN);
-	    mpfr_sqr(SqrImag, Z->y.x, MPFR_RNDN);
-	    mpfr_sub(TempReal, SqrReal, SqrImag, MPFR_RNDN);
-	    mpfr_add(Z->x.x, TempReal, centre->x.x, MPFR_RNDN);
+	    square_bf(SqrReal, Z->x);
+	    square_bf(SqrImag, Z->y);
+	    sub_bf(TempReal, SqrReal, SqrImag);
+	    add_bf(Z->x, TempReal, centre->x);
 
-	    mpfr_mul(RealImag, ZTimes2->x.x, Z->y.x, MPFR_RNDN);
-	    mpfr_add(Z->y.x, RealImag, centre->y.x, MPFR_RNDN);
+	    mult_bf(RealImag, ZTimes2->x, Z->y);
+	    add_bf(Z->y, RealImag, centre->y);
 	    break;
 	case 1:
+/*
 	    if (power == 3)
 		*Z = Z->CCube() + *centre;			// optimise for Cubic by taking out as many multiplies as possible
 	    else
@@ -698,15 +709,16 @@ void CPertEngine::RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZT
 		    BigComplexTemp *= *Z;
 		*Z = BigComplexTemp + *centre;
 		}
+*/
 	    break;
 	case 2:							// Burning Ship
-	    mpfr_sqr(SqrReal, Z->x.x, MPFR_RNDN);
-	    mpfr_sqr(SqrImag, Z->y.x, MPFR_RNDN);
-	    mpfr_sub(TempReal, SqrReal, SqrImag, MPFR_RNDN);
-	    mpfr_add(Z->x.x, TempReal, centre->x.x, MPFR_RNDN);
-	    mpfr_mul(TempImag, ZTimes2->x.x, Z->y.x, MPFR_RNDN);
-	    mpfr_abs(RealImag, TempImag, MPFR_RNDN);
-	    mpfr_add(Z->y.x, RealImag, centre->y.x, MPFR_RNDN);
+	    square_bf(SqrReal, Z->x);
+	    square_bf(SqrImag, Z->y);
+	    sub_bf(TempReal, SqrReal, SqrImag);
+	    add_bf(Z->x, TempReal, centre->x);
+	    mult_bf(TempImag, ZTimes2->x, Z->y);
+	    abs_bf(RealImag, TempImag);
+	    add_bf(Z->y, RealImag, centre->y);
 /*
 	    zisqr = Z.y * Z.y;
 	    zrsqr = Z.x * Z.x;
@@ -714,6 +726,10 @@ void CPertEngine::RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZT
 	    Z.x = (zrsqr - zisqr) + centre.x;
 */
 	    break;
+
+#ifdef ALLOW_ALL_DERIVATIVES
+
+
 	case 3:							// Cubic Burning Ship
 	case 4:							// 4th Power Burning Ship
 	case 5:							// 5th Power Burning Ship
@@ -1087,16 +1103,27 @@ void CPertEngine::RefFunctions(BigComplex *centre, BigComplex *Z, BigComplex *ZT
 	    Z->y += centre->y;
 	    Z->x += centre->x;
 	    break;
+#endif // ALLOW_ALL_DERIVATIVES
 
 	default:
-	    *Z = *Z * *Z + *centre;
+	    //	    Z = Z.CSqr() + centre;
+	    square_bf(SqrReal, Z->x);
+	    square_bf(SqrImag, Z->y);
+	    sub_bf(TempReal, SqrReal, SqrImag);
+	    add_bf(Z->x, TempReal, centre->x);
+
+	    mult_bf(RealImag, ZTimes2->x, Z->y);
+	    add_bf(Z->y, RealImag, centre->y);
 	    break;
 	}
+    restore_stack(cplxsaved);
+/*
     mpfr_clear(TempReal);
     mpfr_clear(TempImag);
     mpfr_clear(SqrReal);
     mpfr_clear(SqrImag);
     mpfr_clear(RealImag);
+*/
     }
 
 //////////////////////////////////////////////////////////////////////
