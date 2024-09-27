@@ -59,9 +59,10 @@ char		PertStatus[200];
 
 int         DoPerturbation(int);
 void        BigCvtcentermag(bf_t *Xctr, bf_t *Yctr, double *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
-void        bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 extern void cvtcentermag(double *Xctr, double *Yctr, LDBL *Magnification, double *Xmagfactor, double *Rotation, double *Skew);
 
+#ifdef ALLOW_MPFR
+void bf2BigNum(BigDouble *BigNum, bf_t bfNum);
 
 /*************************************************************************
     Format string derived from a Bignum
@@ -76,8 +77,9 @@ void ConvertBignum2String(char *s, mpfr_t num)                                //
     sprintf(FormatString, "%%.%dRf", decimals + PRECISION_FACTOR);
     mpfr_sprintf(s, FormatString, num);
     }
+#endif ALLOW_MPFR
 
-/**************************************************************************
+    /**************************************************************************
 	Initialise Perturbation engine
 **************************************************************************/
 
@@ -117,8 +119,7 @@ bool	InitPerturbation(int subtype)
         {
         LDBL LDMagnification;
         cvtcentermag(&xCentre, &yCentre, &LDMagnification, &Xmagfactor, &Rotation, &Skew);
-//        floattobf(xBigCentre, xCentre);
-//        floattobf(yBigCentre, yCentre);
+        yCentre = -yCentre;
         }
 
     if (g_bf_math == bf_math_type::NONE) 
@@ -172,6 +173,7 @@ int DoPerturbation(int subtype)
     return 0;
     }
 
+#ifdef ALLOW_MPFR
 /*************************************************************************
     Format Bignum derived from a string
     mpf_set_str() Bignum from strings in the format:
@@ -217,7 +219,9 @@ void BigNum2bf(bf_t *bfNum, BigDouble BigNum)
     strtobf(*bfNum, bigstr);
     if (bigstr)  {delete[] bigstr; bigstr = NULL;}
     }
-    
+#endif ALLOW_MPFR
+
+
 /**************************************************************************
 	Convert corners to centre/mag using BigNum
 **************************************************************************/

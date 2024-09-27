@@ -5,7 +5,7 @@
 
 #include <sqr.h>
 #include "PertEngine.h"
-#include "BigComplex.h"
+//#include "BigComplex.h"
 
     //////////////////////////////////////////////////////////////////////
 // Individual function point calculations
@@ -663,7 +663,7 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 // Code is written in raw MPFR code to optimise speedy
 //////////////////////////////////////////////////////////////////////
 
-void CPertEngine::RefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2)
+void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2)
     {
     bf_t	TempReal, TempImag, SqrReal, SqrImag, RealImag;
     bf_t	zisqr, zrsqr, realimag, temp, RealImagSqr;
@@ -1124,6 +1124,58 @@ void CPertEngine::RefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTime
     mpfr_clear(SqrImag);
     mpfr_clear(RealImag);
 */
+    }
+
+//////////////////////////////////////////////////////////////////////
+// Reference Zoom Point Functions
+// Code is written in raw MPFR code to optimise speedy
+//////////////////////////////////////////////////////////////////////
+
+void CPertEngine::RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2)
+    {
+    double	TempReal, TempImag, SqrReal, SqrImag, RealImag;
+    double	zisqr, zrsqr, realimag, temp, RealImagSqr;
+//    Complex sqrsqr, zabsBig, tempzBig, sqrtzBig;
+//    Complex aBig;
+
+    switch (subtype)
+	{
+	case 0:							// optimise for Mandelbrot by taking out as many steps as possible
+	    //	    Z = Z.CSqr() + centre;
+	    SqrReal = sqr(Z->x);
+        SqrImag = sqr(Z->y);
+        TempReal = SqrReal - SqrImag;
+        Z->x = TempReal + centre->x;
+        RealImag = ZTimes2->x * Z->y;
+        Z->y = RealImag + centre->y;
+	    break;
+	case 1:
+	    if (power == 3)
+		    *Z = Z->CCube() + *centre;			// optimise for Cubic by taking out as many multiplies as possible
+	    else
+		    {
+		    Complex ComplexTemp = *Z;
+		    for (int k = 0; k < power - 1; k++)
+		        ComplexTemp *= *Z;
+		    *Z = ComplexTemp + *centre;
+		    }
+	    break;
+	case 2:							// Burning Ship
+	    SqrReal = sqr(Z->x);
+        SqrImag = sqr(Z->y);
+        TempReal = SqrReal - SqrImag;
+	    Z->x = TempReal + centre->x;
+        TempImag = ZTimes2->x * Z->y;
+        RealImag = fabs(TempImag);
+        Z->y = RealImag + centre->y;
+/*
+	    zisqr = Z.y * Z.y;
+	    zrsqr = Z.x * Z.x;
+	    Z.y = (Z.x * Z.y).BigAbs() * 2.0 + centre.y;
+	    Z.x = (zrsqr - zisqr) + centre.x;
+*/
+	    break;
+        }
     }
 
 //////////////////////////////////////////////////////////////////////

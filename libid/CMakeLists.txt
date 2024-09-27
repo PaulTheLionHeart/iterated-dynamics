@@ -9,8 +9,6 @@ add_library(libid
     line3d.cpp include/line3d.h
     plot3d.cpp include/plot3d.h
     Complex.cpp include/Complex.h
-    BigComplex.cpp include/BigComplex.h
-    BigDouble.cpp include/BigDouble.h
     PertEngine.cpp include/PertEngine.h
     PertFn.cpp
     Perturbation.cpp
@@ -634,8 +632,4 @@ target_compile_options(libid PUBLIC ${ID_TARGET_OPTIONS})
 target_include_directories(libid PUBLIC include)
 target_link_libraries(libid PRIVATE helpcom os)
 target_link_libraries(libid PUBLIC help-defs config Boost::boost GIF::GIF cpuid::cpuid)
-add_library(mpfr STATIC IMPORTED)
-set_target_properties(mpfr PROPERTIES IMPORTED_LOCATION_DEBUG C:/Github/id/mpfr/build.vc15/lib/x64/Debug/mpfr.lib)
-set_target_properties(mpfr PROPERTIES IMPORTED_LOCATION_RELEASE C:/Github/id/mpfr/build.vc15/lib/x64/Release/mpfr.lib)
-target_link_libraries(libid PUBLIC mpfr)
 add_dependencies(libid native-help)

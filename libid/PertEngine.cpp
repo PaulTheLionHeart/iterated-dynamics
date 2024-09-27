@@ -80,7 +80,7 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
     else
     {
         xZoomPt = xZoomPointin;
-        yZoomPt = xZoomPointin;
+        yZoomPt = yZoomPointin;
     }
 
     /*
@@ -211,13 +211,13 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 
             int result;
             if (math_type != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
-            {
+                {
                 result = BigReferenceZoomPoint(&BigReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
-            }
+                }
             else
-            {
+                {
                 result = ReferenceZoomPoint(&ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
-            }
+                }
 	        if (result < 0)
 		        {
 		        CloseTheDamnPointers();
@@ -243,29 +243,35 @@ int CPertEngine::calculateOneFrame(double bailout, char *StatusBarInfo, int powe
 	        // We need to store this offset because the formula we use to convert pixels into a complex point does so relative to the center of the image.
 	        // We need to offset that calculation when our reference point isn't in the center. The actual offsetting is done in calculate point.
 
-	        calculatedRealDelta = deltaReal;
-	        calculatedImaginaryDelta = deltaImaginary;
-            floattobf(bf_tmp, deltaReal);
-            add_bf(BigReferenceCoordinate.x, BigC.x, bf_tmp);
-            floattobf(bf_tmp, deltaImaginary);
-            add_bf(BigReferenceCoordinate.y, BigC.y, bf_tmp);
+            calculatedRealDelta = deltaReal;
+            calculatedImaginaryDelta = deltaImaginary;
 
-//	        ReferenceCoordinate.x = C.x + deltaReal;
-//	        ReferenceCoordinate.y = C.y + deltaImaginary;
+            if (math_type != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
+                {
+                floattobf(bf_tmp, deltaReal);
+                add_bf(BigReferenceCoordinate.x, BigC.x, bf_tmp);
+                floattobf(bf_tmp, deltaImaginary);
+                add_bf(BigReferenceCoordinate.y, BigC.y, bf_tmp);
+                }
+            else
+                {
+                ReferenceCoordinate.x = C.x + deltaReal;
+                ReferenceCoordinate.y = C.y + deltaImaginary;
+                }
 
             int result;
             if (math_type != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
                 {
-                    result = BigReferenceZoomPoint(&BigReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
+                result = BigReferenceZoomPoint(&BigReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
                 }
-                else
+            else
                 {
-                    result = ReferenceZoomPoint(&ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
+                result = ReferenceZoomPoint(&ReferenceCoordinate, MaxIteration, user_data, StatusBarInfo);
                 }
-                if (result < 0)
+             if (result < 0)
                 {
-                    CloseTheDamnPointers();
-                    return -1;
+                CloseTheDamnPointers();
+                return -1;
                 }
             }
 
@@ -609,7 +615,7 @@ int CPertEngine::BigReferenceZoomPoint(BFComplex *centre, int maxIteration, int 
         floattobf(bftmp, glitchTolerancy);
         mult_bf(TempReal, Z.x, bftmp);
         mult_bf(TempImag, Z.y, bftmp);
-        //	    TempReal = Z.x * glitchTolerancy;
+//	    TempReal = Z.x * glitchTolerancy;
 //	    TempImag = Z.y * glitchTolerancy;
 	    Complex tolerancy;
         tolerancy.x = bftofloat(TempReal);
@@ -620,7 +626,7 @@ int CPertEngine::BigReferenceZoomPoint(BFComplex *centre, int maxIteration, int 
         PerturbationToleranceCheck[i] = sqr(tolerancy.x) + sqr(tolerancy.y);
 
 	    // Calculate the set
-	    RefFunctions(centre, &Z, &ZTimes2);
+        BigRefFunctions(centre, &Z, &ZTimes2);
 	    }
     restore_stack(cplxsaved);
     return 0;
@@ -634,8 +640,7 @@ int CPertEngine::ReferenceZoomPoint(Complex *centre, int maxIteration, int user_
     {
     // Raising this number makes more calculations, but less variation between each calculation (less chance of mis-identifying a glitched point).
     Complex   ZTimes2, Z;
-    double   TempReal, TempImag, bftmp;
-//    bf_t   zisqr, zrsqr, realimag;
+    double   TempReal, TempImag;
     double      glitchTolerancy = 1e-6;
 
     Z = *centre;
@@ -670,18 +675,11 @@ int CPertEngine::ReferenceZoomPoint(Complex *centre, int maxIteration, int user_
 	        sprintf(StatusBarInfo, "Pass: %d, Ref (%d%%)", referencePoints, int(progress * 100));
 	        }
 
-        TempReal = Z.x * glitchTolerancy;
-	    TempImag = Z.y * glitchTolerancy;
-	    Complex tolerancy;
-        tolerancy.x = TempReal;
-        tolerancy.y = TempImag;
-
-//	    Complex tolerancy{ TempReal.BigDoubleToDouble(), TempImag.BigDoubleToDouble() };
-//	    PerturbationToleranceCheck[i] = (CSumSqr(tolerancy));
+	    Complex tolerancy = Z * glitchTolerancy;
         PerturbationToleranceCheck[i] = sqr(tolerancy.x) + sqr(tolerancy.y);
 
 	    // Calculate the set
-//	    RefFunctions(centre, &Z, &ZTimes2);
+	    RefFunctions(centre, &Z, &ZTimes2);
 	    }
     return 0;
     }

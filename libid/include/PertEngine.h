@@ -12,8 +12,8 @@
 #include "Dib.h"
 #include "colour.h"
 */
-#include "BigDouble.h"
-#include "BigComplex.h"
+//#include "BigDouble.h"
+//#include "BigComplex.h"
 
 #define	MAXPOWER    28
 #define MAXFILTER   9
@@ -33,7 +33,8 @@ class CPertEngine
 	void	LoadPascal(long PascalArray[], int n);
 	double	DiffAbs(const double c, const double d);
 	void	PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *DeltaSub0);
-    void    RefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2);
+    void    BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2);
+    void    RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2);
 	void	CloseTheDamnPointers(void);
 
 	Complex *XSubN = NULL;
