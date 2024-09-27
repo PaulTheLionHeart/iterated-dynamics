@@ -21,13 +21,15 @@
 class CPertEngine 
     {
     public:
-    int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xZoomPointin, bf_t yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn /*, CTZfilter *TZfilter*/);
+    int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xBigZoomPointin, bf_t yBigZoomPointin,
+            double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn, bf_math_type math_typeIn /*, CTZfilter *TZfilter*/);
     int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
     int     calculatePoint(int x, int y, double tempRadius, int window_radius, double bailout,
             Point *glitchPoints, int user_data(), void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
-    int     ReferenceZoomPoint(BFComplex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
+    int     BigReferenceZoomPoint(BFComplex *BigCentre, int maxIteration, int user_data(), char *StatusBarInfo);
+    int     ReferenceZoomPoint(Complex *centre, int maxIteration, int user_data(), char *StatusBarInfo);
 	void	LoadPascal(long PascalArray[], int n);
 	double	DiffAbs(const double c, const double d);
 	void	PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *DeltaSub0);
@@ -56,8 +58,10 @@ class CPertEngine
 	int	    OutsideMethod;			// the number of the outside filter
 	long	GlitchPointCount;
 	long	RemainingPointCount;
-    bf_t	xZoomPt, yZoomPt;
+    bf_t	xBigZoomPt, yBigZoomPt;
+    double	xZoomPt, yZoomPt;
 	double	ZoomRadius;
+    double  xCentre, yCentre;
 	bool	calculateGlitches = true;
 	bool	seriesApproximation = false;
 	unsigned int numCoefficients = 5;
@@ -66,7 +70,7 @@ class CPertEngine
 	int	    referencePoints = 0;
     int     kbdchar;            // keyboard character
     int     saved;              // keep track of bigflt memory
-
+    bf_math_type math_type;
     };
 
 

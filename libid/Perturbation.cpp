@@ -85,11 +85,7 @@ bool	InitPerturbation(int subtype)
     {
     double  mandel_width;    // width of display
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
-    char s[1200];
-    bf_math_type TempMathType = g_bf_math;
-
-    g_bf_math = bf_math_type::BIGFLT;       // pert engine needs this (for the moment)
-
+//    char s[1200];
 /*
     int bitcount = decimals * 5;
     if (bitcount < 30)
@@ -102,29 +98,30 @@ bool	InitPerturbation(int subtype)
         xBigCentre.ChangePrecision(1600);
         yBigCentre.ChangePrecision(1600);
     */
-    bf_t xBigCentre, yBigCentre, BigTmp;
+    bf_t xBigCentre = NULL, yBigCentre = NULL, BigTmp = NULL;
     int saved;
-    saved = save_stack();
-    xBigCentre = alloc_stack(g_bf_length + 2);
-    yBigCentre = alloc_stack(g_bf_length + 2);
-    BigTmp = alloc_stack(g_bf_length + 2);
 
     double  Magnification;
 
-
-    if (TempMathType != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
+    if (g_bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
         {
-        BigCvtcentermag(&xBigCentre, &yBigCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);              // have to make a mpfr version of this
+        saved = save_stack();
+        xBigCentre = alloc_stack(g_bf_length + 2);
+        yBigCentre = alloc_stack(g_bf_length + 2);
+        BigTmp = alloc_stack(g_bf_length + 2);
+        BigCvtcentermag(&xBigCentre, &yBigCentre, &Magnification, &Xmagfactor, &Rotation, &Skew);
+        neg_bf(yBigCentre, yBigCentre);
+        xCentre = yCentre = 0.0; // get rid of silly runtime error messages
         }
     else
         {
         LDBL LDMagnification;
         cvtcentermag(&xCentre, &yCentre, &LDMagnification, &Xmagfactor, &Rotation, &Skew);
-        floattobf(xBigCentre, xCentre);
-        floattobf(yBigCentre, yCentre);
+//        floattobf(xBigCentre, xCentre);
+//        floattobf(yBigCentre, yCentre);
         }
 
-    if (TempMathType == bf_math_type::NONE) 
+    if (g_bf_math == bf_math_type::NONE) 
         mandel_width = g_y_max - g_y_min;
     else
         {
@@ -138,11 +135,11 @@ bool	InitPerturbation(int subtype)
     if (BigNumFlag)
 	    mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
     */
-    neg_bf(yBigCentre, yBigCentre);
-    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre, yBigCentre, mandel_width / 2, g_potential_flag/*, &TZfilter*/);
-    restore_stack(saved);
-    g_bf_math = TempMathType;               // better restore it before we return
+    PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre,
+            yBigCentre, xCentre, yCentre, mandel_width / 2, g_potential_flag /*, &TZfilter*/, g_bf_math);
     DoPerturbation(subtype);
+    if (g_bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
+        restore_stack(saved);
     g_calc_status = calc_status_value::COMPLETED;
     return false;
     }
