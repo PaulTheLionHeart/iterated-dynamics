@@ -666,8 +666,9 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2)
     {
     bf_t	TempReal, TempImag, SqrReal, SqrImag, RealImag;
-    bf_t	zisqr, zrsqr, realimag, temp, RealImagSqr;
-//    BFComplex sqrsqr, zabsBig, tempzBig, sqrtzBig;
+//    bf_t	zisqr, zrsqr, realimag, temp, RealImagSqr;
+    BFComplex TempCmplx, TempCmplx1;
+        //    BFComplex sqrsqr, zabsBig, tempzBig, sqrtzBig;
 //    BFComplex aBig;
     int cplxsaved;
 
@@ -678,8 +679,12 @@ void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZT
     SqrReal = alloc_stack(g_r_bf_length + 2);
     SqrImag = alloc_stack(g_r_bf_length + 2);
     RealImag = alloc_stack(g_r_bf_length + 2);
+    TempCmplx.x = alloc_stack(g_r_bf_length + 2);
+    TempCmplx.y = alloc_stack(g_r_bf_length + 2);
+    TempCmplx1.x = alloc_stack(g_r_bf_length + 2);
+    TempCmplx1.y = alloc_stack(g_r_bf_length + 2);
 
-/*
+    /*
     mpfr_init(TempReal);
     mpfr_init(TempImag);
     mpfr_init(SqrReal);
@@ -727,15 +732,14 @@ void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZT
 */
 	    break;
 
-#ifdef ALLOW_ALL_DERIVATIVES
-
-
 	case 3:							// Cubic Burning Ship
 	case 4:							// 4th Power Burning Ship
 	case 5:							// 5th Power Burning Ship
-	    Z->x = Z->x.BigAbs();
-	    Z->y = Z->y.BigAbs();
-	    *Z = *centre + Z->CPolynomial(power);
+        abs_bf(TempCmplx.x, Z->x);
+        abs_bf(TempCmplx.y, Z->y);
+        CPolynomial(&TempCmplx1, TempCmplx, power);
+        add_bf(Z->x, TempCmplx1.x, centre->x);
+        add_bf(Z->y, TempCmplx1.y, centre->y);
 /*
 	    SqrReal = zBig.x.BigSqr();
 	    sqrBig.y = zBig.y.BigSqr();
@@ -750,13 +754,15 @@ void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZT
 */
 	    break;
 	case 6:							// Celtic
-	    zrsqr = Z->x.BigSqr();
-	    zisqr = Z->y.BigSqr();
-	    realimag = Z->x * Z->y;
-	    Z->y = realimag + realimag + centre->y;
-	    temp = zrsqr - zisqr;
-	    Z->x = centre->x + temp.BigAbs();
+	    square_bf(SqrReal, Z->x);
+	    square_bf(SqrImag, Z->y);
+	    mult_bf(RealImag, ZTimes2->x, Z->y);
+        add_bf(Z->y, RealImag, centre->y);
+  	    sub_bf(TempReal, SqrReal, SqrImag);
+        abs_bf(TempImag, TempReal);
+        add_bf(Z->x, TempImag, centre->x);
 	    break;
+/*
 	case 7:							// Cubic Celtic
 	    zrsqr = Z->x.BigSqr();
 	    zisqr = Z->y.BigSqr();
@@ -781,18 +787,22 @@ void CPertEngine::BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZT
 	    temp = (sqrsqr.x - RealImagSqr * 10.0 + sqrsqr.y * 5.0) * Z->x;
 	    Z->x = temp.BigAbs() + centre->x;
 	    break;
+*/
 	case 10:						// Mandelbar (Tricorn)
-	    zrsqr = Z->x.BigSqr();
-	    zisqr = Z->y.BigSqr();
-	    realimag = Z->x * Z->y;
-	    Z->x = centre->x + zrsqr - zisqr;
-	    Z->y = centre->y - realimag - realimag;
+	    square_bf(SqrReal, Z->x);
+	    square_bf(SqrImag, Z->y);
+	    mult_bf(RealImag, ZTimes2->x, Z->y);
+   	    sub_bf(TempReal, SqrReal, SqrImag);
+        add_bf(Z->x, TempReal, centre->x);
+        sub_bf(Z->y, centre->y, RealImag);
 	    break;
 	case 11:						// Mandelbar (power)
-	    *Z = Z->CPolynomial(power);
-	    Z->y = -Z->y + centre->y;
-	    Z->x = Z->x + centre->x;
+        CPolynomial(&TempCmplx, *Z, power);
+        add_bf(Z->x, TempCmplx.x, centre->x);
+        sub_bf(Z->y, centre->y, TempCmplx.y);
 	    break;
+#ifdef ALLOW_ALL_DERIVATIVES
+
 	case 12:						// Buffalo
 	    zrsqr = Z->x.BigSqr();
 	    zisqr = Z->y.BigSqr();
@@ -1137,6 +1147,7 @@ void CPertEngine::RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2)
     double	zisqr, zrsqr, realimag, temp, RealImagSqr;
 //    Complex sqrsqr, zabsBig, tempzBig, sqrtzBig;
 //    Complex aBig;
+    Complex z;
 
     switch (subtype)
 	{
@@ -1168,12 +1179,49 @@ void CPertEngine::RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2)
         TempImag = ZTimes2->x * Z->y;
         RealImag = fabs(TempImag);
         Z->y = RealImag + centre->y;
-/*
-	    zisqr = Z.y * Z.y;
-	    zrsqr = Z.x * Z.x;
-	    Z.y = (Z.x * Z.y).BigAbs() * 2.0 + centre.y;
-	    Z.x = (zrsqr - zisqr) + centre.x;
-*/
+	    break;
+	case 3:							// Cubic Burning Ship
+	case 4:							// 4th Power Burning Ship
+	case 5:							// 5th Power Burning Ship
+        z.x = fabs(Z->x);
+        z.y = -fabs(Z->y);
+        z = z.CPolynomial(power);
+        Z->x = z.x + centre->x;
+        Z->y = z.y + centre->y;
+	    break;
+	case 6:							// Celtic
+        SqrReal = sqr(Z->x);
+        SqrImag = sqr(Z->y);
+        RealImag = Z->x * ZTimes2->y;
+        Z->y = -RealImag - centre->y;
+        Z->x = -fabs(SqrReal - SqrImag) - centre->x;
+        break;
+	case 7:							// Cubic Celtic
+        z = Z->CPolynomial(3);
+        Z->x = fabs(z.x) + centre->x;
+        Z->y = z.y + centre->y;
+	    break;
+	case 8:							// 4th Celtic Buffalo
+        z = Z->CPolynomial(4);
+        Z->x = fabs(z.x) + centre->x;
+        Z->y = z.y + centre->y;
+	    break;
+	case 9:							// 5th Celtic
+        z = Z->CPolynomial(5);
+        Z->x = fabs(z.x) + centre->x;
+        Z->y = z.y + centre->y;
+	    break;
+	case 10:						// Mandelbar (Tricorn)
+        SqrReal = sqr(Z->x);
+        SqrImag = sqr(Z->y);
+        RealImag = Z->x * ZTimes2->y;
+        Z->x = SqrReal - SqrImag + centre->x;
+        Z->y = -RealImag + centre->y;
+	    break;
+	case 11:						// Mandelbar (power)
+        z = Z->CPolynomial(power);
+        Z->x = z.x + centre->x;
+        Z->y = -z.y + centre->y;
 	    break;
         }
     }
@@ -1220,5 +1268,64 @@ double CPertEngine::DiffAbs(const double c, const double d)
 	    }
     }
 
+/**************************************************************************
+	Evaluate a Complex Polynomial
+**************************************************************************/
+
+void CPertEngine::CPolynomial(BFComplex *out, BFComplex in, int degree)
+
+    {
+    bf_t	t, t1, t2, t3, t4;
+    int cplxsaved;
+
+    cplxsaved = save_stack();
+    t = alloc_stack(g_r_bf_length + 2);
+    t1 = alloc_stack(g_r_bf_length + 2);
+    t2 = alloc_stack(g_r_bf_length + 2);
+    t3 = alloc_stack(g_r_bf_length + 2);
+    t4 = alloc_stack(g_r_bf_length + 2);
+
+    if (degree < 0)
+	    degree = 0;
+
+    copy_bf(t1, in.x);	  		// BigTemp1 = xt  
+    copy_bf(t2, in.x);                        // BigTemp2 = yt
+
+    if (degree & 1)
+	    {
+        copy_bf(out->x, t1);  // new.x = result real  
+	    copy_bf(out->y, t2);  // new.y = result imag
+	    }
+    else
+	    {
+        inttobf(out->x, 1);
+	    inttobf(out->y, 0);
+	    }
+
+    degree >>= 1;
+    while (degree)
+	    {
+	    sub_bf(t, t1, t2);				// (xt - yt)
+	    add_bf(t3, t1, t2);				// (xt + yt)
+	    mult_bf(t4, t, t3);				// t2 = (xt + yt) * (xt - yt)
+	    copy_bf(t, t2);
+	    mult_bf(t3, t, t1);				// yt = xt * yt
+	    add_bf(t2, t3, t3);				// yt = yt + yt
+	    copy_bf(t1, t4);
+
+	    if (degree & 1)
+	        {
+	        mult_bf(t, t1, out->x);			// xt * result->x
+	        mult_bf(t3, t2, out->y);			// yt * result->y
+	        sub_bf(t4, t, t3);				// t2 = xt * result->x - yt * result->y
+	        mult_bf(t, t1, out->y);			// xt * result->y
+	        mult_bf(t3, t2, out->x);			// yt * result->x
+	        add_bf(out->y, t, t3);			// result->y = result->y * xt + yt * result->x
+	        copy_bf(out->x, t4);    			// result->x = t2
+	        }
+	    degree >>= 1;
+	    }
+    restore_stack(cplxsaved);
+    }
 
 

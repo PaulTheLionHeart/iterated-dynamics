@@ -43,9 +43,10 @@ extern	Complex	z, q;
 
 int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xBigZoomPointin,
     bf_t yBigZoomPointin, double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn,
-    bf_math_type math_typeIn /*, CTZfilter *TZfilter*/)
+    bf_math_type math_typeIn, double g_params[] /*, CTZfilter *TZfilter*/)
     {
     Complex q;
+    int     i;
 
     width = WidthIn;
     height = HeightIn;
@@ -53,8 +54,10 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
     ZoomRadius = ZoomRadiusIn;
     IsPotential = IsPotentialIn;
     math_type = math_typeIn;
-    
-//    method = TZfilter->method;
+    for (i = 0; i < MAX_PARAMS; i++)
+        param[i] = g_params[i];
+
+    //    method = TZfilter->method;
 
 /*
     int bitcount = decimals * 5;

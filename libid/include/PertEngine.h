@@ -8,6 +8,7 @@
 #include "id_keys.h"
 #include "fractalb.h"
 #include "biginit.h"
+#include "id.h"
 /*
 #include "Dib.h"
 #include "colour.h"
@@ -22,7 +23,7 @@ class CPertEngine
     {
     public:
     int     initialiseCalculateFrame(int WidthIn, int HeightIn, int threshold, bf_t xBigZoomPointin, bf_t yBigZoomPointin,
-            double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn, bf_math_type math_typeIn /*, CTZfilter *TZfilter*/);
+            double xZoomPointin, double yZoomPointin, double ZoomRadiusIn, bool IsPotentialIn, bf_math_type math_typeIn, double g_params[] /*, CTZfilter *TZfilter*/);
     int     calculateOneFrame(double bailout, char *StatusBarInfo, int powerin, int InsideFilterIn, int OutsideFilterIn, int biomorph, int subtype, Complex RSRA, bool RSRsign, int user_data(),
                             void (*plot)(int, int, int), int potential(double, long)/*, CTZfilter *TZfilter, CTrueCol *TrueCol*/);
     private:
@@ -36,6 +37,7 @@ class CPertEngine
     void    BigRefFunctions(BFComplex *centre, BFComplex *Z, BFComplex *ZTimes2);
     void    RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2);
 	void	CloseTheDamnPointers(void);
+    void    CPolynomial(BFComplex *out, BFComplex in, int degree);
 
 	Complex *XSubN = NULL;
 	double	*PerturbationToleranceCheck = NULL;
@@ -46,6 +48,7 @@ class CPertEngine
 	long	PascalArray[MAXPOWER];
 	Point	*pointsRemaining = NULL;
 	Point	*glitchPoints = NULL;
+  	double	param[MAX_PARAMS];
 
 //	Complex	q;			// location of current pixel
 	Complex	rsrA;			// TheRedshiftRider value of a

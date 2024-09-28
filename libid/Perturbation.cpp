@@ -137,7 +137,7 @@ bool	InitPerturbation(int subtype)
 	    mandel_width = mpfr_get_d(BigWidth.x, MPFR_RNDN);
     */
     PertEngine.initialiseCalculateFrame(g_screen_x_dots, g_screen_y_dots, g_max_iterations, xBigCentre,
-            yBigCentre, xCentre, yCentre, mandel_width / 2, g_potential_flag /*, &TZfilter*/, g_bf_math);
+            yBigCentre, xCentre, yCentre, mandel_width / 2, g_potential_flag, g_bf_math, g_params/*, &TZfilter*/);
     DoPerturbation(subtype);
     if (g_bf_math != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
         restore_stack(saved);

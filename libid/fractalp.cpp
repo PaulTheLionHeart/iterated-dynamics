@@ -2307,7 +2307,7 @@ fractalspecificstuff g_fractal_specific[] =
         STDBAILOUT
     },
     {
-        "mandelbar", {realz0, imagz0, "degree", "orientation (deg > 2)"},
+        "mandelbar", {realz0, imagz0, "degree", ""},
         {0, 0, 2, 0},
         help_labels::HT_MANDELBAR, help_labels::HF_MANDELBAR, fractal_flags::BAILTEST | fractal_flags::PERTURB,
         -3.0F, 2.5F, -2.0F, 2.0F, 0,

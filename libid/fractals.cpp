@@ -749,8 +749,8 @@ int mandelbarfpOrbit()
         z.x = g_old_z.x;
         z.y = g_old_z.y;
         z = z.CPolynomial(degree);
-        g_new_z.x = (g_params[3] == 1.0 ? -z.x : z.x) + q.x;
-        g_new_z.y = (g_params[3] == 1.0 ? z.y : -z.y) + q.y;
+        g_new_z.x = z.x + q.x;
+        g_new_z.y = -z.y + q.y;
     }
     return g_bailout_float();
 }
