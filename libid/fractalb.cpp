@@ -744,7 +744,6 @@ bool MandelbfSetup()
     case fractal_type::BURNINGSHIP:
     case fractal_type::MANDELBAR:
     case fractal_type::CELTIC:
-    case fractal_type::FPMANDELZPOWER:
         /*
            floating point code could probably be altered to handle many of
            the situations that otherwise are using standard_fractal().
@@ -784,16 +783,27 @@ bool MandelbfSetup()
                     else
                         return InitPerturbation(6);
                     break;
-                case fractal_type::FPMANDELZPOWER:                          // only allow integer values of real part
-                    if (degree > 2 && g_std_calc_mode == 'p')
-                        return InitPerturbation(1);
-                    break;
                 }
         }
-        else if (g_fractal_type == fractal_type::FPMANDELZPOWER)
+ //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
+ //       {
+ //           g_calc_type = standard_fractal; // Is this the best place to do this?
+ //       }
+    case fractal_type::JULIAFP:
+        copy_bf(g_parm_z_bf.x, g_bf_parms[0]);
+        copy_bf(g_parm_z_bf.y, g_bf_parms[1]);
+        break;
+    case fractal_type::FPMANDELZPOWER:
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        {
+            int degree = (int) g_params[2];                     // only allow integer values of real part
+            if (degree > 2)
+                return InitPerturbation(1);
+        }
+        else
         {
             init_big_pi();
-            if ((double) g_c_exponent == g_params[2] && (g_c_exponent & 1)) // odd exponents
+            if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
             {
                 g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
             }
@@ -802,15 +812,6 @@ bool MandelbfSetup()
                 g_symmetry = symmetry_type::NONE;
             }
         }
-        break;
-        if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR ||
-            g_fractal_type == fractal_type::CELTIC)
-        {
-            g_calc_type = standard_fractal; // Is this the best place to do this?
-        }
-    case fractal_type::JULIAFP:
-        copy_bf(g_parm_z_bf.x, g_bf_parms[0]);
-        copy_bf(g_parm_z_bf.y, g_bf_parms[1]);
         break;
     case fractal_type::FPJULIAZPOWER:
         init_big_pi();
@@ -1309,4 +1310,3 @@ BNComplex *ComplexPower_bn(BNComplex *t, BNComplex *xx, BNComplex *yy)
     restore_stack(saved);
     return t;
 }
-
