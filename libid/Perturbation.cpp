@@ -9,24 +9,6 @@
 #include "drivers.h"
 #include "id_data.h"
 
-// some early tests
-//const char* xZoomPointString = "-1.25736802846652839265383159384773654166836713857126000896912753375688559878664765114255696457015368246531973104439755978333044015506759938503739206829441575363669402497147343368904702066174408250247081855416385744218741909521990441308969603994513271641284298225323509381146075334937409491188";
-//const char* yZoomPointString = "0.37873083102862491151257052392242106932532193327534173605649141946411779667848532042309666819671311329800095959763206221251386819369531602358854394169140220049675504811341950346171196600590463661845947574424944950533273158558278821586333530950155398785389980291835095955110139525825547062070";
-//const char* xZoomPointString = "-1.9428";
-//const char* yZoomPointString = "0.0";
-const char* xZoomPointString = "-0.75";
-const char* yZoomPointString = "0.01";
-//const char* xZoomPointString = "-2.0";
-//const char* yZoomPointString = "0.0";
-//const char* xZoomPointString = "-1.90750420816369968453818946601049";
-//const char* yZoomPointString = "-8.007949072567580760039e-12";
-//const char* xZoomPointString = "-1.74997338996683218759081143886";
-//const char* yZoomPointString = "9.33818690200204924e-14";
-//const char* xZoomPointString = "0.4114706336593580722758780101609024";
-//const char* yZoomPointString = "0.6074067173514734090007173476657398";
-//const char* xZoomPointString = "-1.6129965373041952026071917970859685";
-//const char* yZoomPointString = "1.70637685183811519151570457965e-6";
-
 //extern  int     driver_key_pressed();
 extern  void    (*g_plot)(int, int, int); // function pointer
 extern	int	    potential(double, long);
@@ -87,8 +69,8 @@ bool	InitPerturbation(int subtype)
     {
     double  mandel_width;    // width of display
     double  xCentre, yCentre, Xmagfactor, Rotation, Skew;
-//    char s[1200];
-/*
+
+#ifdef ALLOW_MPFR
     int bitcount = decimals * 5;
     if (bitcount < 30)
         bitcount = 30;
@@ -99,7 +81,7 @@ bool	InitPerturbation(int subtype)
         mpfr_set_default_prec(1600);
         xBigCentre.ChangePrecision(1600);
         yBigCentre.ChangePrecision(1600);
-    */
+#endif ALLOW_MPFR
     bf_t xBigCentre = NULL, yBigCentre = NULL, BigTmp = NULL;
     int saved;
 
@@ -155,9 +137,7 @@ int DoPerturbation(int subtype)
     Complex a = {0, 0};             // future TheRedshiftRider
     bool    IsPositive = false;
     int     degree;  // power
-//    BYTE    subtype; // subtype
 
-//    subtype = (int) g_params[0];
     degree = (int) g_params[2];
 /*        
     if (subtype == 53)              // future TheRedshiftRider
@@ -168,7 +148,6 @@ int DoPerturbation(int subtype)
 	    }
 */
     if (PertEngine.calculateOneFrame(g_magnitude_limit, PertStatus, degree, g_inside_color, g_outside_color, g_biomorph, subtype, a, IsPositive, UserData, g_plot, potential/*, &TZfilter, &TrueCol*/) < 0)
-        //    if (frameCalculator.calculateOneFrame(rqlim, PertStatus, degree, method, biomorph, subtype, a, IsPositive, UserData, plot, potential) < 0)
 	    return -1;
     return 0;
     }

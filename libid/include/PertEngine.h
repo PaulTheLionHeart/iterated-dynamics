@@ -38,6 +38,7 @@ class CPertEngine
     void    RefFunctions(Complex *centre, Complex *Z, Complex *ZTimes2);
 	void	CloseTheDamnPointers(void);
     void    CPolynomial(BFComplex *out, BFComplex in, int degree);
+    void    CCube(BFComplex *out, BFComplex in);
 
 	Complex *XSubN = NULL;
 	double	*PerturbationToleranceCheck = NULL;

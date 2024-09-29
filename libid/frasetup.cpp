@@ -124,6 +124,7 @@ MandelfpSetup()
     case fractal_type::BURNINGSHIP:
     case fractal_type::MANDELBAR:
     case fractal_type::CELTIC:
+    case fractal_type::FPMANDELZPOWER:
         /*
            floating point code could probably be altered to handle many of
            the situations that otherwise are using standard_fractal().
@@ -132,7 +133,7 @@ MandelfpSetup()
         */
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
-            int degree = g_params[2];
+            int degree = (int)g_params[2];
             switch (g_fractal_type)
             {
                 case fractal_type::MANDELFP:
@@ -162,8 +163,34 @@ MandelfpSetup()
                     else
                         return InitPerturbation(6);
                     break;
+                case fractal_type::FPMANDELZPOWER:      // only allow integer values of real part
+                    if (degree > 2)
+                        return InitPerturbation(1);
+                    break;
                 }
         }
+        else if (g_fractal_type == fractal_type::FPMANDELZPOWER)
+        {
+            if ((double) g_c_exponent == g_params[2] && (g_c_exponent & 1)) // odd exponents
+            {
+                g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
+            }
+            if (g_params[3] != 0)
+            {
+                g_symmetry = symmetry_type::NONE;
+            }
+            if (g_params[3] == 0.0 && g_debug_flag != debug_flags::force_complex_power &&
+                (double) g_c_exponent == g_params[2])
+            {
+                g_fractal_specific[+g_fractal_type].orbitcalc = floatZpowerFractal;
+            }
+            else
+            {
+                g_fractal_specific[+g_fractal_type].orbitcalc = floatCmplxZpowerFractal;
+            }
+        }
+        break;
+
         if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
         {
             g_calc_type = standard_fractal; // Is this the best place to do this?
@@ -190,24 +217,6 @@ MandelfpSetup()
         }
         break;
 
-    case fractal_type::FPMANDELZPOWER:
-        if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
-        {
-            g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
-        }
-        if (g_params[3] != 0)
-        {
-            g_symmetry = symmetry_type::NONE;
-        }
-        if (g_params[3] == 0.0 && g_debug_flag != debug_flags::force_complex_power && (double)g_c_exponent == g_params[2])
-        {
-            g_fractal_specific[+g_fractal_type].orbitcalc = floatZpowerFractal;
-        }
-        else
-        {
-            g_fractal_specific[+g_fractal_type].orbitcalc = floatCmplxZpowerFractal;
-        }
-        break;
     case fractal_type::MAGNET1M:
     case fractal_type::MAGNET2M:
         g_attractor[0].x = 1.0;      // 1.0 + 0.0i always attracts

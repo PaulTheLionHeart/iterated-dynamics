@@ -696,14 +696,6 @@ bool MandelbfSetup()
 
     g_bf_math = bf_math_type::BIGFLT;
 
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
-    {
-        InitPerturbation(0);
-        restore_stack(saved);
-        g_std_calc_mode = 'g';      // better return calc mode back to guessing (default) or we get a nice little crash
-        g_calc_status = calc_status_value::COMPLETED; // don't want to redo fractal using guessing
-        return true;
-    }
     // g_delta_x_bf = (g_bf_x_max - g_bf_x_3rd)/(xdots-1)
     sub_bf(g_delta_x_bf, g_bf_x_max, g_bf_x_3rd);
     div_a_bf_int(g_delta_x_bf, (U16)(g_logical_screen_x_dots - 1));
@@ -748,20 +740,77 @@ bool MandelbfSetup()
     g_c_exponent = (int)g_params[2];
     switch (g_fractal_type)
     {
+    case fractal_type::MANDELFP:
+    case fractal_type::BURNINGSHIP:
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
+    case fractal_type::FPMANDELZPOWER:
+        /*
+           floating point code could probably be altered to handle many of
+           the situations that otherwise are using standard_fractal().
+           calcmandfp() can currently handle invert, any rqlim, potflag
+           zmag, epsilon cross, and all the current outside options
+        */
+        if (/*g_std_calc_mode == 'p' && */bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        {
+            int degree = g_params[2];
+            switch (g_fractal_type)
+            {
+                case fractal_type::MANDELFP:
+                    if (g_std_calc_mode == 'p')
+                        return InitPerturbation(0);
+                    break;
+                case fractal_type::BURNINGSHIP:
+                    if (degree == 2)
+                        return InitPerturbation(2);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(degree);
+                    else
+                        return InitPerturbation(2);
+                    break;
+                case fractal_type::MANDELBAR:
+                    if (degree == 2)
+                        return InitPerturbation(10);
+                    else if (degree > 2 && degree <= 10)
+                        return InitPerturbation(11);
+                    else
+                        return InitPerturbation(10);
+                    break;
+                case fractal_type::CELTIC:
+                    if (degree == 2)
+                        return InitPerturbation(6);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(4+degree);
+                    else
+                        return InitPerturbation(6);
+                    break;
+                case fractal_type::FPMANDELZPOWER:                          // only allow integer values of real part
+                    if (degree > 2 && g_std_calc_mode == 'p')
+                        return InitPerturbation(1);
+                    break;
+                }
+        }
+        else if (g_fractal_type == fractal_type::FPMANDELZPOWER)
+        {
+            init_big_pi();
+            if ((double) g_c_exponent == g_params[2] && (g_c_exponent & 1)) // odd exponents
+            {
+                g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
+            }
+            if (g_params[3] != 0)
+            {
+                g_symmetry = symmetry_type::NONE;
+            }
+        }
+        break;
+        if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR ||
+            g_fractal_type == fractal_type::CELTIC)
+        {
+            g_calc_type = standard_fractal; // Is this the best place to do this?
+        }
     case fractal_type::JULIAFP:
         copy_bf(g_parm_z_bf.x, g_bf_parms[0]);
         copy_bf(g_parm_z_bf.y, g_bf_parms[1]);
-        break;
-    case fractal_type::FPMANDELZPOWER:
-        init_big_pi();
-        if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
-        {
-            g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
-        }
-        if (g_params[3] != 0)
-        {
-            g_symmetry = symmetry_type::NONE;
-        }
         break;
     case fractal_type::FPJULIAZPOWER:
         init_big_pi();
@@ -1008,6 +1057,35 @@ JuliaZpowerbfFractal()
     return g_bailout_bigfloat();
 }
 
+// a few dummy routines until we build them. Until then force perturbation
+int
+CelticbfFractal()
+{
+    return g_bailout_bigfloat();
+}
+
+int
+MandelbarbfFractal()
+{
+    return g_bailout_bigfloat();
+}
+
+int
+BurningShipbfFractal()
+{
+/*
+    square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
+    square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
+    sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
+    add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
+    mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
+    double_bf(g_bf_tmp, g_bf_tmp);
+    abs_bf(g_bf_tmp, g_bf_tmp);
+    add_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
+*/
+    return g_bailout_bigfloat();
+}
+
 DComplex cmplxbntofloat(BNComplex *s)
 {
     DComplex t;
@@ -1231,3 +1309,4 @@ BNComplex *ComplexPower_bn(BNComplex *t, BNComplex *xx, BNComplex *yy)
     restore_stack(saved);
     return t;
 }
+
