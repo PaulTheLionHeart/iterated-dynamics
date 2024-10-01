@@ -162,10 +162,6 @@ MandelfpSetup()
                     else
                         return InitPerturbation(6);
                     break;
-                case fractal_type::FPMANDELZPOWER:      // only allow integer values of real part
-                    if (degree > 2)
-                        return InitPerturbation(1);
-                    break;
                 }
         }
         if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
