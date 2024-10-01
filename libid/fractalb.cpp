@@ -688,7 +688,7 @@ bool MandelbnSetup()
 bool MandelbfSetup()
 {
     // I suspect the following code should be somewhere in perform_worklist() to reset the setup routine to floating point
-    // when zooming out. Somehow the math type is restored and the bigflt memory restored, but the pinter to setup isn't.
+    // when zooming out. Somehow the math type is restored and the bigflt memory restored, but the pointer to setup isn't.
     if (g_bf_math == bf_math_type::NONE)    // kludge to prevent crash when math type = NONE and still call bigflt setup routine
         return MandelfpSetup();
     // this should be set up dynamically based on corners
