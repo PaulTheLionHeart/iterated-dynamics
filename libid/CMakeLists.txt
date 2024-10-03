@@ -14,7 +14,6 @@ add_library(libid
     Perturbation.cpp
 
     include/Point.h
-    include/gmp.h
 
     boundary_trace.cpp include/boundary_trace.h
     calc_frac_init.cpp include/calc_frac_init.h
