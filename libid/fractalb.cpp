@@ -1069,6 +1069,7 @@ JuliaZpowerbfFractal()
 }
 
 // a few dummy routines until we build them. Until then force perturbation
+// gotta fix a general bigflt bug first
 int
 CelticbfFractal()
 {

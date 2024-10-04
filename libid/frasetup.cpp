@@ -120,7 +120,6 @@ MandelfpSetup()
             g_symmetry = symmetry_type::X_AXIS_NO_PARAM;
         }
         break;
-    case fractal_type::MANDELFP:
     case fractal_type::BURNINGSHIP:
     case fractal_type::MANDELBAR:
     case fractal_type::CELTIC:
@@ -132,12 +131,9 @@ MandelfpSetup()
         */
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
-            int degree = (int)g_params[2];
+            int degree = (int) g_params[2];
             switch (g_fractal_type)
             {
-                case fractal_type::MANDELFP:
-                    return InitPerturbation(0);
-                    break;
                 case fractal_type::BURNINGSHIP:
                     if (degree == 2)
                         return InitPerturbation(2);
@@ -164,10 +160,27 @@ MandelfpSetup()
                     break;
                 }
         }
-        if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
+        else /*if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)*/
         {
-            g_calc_type = standard_fractal; // Is this the best place to do this?
+            g_symmetry = symmetry_type::NONE;           // we can fix this up later
+            switch (g_fractal_type)
+            {
+            case fractal_type::BURNINGSHIP:
+                g_fractal_specific[+g_fractal_type].orbitcalc = burningshipfpOrbit;
+                break;
+            case fractal_type::MANDELBAR:
+                g_fractal_specific[+g_fractal_type].orbitcalc = mandelbarfpOrbit;
+                break;
+            case fractal_type::CELTIC:
+                g_fractal_specific[+g_fractal_type].orbitcalc = celticfpOrbit;
+                break;
+            }
+ //           g_calc_type = standard_fractal; // Is this the best place to do this?
         }
+        break;
+    case fractal_type::MANDELFP:
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+            return InitPerturbation(0);
         else if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
             && g_decomp[0] == 0
