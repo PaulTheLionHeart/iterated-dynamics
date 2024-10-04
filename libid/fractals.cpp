@@ -56,6 +56,7 @@ an appropriate setup, per_image, per_pixel, and orbit routines.
 #include "mpmath_c.h"
 #include "newton.h"
 #include "parser.h"
+#include "Complex.h"
 #include "pixel_grid.h"
 
 #include <cfloat>
@@ -581,6 +582,7 @@ int mandelfp_per_pixel()
 {
     // floating point mandelbrot
     // mandelfp
+    // mandelbrot derivatives
 
     if (g_invert != 0)
     {
@@ -593,6 +595,12 @@ int mandelfp_per_pixel()
     }
     switch (g_fractal_type)
     {
+    case fractal_type::BURNINGSHIP: // a bunch of mandelbrot derivatives
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
+        g_old_z.x = 0.0;
+        g_old_z.y = 0.0;
+        break;
     case fractal_type::MAGNET2M:
         FloatPreCalcMagnet2();
     case fractal_type::MAGNET1M:
@@ -695,4 +703,81 @@ int otherjuliafp_per_pixel()
         g_old_z.y = g_dy_pixel();
     }
     return 0;
+}
+int burningshipfpOrbit()
+{
+    Complex z, q;
+    double real_imag;
+    int degree = (int) g_params[2];
+    q.x = g_init.x;
+    q.y = g_init.y;
+    if (degree == 2) // Burning Ship
+    {
+        g_temp_sqr_x = sqr(g_old_z.x);
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = fabs(g_old_z.x * g_old_z.y);
+        g_new_z.x = g_temp_sqr_x - g_temp_sqr_y + q.x;
+        g_new_z.y = real_imag + real_imag - q.y;
+    }
+    else if (degree > 2) // Burning Ship to higher power
+    {
+        z.x = fabs(g_old_z.x);
+        z.y = -fabs(g_old_z.y);
+        z = z.CPolynomial(degree);
+        g_new_z.x = z.x + q.x;
+        g_new_z.y = z.y + q.y;
+    }
+    return g_bailout_float();
+}
+
+int mandelbarfpOrbit()
+{
+    Complex z, q;
+    double real_imag;
+    int degree = (int) g_params[2];
+    q.x = g_init.x;
+    q.y = g_init.y;
+    if (degree == 2) // Mandelbar
+    {
+        g_temp_sqr_x = sqr(g_old_z.x);
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = g_old_z.x * g_old_z.y;
+        g_new_z.x = g_temp_sqr_x - g_temp_sqr_y + q.x;
+        g_new_z.y = -real_imag - real_imag + q.y;
+    }
+    else if (degree > 2) // Mandelbar to higher power
+    {
+        z.x = g_old_z.x;
+        z.y = g_old_z.y;
+        z = z.CPolynomial(degree);
+        g_new_z.x = z.x + q.x;
+        g_new_z.y = -z.y + q.y;
+    }
+    return g_bailout_float();
+}
+
+int celticfpOrbit()
+{
+    Complex z, q;
+    double real_imag;
+    int degree = (int) g_params[2];
+    q.x = g_init.x;
+    q.y = g_init.y;
+    if (degree == 2) // Celtic
+    {
+        g_temp_sqr_x = sqr(g_old_z.x);
+        g_temp_sqr_y = sqr(g_old_z.y);
+        real_imag = g_old_z.x * g_old_z.y;
+        g_new_z.y = -real_imag - real_imag - q.y;
+        g_new_z.x = -fabs(g_temp_sqr_x - g_temp_sqr_y) - q.x;
+    }
+    else if (degree > 2) // Celtic to higher power
+    {
+        z.x = g_old_z.x;
+        z.y = g_old_z.y;
+        z = z.CPolynomial(degree);
+        g_new_z.x = fabs(z.x) + q.x;
+        g_new_z.y = z.y + q.y;
+    }
+    return g_bailout_float();
 }

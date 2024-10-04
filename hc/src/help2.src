@@ -119,6 +119,15 @@ SUMMARY OF FRACTAL TYPES
     Three parameters: Filter Cycles, Seed Population, and Beta.
 
 ~OnlineFF
+{=HT_BURNINGSHIP burningship}
+~Label=HF_BURNINGSHIP
+    Classic Mandelbrot Derivative fractal.
+      z(0) = c = pixel;
+      real(tmp) = sqr(real(z(n))) - sqr(imag(z(n)))
+      imag(tmp) = abs(real(z(n)) * imag(z(n))) * -2.0
+      z(n+1) = tmp + c.
+      Three parameters: perturbations of z(0) and degree.
+
 {=HT_CELLULAR cellular}
 ~Label=HF_CELLULAR
     One-dimensional cellular automata or line automata.  The type of CA
@@ -128,6 +137,15 @@ SUMMARY OF FRACTAL TYPES
     Four parameters: Initial String, Rule, Type, and Starting Row Number.
     For Type = 21, 31, 41, 51, 61, 22, 32, 42, 23, 33, 24, 25, 26, 27
         Rule =  4,  7, 10, 13, 16,  6, 11, 16,  8, 15, 10, 12, 14, 16 digits
+
+{=HT_CELTIC celtic}
+~Label=HF_CELTIC
+    Mandelbrot Derivative fractal.
+      z(0) = c = pixel;
+      real(tmp) = abs(sqr(real(z(n))) - sqr(imag(z(n))))
+      imag(tmp) = real(z(n)) * imag(z(n)) * 2.0
+      z(n+1) = tmp + c.
+      Three parameters: perturbations of z(0) and degree.
 
 {=HT_MARTIN chip}
 ~Label=HF_CHIP
@@ -522,6 +540,15 @@ SUMMARY OF FRACTAL TYPES
       z(0) = c = pixel;
       z(n+1) = z(n)^2 + c.
     Two parameters: real & imaginary perturbations of z(0).
+
+{=HT_MANDELBAR mandelbar}
+~Label=HF_MANDELBAR
+    Mandelbrot Derivative fractal. Also called Tricorn.
+      z(0) = c = pixel;
+      real(tmp) = sqr(real(z(n))) - sqr(imag(z(n)))
+      imag(tmp) = real(z(n)) * imag(z(n)) * -2.0
+      z(n+1) = tmp + c.
+      Three parameters: perturbations of z(0) and degree.
 
 {=HT_FNORFN mandel(fn||fn)}
 ~Label=HF_MANDELFNFN
@@ -2339,6 +2366,20 @@ author of "A Hypercomplex Calculus with Applications to Relativity"
 (ISBN 0-9623837-0-8).
 
 See also {Quaternion} and { Quaternion and Hypercomplex Algebra }
+;
+;
+~Topic=BURNINGSHIP, Label=HT_BURNINGSHIP
+(type=burningship)
+
+~Topic=MANDELBAR, Label=HT_MANDELBAR
+(type=mandelbar)
+
+~Topic=CELTIC, Label=HT_CELTIC
+(type=celtic)
+
+These fractals are derivatives of the classic Mandelbrot fractal with a twist.
+Some parts use absolute values in the equations and give an amazing variety
+of new fractals.
 ;
 ;
 ~Topic=Cellular Automata, Label=HT_CELLULAR

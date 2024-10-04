@@ -70,7 +70,7 @@
 
 // routines in this module
 static void perform_worklist();
-static int  potential(double, long);
+       int  potential(double, long);    // static removed so we can run this from perturbation
 static void decomposition();
 static void setsymmetry(symmetry_type sym, bool uselist);
 static bool xsym_split(int xaxis_row, bool xaxis_between);
@@ -1199,13 +1199,21 @@ static void perform_worklist()
             boundary_trace();
             break;
         case 'g':
-            solid_guess();
+            if (g_calc_status != calc_status_value::COMPLETED) // horrible cludge preventing crash when
+                                                               // coming back from perturbation and math =
+                                                               // bignum/bigflt in fractalb.cpp
+                solid_guess();
             break;
         case 'd':
             diffusion_scan();
             break;
         case 'o':
             sticky_orbits();
+            break;
+        case 'p':
+            if (bit_set(g_cur_fractal_specific->flags,
+                    fractal_flags::PERTURB)) // we already finished perturbation, so let's get outa here
+                return;
             break;
         default:
             one_or_two_pass();
@@ -2527,7 +2535,7 @@ static void decomposition()
 // controlling the level and slope of the continuous potential
 // surface. Returns color.
 //
-static int potential(double mag, long iterations)
+int potential(double mag, long iterations)      // static removed so it can be called from perturbation
 {
     float f_mag;
     float f_tmp;

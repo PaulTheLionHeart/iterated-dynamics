@@ -25,6 +25,8 @@ fractal routines.
 #include "id.h"
 #include "id_data.h"
 #include "stop_msg.h"
+#include "miscfrac.h"
+#include "frasetup.h"
 #include "type_has_param.h"
 
 #include <array>
@@ -637,6 +639,15 @@ bool MandelbnSetup()
         }
     }
 
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+    {
+        InitPerturbation(0);
+        restore_stack(saved);
+        g_std_calc_mode = 'g';      // better return calc mode back to guessing (default) or we get a nice little crash
+        g_calc_status = calc_status_value::COMPLETED;   // don't want to redo fractal using guessing
+        return true;
+    }
+
     g_c_exponent = (int)g_params[2];
     switch (g_fractal_type)
     {
@@ -679,6 +690,10 @@ bool MandelbnSetup()
 
 bool MandelbfSetup()
 {
+    // I suspect the following code should be somewhere in perform_worklist() to reset the setup routine to floating point
+    // when zooming out. Somehow the math type is restored and the bigflt memory restored, but the pointer to setup isn't.
+    if (g_bf_math == bf_math_type::NONE)    // kludge to prevent crash when math type = NONE and still call bigflt setup routine
+        return MandelfpSetup();
     // this should be set up dynamically based on corners
     bf_t bftemp1;
     bf_t bftemp2;
@@ -733,19 +748,77 @@ bool MandelbfSetup()
     g_c_exponent = (int)g_params[2];
     switch (g_fractal_type)
     {
+    case fractal_type::MANDELFP:
+    case fractal_type::BURNINGSHIP:
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
+        /*
+           floating point code could probably be altered to handle many of
+           the situations that otherwise are using standard_fractal().
+           calcmandfp() can currently handle invert, any rqlim, potflag
+           zmag, epsilon cross, and all the current outside options
+        */
+        if (/*g_std_calc_mode == 'p' && */bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        {
+            int degree = g_params[2];
+            switch (g_fractal_type)
+            {
+                case fractal_type::MANDELFP:
+                    if (g_std_calc_mode == 'p')
+                        return InitPerturbation(0);
+                    break;
+                case fractal_type::BURNINGSHIP:
+                    if (degree == 2)
+                        return InitPerturbation(2);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(degree);
+                    else
+                        return InitPerturbation(2);
+                    break;
+                case fractal_type::MANDELBAR:
+                    if (degree == 2)
+                        return InitPerturbation(10);
+                    else if (degree > 2 && degree <= 10)
+                        return InitPerturbation(11);
+                    else
+                        return InitPerturbation(10);
+                    break;
+                case fractal_type::CELTIC:
+                    if (degree == 2)
+                        return InitPerturbation(6);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(4+degree);
+                    else
+                        return InitPerturbation(6);
+                    break;
+                }
+        }
+ //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
+ //       {
+ //           g_calc_type = standard_fractal; // Is this the best place to do this?
+ //       }
     case fractal_type::JULIAFP:
         copy_bf(g_parm_z_bf.x, g_bf_parms[0]);
         copy_bf(g_parm_z_bf.y, g_bf_parms[1]);
         break;
     case fractal_type::FPMANDELZPOWER:
-        init_big_pi();
-        if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
-            g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
+            int degree = (int) g_params[2]; // only allow integer values of real part
+            if (degree > 2)
+                return InitPerturbation(1);
         }
-        if (g_params[3] != 0)
+        else
         {
-            g_symmetry = symmetry_type::NONE;
+            init_big_pi();
+            if ((double)g_c_exponent == g_params[2] && (g_c_exponent & 1))   // odd exponents
+            {
+                g_symmetry = symmetry_type::XY_AXIS_NO_PARAM;
+            }
+            if (g_params[3] != 0)
+            {
+                g_symmetry = symmetry_type::NONE;
+            }
         }
         break;
     case fractal_type::FPJULIAZPOWER:
@@ -772,6 +845,8 @@ bool MandelbfSetup()
 
 int mandelbn_per_pixel()
 {
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+        return true;
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bn_int(g_param_z_bn.x, g_delta_x_bn, (U16)g_col);
     mult_bn_int(g_bn_tmp, g_delta2_x_bn, (U16)g_row);
@@ -818,6 +893,11 @@ int mandelbn_per_pixel()
 
 int mandelbf_per_pixel()
 {
+    // I suspect the following code should be somewhere in perform_worklist() to reset the setup routine to
+    // floating point when zooming out. Somehow the math type is restored and the bigflt memory restored, but
+    // the pointer to setup isn't.
+    if (g_bf_math == bf_math_type::NONE) // kludge to prevent crash when math type = NONE and still call bigflt setup routine
+        return mandelfp_per_pixel();
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bf_int(g_parm_z_bf.x, g_delta_x_bf, (U16)g_col);
     mult_bf_int(g_bf_tmp, g_delta2_x_bf, (U16)g_row);
@@ -988,6 +1068,35 @@ JuliaZpowerbfFractal()
     add_bf(g_new_z_bf.x, g_parm_z_bf.x, g_new_z_bf.x);
     add_bf(g_new_z_bf.y, g_parm_z_bf.y, g_new_z_bf.y);
     restore_stack(saved);
+    return g_bailout_bigfloat();
+}
+
+// a few dummy routines until we build them. Until then force perturbation
+int
+CelticbfFractal()
+{
+    return g_bailout_bigfloat();
+}
+
+int
+MandelbarbfFractal()
+{
+    return g_bailout_bigfloat();
+}
+
+int
+BurningShipbfFractal()
+{
+/*
+    square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
+    square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
+    sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
+    add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
+    mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
+    double_bf(g_bf_tmp, g_bf_tmp);
+    abs_bf(g_bf_tmp, g_bf_tmp);
+    add_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
+*/
     return g_bailout_bigfloat();
 }
 

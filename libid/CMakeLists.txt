@@ -10,6 +10,12 @@ add_library(libid
     3d.cpp include/3d.h
     line3d.cpp include/line3d.h
     plot3d.cpp include/plot3d.h
+    Complex.cpp include/Complex.h
+    PertEngine.cpp include/PertEngine.h
+    PertFn.cpp
+    Perturbation.cpp
+
+    include/Point.h
 
     boundary_trace.cpp include/boundary_trace.h
     calc_frac_init.cpp include/calc_frac_init.h
@@ -631,3 +637,4 @@ target_link_libraries(libid PRIVATE helpcom os)
 target_link_libraries(libid PUBLIC help-defs config Boost::boost GIF::GIF cpuid::cpuid)
 set_target_properties(libid PROPERTIES FOLDER Libraries)
 add_dependencies(libid native-help)
+

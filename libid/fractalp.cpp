@@ -179,8 +179,11 @@ AlternateMath g_alternate_math[] =
     {fractal_type::FPJULIAZPOWER, bf_math_type::BIGFLT, JuliaZpowerbfFractal, juliabf_per_pixel, MandelbfSetup  },
     {fractal_type::FPMANDELZPOWER, bf_math_type::BIGFLT, JuliaZpowerbfFractal, mandelbf_per_pixel, MandelbfSetup},
     {fractal_type::DIVIDE_BROT5, bf_math_type::BIGFLT, DivideBrot5bfFractal, dividebrot5bf_per_pixel, MandelbfSetup},
+    {fractal_type::BURNINGSHIP, bf_math_type::BIGFLT, BurningShipbfFractal, mandelbf_per_pixel, MandelbfSetup},
+    {fractal_type::MANDELBAR, bf_math_type::BIGFLT, MandelbarbfFractal, mandelbf_per_pixel, MandelbfSetup},
+    {fractal_type::CELTIC, bf_math_type::BIGFLT, CelticbfFractal, mandelbf_per_pixel, MandelbfSetup},
     {fractal_type::NOFRACTAL, bf_math_type::NONE, nullptr, nullptr, nullptr}
-};
+    };
 
 // These are only needed for types with both integer and float variations
 const char *const t_barnsleyj1{"*barnsleyj1"};
@@ -273,7 +276,7 @@ fractalspecificstuff g_fractal_specific[] =
         t_mandel+1,
         {realz0, imagz0, "", ""},
         {0, 0, 0, 0},
-        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST,
+        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         1, fractal_type::JULIA, fractal_type::NOFRACTAL, fractal_type::MANDELFP, symmetry_type::X_AXIS_NO_PARAM,
         JuliaFractal, mandel_per_pixel, MandelSetup, standard_fractal,
@@ -316,8 +319,8 @@ fractalspecificstuff g_fractal_specific[] =
     {
         t_mandel,
         {realz0, imagz0, "", ""},
-        {0, 0, 0, 0},
-        help_labels::HT_MANDEL, help_labels::HF_MANDEL, fractal_flags::BAILTEST|fractal_flags::BF_MATH,
+        {0, 0, 0, 0}, help_labels::HT_MANDEL, help_labels::HF_MANDEL,
+        fractal_flags::BAILTEST | fractal_flags::BF_MATH | fractal_flags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         0, fractal_type::JULIAFP, fractal_type::NOFRACTAL, fractal_type::MANDEL, symmetry_type::X_AXIS_NO_PARAM,
         JuliafpFractal, mandelfp_per_pixel, MandelfpSetup, standard_fractal,
@@ -861,8 +864,8 @@ fractalspecificstuff g_fractal_specific[] =
     {
         t_manzpower+1,
         {realz0, imagz0, exponent, imexponent},
-        {0, 0, 2, 0},
-        help_labels::HT_PICKMJ, help_labels::HF_MANZPOWER, fractal_flags::BAILTEST,
+        {0, 0, 2, 0}, help_labels::HT_PICKMJ,
+        help_labels::HF_MANZPOWER, fractal_flags::BAILTEST | fractal_flags::PERTURB,
         -2.0F, 2.0F, -1.5F, 1.5F,
         1, fractal_type::LJULIAZPOWER, fractal_type::NOFRACTAL, fractal_type::FPMANDELZPOWER, symmetry_type::X_AXIS_NO_IMAG,
         longZpowerFractal, long_mandel_per_pixel, MandellongSetup,
@@ -2296,6 +2299,35 @@ fractalspecificstuff g_fractal_specific[] =
         -2.5F, 1.5F, -1.5F, 1.5F,
         0, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, fractal_type::NOFRACTAL, symmetry_type::NONE,
         MandelbrotMix4fpFractal, MandelbrotMix4fp_per_pixel, MandelbrotMix4Setup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "burningship",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 2, 0},
+        help_labels::HT_BURNINGSHIP, help_labels::HF_BURNINGSHIP, fractal_flags::BAILTEST|fractal_flags::PERTURB|fractal_flags::BF_MATH,
+        -2.5F, 1.5F, -1.2F, 1.8F,
+        0, fractal_type::BURNINGSHIP, fractal_type::NOFRACTAL, fractal_type::BURNINGSHIP, symmetry_type::NONE,
+        burningshipfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "mandelbar", {realz0, imagz0, "degree", ""},
+        {0, 0, 2, 0},
+        help_labels::HT_MANDELBAR, help_labels::HF_MANDELBAR, fractal_flags::BAILTEST | fractal_flags::PERTURB|fractal_flags::BF_MATH,
+        -3.0F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::MANDELBAR, fractal_type::NOFRACTAL, fractal_type::MANDELBAR, symmetry_type::NONE,
+        mandelbarfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "celtic",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 2, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST | fractal_flags::PERTURB | fractal_flags::BF_MATH,
+        -3.0F, 2.0F, -2.0F, 2.0F, 0,
+        fractal_type::CELTIC, fractal_type::NOFRACTAL, fractal_type::CELTIC, symmetry_type::NONE,
+        celticfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
 
