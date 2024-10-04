@@ -744,7 +744,6 @@ bool MandelbfSetup()
             half_a_bf(g_close_enough_bf);
         }
     }
-
     g_c_exponent = (int)g_params[2];
     switch (g_fractal_type)
     {
@@ -793,6 +792,7 @@ bool MandelbfSetup()
                     break;
                 }
         }
+        break;
  //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
  //       {
  //           g_calc_type = standard_fractal; // Is this the best place to do this?
@@ -1072,6 +1072,7 @@ JuliaZpowerbfFractal()
 }
 
 // a few dummy routines until we build them. Until then force perturbation
+// gotta fix a general bigflt bug first
 int
 CelticbfFractal()
 {

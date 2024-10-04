@@ -15,6 +15,7 @@
 #include "fractalp.h"
 #include "fractals.h"
 #include "fractype.h"
+#include "miscfrac.h"
 #include "get_julia_attractor.h"
 #include "id_data.h"
 #include "magnet.h"
@@ -23,7 +24,6 @@
 #include "pickover_mandelbrot.h"
 #include "popcorn.h"
 #include "trig_fns.h"
-#include "miscfrac.h"
 
 #include <cmath>
 
@@ -122,55 +122,67 @@ MandelfpSetup()
             g_symmetry = symmetry_type::X_AXIS_NO_PARAM;
         }
         break;
-    case fractal_type::MANDELFP:
+    case fractal_type::BURNINGSHIP:
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
         /*
            floating point code could probably be altered to handle many of
            the situations that otherwise are using standard_fractal().
            calcmandfp() can currently handle invert, any rqlim, potflag
            zmag, epsilon cross, and all the current outside options
         */
-    case fractal_type::BURNINGSHIP:
-    case fractal_type::MANDELBAR:
-    case fractal_type::CELTIC:
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
             int degree = (int) g_params[2];
             switch (g_fractal_type)
             {
-            case fractal_type::MANDELFP:
-                return InitPerturbation(0);
-                break;
+                case fractal_type::BURNINGSHIP:
+                    if (degree == 2)
+                        return InitPerturbation(2);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(degree);
+                    else
+                        return InitPerturbation(2);
+                    break;
+                case fractal_type::MANDELBAR:
+                    if (degree == 2)
+                        return InitPerturbation(10);
+                    else if (degree > 2 && degree <= 10)
+                        return InitPerturbation(11);
+                    else
+                        return InitPerturbation(10);
+                    break;
+                case fractal_type::CELTIC:
+                    if (degree == 2)
+                        return InitPerturbation(6);
+                    else if (degree > 2 && degree <= 5)
+                        return InitPerturbation(4+degree);
+                    else
+                        return InitPerturbation(6);
+                    break;
+                }
+        }
+        else /*if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)*/
+        {
+            g_symmetry = symmetry_type::NONE;           // we can fix this up later
+            switch (g_fractal_type)
+            {
             case fractal_type::BURNINGSHIP:
-                if (degree == 2)
-                    return InitPerturbation(2);
-                else if (degree > 2 && degree <= 5)
-                    return InitPerturbation(degree);
-                else
-                    return InitPerturbation(2);
+                g_fractal_specific[+g_fractal_type].orbitcalc = burningshipfpOrbit;
                 break;
             case fractal_type::MANDELBAR:
-                if (degree == 2)
-                    return InitPerturbation(10);
-                else if (degree > 2 && degree <= 10)
-                    return InitPerturbation(11);
-                else
-                    return InitPerturbation(10);
+                g_fractal_specific[+g_fractal_type].orbitcalc = mandelbarfpOrbit;
                 break;
             case fractal_type::CELTIC:
-                if (degree == 2)
-                    return InitPerturbation(6);
-                else if (degree > 2 && degree <= 5)
-                    return InitPerturbation(4 + degree);
-                else
-                    return InitPerturbation(6);
+                g_fractal_specific[+g_fractal_type].orbitcalc = celticfpOrbit;
                 break;
             }
+ //           g_calc_type = standard_fractal; // Is this the best place to do this?
         }
-        if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR ||
-            g_fractal_type == fractal_type::CELTIC)
-        {
-            g_calc_type = standard_fractal; // Is this the best place to do this?
-        }
+        break;
+    case fractal_type::MANDELFP:
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+            return InitPerturbation(0);
         else if (g_debug_flag != debug_flags::force_standard_fractal
             && !g_distance_estimator
             && g_decomp[0] == 0
@@ -192,6 +204,7 @@ MandelfpSetup()
             g_calc_type = standard_fractal;
         }
         break;
+
     case fractal_type::FPMANDELZPOWER:
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
