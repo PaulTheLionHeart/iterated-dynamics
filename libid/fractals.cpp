@@ -780,3 +780,94 @@ int celticfpOrbit()
     }
     return g_bailout_float();
 }
+
+// okay, let's lunmp the Tierazon fractals together for simplicity and use fratal type to select the correct ones
+/*
+int tierazonfp_per_pixel()
+{
+    int degree;
+    Complex z, q;
+    z.x = g_old_z.x;
+    z.y = g_old_z.y;
+//    q.x = g_init.x;
+//    q.y = g_init.y;
+    q.x = g_dx_pixel();
+    q.y = g_dy_pixel();
+
+    switch (g_fractal_type)
+        {
+        case fractal_type::NEWTONAPPLE: // Newton's apple
+            degree = (int) g_params[2];
+            if (degree < 2)
+                degree = 2;
+//          if (!juliaflag)
+                z = q * ((double) degree);
+            z = z.CInvert();
+            g_old_z.x = z.x + g_params[0];
+            g_old_z.y = z.y + g_params[1];
+            break;
+        case fractal_type::TALIS: // Talis
+            degree = (int) g_params[2];
+            if (degree < 2)
+                degree = 2;
+//          if (!juliaflag)
+            {
+                g_old_z.x = q.x + g_params[0];
+                g_old_z.y = q.y + g_params[1];
+            }
+        break;
+    }
+    return 1;
+}
+
+int tierazonfpOrbit()
+{
+    int degree;
+    Complex z, q, a, b, zd;
+    double  d;
+    z.x = g_old_z.x;
+    z.y = g_old_z.y;
+//    q.x = g_init.x;
+//    q.y = g_init.y;
+    q.x = g_dx_pixel();
+    q.y = g_dy_pixel();
+
+    switch (g_fractal_type)
+        {
+        case fractal_type::NEWTONAPPLE: // Newton's apple
+            {
+            double s, t, u;
+            Complex fn, f1n, f2n, f3n, c, e, f, z1;
+            degree = (int) g_params[2];
+
+            z1 = z;
+            f3n = z.CPolynomial(degree - 4);  // z^(deg - 4) - third derivative power
+            f2n = f3n * z;                    // z^(deg - 2) - second derivative power
+            f1n = f2n * z;                    // z^(deg - 1) - first derivative power
+            fn = f1n * z;                     // z^deg - function power
+            c = q * fn * ((double) degree);
+            e = f1n * ((double) (degree - 1));
+            a = c - e - f2n * ((double) (degree - 2)); // top row
+            s = (double) degree * (double) (degree - 1);
+            t = (double) (degree - 1) * (double) (degree - 2);
+            u = (double) (degree - 2) * (double) (degree - 3);
+            c = q * f1n * s;
+            e = f2n * t;
+            b = c - e - f3n * u; // bottom row
+            z = z - a / b;
+            zd = z - z1;
+            d = zd.CSumSqr();
+            g_new_z.x = z.x;
+            g_new_z.y = z.y;
+            return (d < MINSIZE);
+            }
+        case fractal_type::TALIS: // Talis
+            z = z.CSqr() / (z + 1) + q;
+            g_new_z.x = z.x;
+            g_new_z.y = z.y;
+            return g_bailout_float();
+            break;
+        }
+    return 1;             // get rid of silly warnings
+}
+*/

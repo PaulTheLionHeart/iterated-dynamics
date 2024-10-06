@@ -790,7 +790,9 @@ bool MandelbfSetup()
                     break;
                 }
         }
- //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR || g_fractal_type == fractal_type::CELTIC)
+        break;
+        //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR
+        //       || g_fractal_type == fractal_type::CELTIC)
  //       {
  //           g_calc_type = standard_fractal; // Is this the best place to do this?
  //       }

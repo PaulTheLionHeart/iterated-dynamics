@@ -11,24 +11,7 @@
 // Note that CSqr(z) is used in place of z*z and CCube(z) in place of z*z*z for speed
 /////////////////////////////////////////////////////
 
-#include	<math.h>
-#include	"Complex.h"
-#include	"fractype.h"
-#include	"cmplx.h"
-#include    "bailout_formula.h"
-#include    "pixel_grid.h"
-#include    "id.h"
-
-#define MAXSIZE 1.0e+6
-#define MINSIZE 1.0e-6
-
-extern double g_params[];
-extern bailouts g_bail_out_test;
-extern double g_magnitude_limit;
-extern DComplex g_old_z, g_new_z;
-extern long g_max_iterations; // try this many iterations
-extern long g_color_iter;   
-extern int g_periodicity_check;
+#include "tierazon.h"
 
 bool juliaflag = false; // for the time being
 
@@ -36,8 +19,7 @@ static Complex a, b, c, c1, c2, cb, caa3, t, Sqr, z, z1, z2, z3, z4, zd, zt, q;
 static double d/*real_imag, RealImagSqr*/;
 static int degree, subtype;
 
-extern  bool BailoutTest(Complex *z, Complex SqrZ);
-
+bool BailoutTest(Complex *z, Complex SqrZ);
 bool FractintBailoutTest(Complex *z);
 
 /**************************************************************************
@@ -221,16 +203,16 @@ int	InitTierazonFunctions(int subtype, Complex *z, Complex *q)
 	    case 118:					// N - Set Method
     	    if (!juliaflag)                             // let's worry about Julai sets later
 		        {
-		        z->x = q->x + g_params[2];
-		        z->y = q->y + g_params[3];
+		        z->x = q->x + g_params[0];
+		        z->y = q->y + g_params[1];
 		        }
 	        break;
 	    case 2:						// Nova, init: z=1; iterate: z=z-((z*z*z-1)/(3*z*z))+c
     	    if (!juliaflag)
 		        {
 		        //	Note that julia parameters are also used as starting values for Mandelbrot
-		        z->x = g_params[2] + 1.0;
-		        z->y = g_params[3];
+		        z->x = g_params[0] + 1.0;
+		        z->y = g_params[1];
 		        }
           else
      	        z = q;
@@ -254,8 +236,8 @@ int	InitTierazonFunctions(int subtype, Complex *z, Complex *q)
 	    case 102:					// Ramon, z = ((z*z+c-1)/(2*z+c-2))^2; [magneto 1]
     	    if (!juliaflag)
 		        {
-		        z->x = g_params[2];
-		        z->y = g_params[3];
+		        z->x = g_params[0];
+		        z->y = g_params[1];
 		        }
 	        break;
 
@@ -264,8 +246,8 @@ int	InitTierazonFunctions(int subtype, Complex *z, Complex *q)
     	    if (!juliaflag)
 		        {
 		        //	Note that julia parameters are also used as starting values for Mandelbrot
-		        z->x = g_params[2] + 1.0;
-		        z->y = g_params[3];
+		        z->x = g_params[0] + 1.0;
+		        z->y = g_params[1];
 		        }
             else
     	        z = q;
@@ -275,8 +257,8 @@ int	InitTierazonFunctions(int subtype, Complex *z, Complex *q)
     	    if (!juliaflag)
 		        {
 		        *z = *q;
-		        z->x += g_params[2];
-		        z->y += g_params[3];
+		        z->x += g_params[0];
+		        z->y += g_params[1];
 		        }
 	        z2 = 1.0;
 	        break;
@@ -447,8 +429,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 106:					// More Fractals, 5th order N/Mset
     	    if (!juliaflag)
 		        {
-                z->x = -q->x * (double) (degree - 2) / (double) degree + g_params[2];
-                z->y = -q->y * (double) (degree - 2) / (double) degree + g_params[3];
+                z->x = -q->x * (double) (degree - 2) / (double) degree + g_params[0];
+                z->y = -q->y * (double) (degree - 2) / (double) degree + g_params[1];
 		        }
 	        break;
 
@@ -470,8 +452,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 51:					// Trig functions, z = csin(z*z*z*z)*c
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        if (subtype == 50)
 		        *q = q->CCos();
 	        break;
@@ -481,8 +463,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
     	    if (!juliaflag)
 		        *z = *q * ((double)degree);
 	        *z = z->CInvert();
-	        z->x = z->x + g_params[2];
-	        z->y = z->y + g_params[3];
+	        z->x = z->x + g_params[0];
+	        z->y = z->y + g_params[1];
 	        break;
 
 
@@ -490,8 +472,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
     	    if (!juliaflag)
 		        *z = *q * 2.0;
 	        *z = z->CInvert();
-	        z->x = g_params[2] - z->x;
-	        z->y = g_params[3] - z->y;
+	        z->x = g_params[0] - z->x;
+	        z->y = g_params[1] - z->y;
 	        break;
 
 	    case 60:					// More Newton Msets, 18th order Newton Mset flower
@@ -503,8 +485,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 67:					// Newton Variations II, z=z-(((z^3)-z)/((3*z*z-1)))+c
     	    if (!juliaflag)
 		        *z = 1;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        return 0;
 
 	    case 62:					// Newton Variations II, z=(((z^3)-z-1)/((z^3)-1)-z)*c
@@ -576,8 +558,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 176:					// Flarium 125, Sharon Webb: z = z+z*z*z/4 + c; [Sharon21]
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 79:					// Polynomials, CBAP  F(z) = Z^3 - 3*(A^2)*Z + B(MOD 2)
@@ -600,8 +582,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	        z2 = 0.5;
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 81:					// Quartets, z2=2; z=z*z*z*z+z2+c; z2=z1
@@ -609,21 +591,21 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
     	    if (!juliaflag)
 		        *z = *q;
 	        z2 = *z;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 83:					// Quartets, t=0; z1=z; z=z*z*z-t*t*t+c; z=z1
 	        z2 = 0;
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 84:					// Quartets, t=0; z1=z; z=z*z*z*z-t*t*t*t+c; t=z1
-	        z2.x = g_params[2];	    // t = 0;
-	        z2.y = g_params[3];
+	        z2.x = g_params[0];	    // t = 0;
+	        z2.y = g_params[1];
     	    if (!juliaflag)
 		        *z = 0;
 	        break;
@@ -631,16 +613,16 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 85:					// Quartets, z2=z; z=(z^4)+c; c=z2
     	    if (!juliaflag)
 		        {
-		        z->x = q->x + g_params[2];
-		        z->y = q->y + g_params[3];
+		        z->x = q->x + g_params[0];
+		        z->y = q->y + g_params[1];
 		        }
 	        break;
 
 	    case 86:					// Newton Variations, z=z-((z^4)-z)/(4*(z^3)-1); z=z*z*c
     	    if (!juliaflag)
 		        *z = q->CInvert();
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 91:					// Polynomials, z=z*z*z-caa3*z+cb; [CCAP]
@@ -674,15 +656,15 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
     	    if (!juliaflag)
 		        *z = *q;
 	        z2 = *z;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 95:					// Polynomials, z=z*z*z*z/t1+c
 	        if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        t = *q + 1;
 	        z2 = t.CSin();
 	        break;
@@ -691,16 +673,16 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	        z2 = *q;
     	    if (!juliaflag)
 		        {
-		        z->x = g_params[2];
-		        z->y = g_params[3];
+		        z->x = g_params[0];
+		        z->y = g_params[1];
 		        }
 	        break;
 
 	    case 99:					// Quartets, z1=z; z2=c+z2/z-z; z=z*c+z2/c
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        z2 = z->CSin();	//z2 = c-c.csin();
 	        z2 = *z - z2;
 	        break;
@@ -708,8 +690,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 103:					// Ramon, z = ((z*z*z+3*c2*z+c1)/(3*z*z+3*c2*z+c1+1))^2; [magneto 2]
     	    if (!juliaflag)
 		        {
-		        z->x = g_params[2];
-		        z->y = g_params[3];
+		        z->x = g_params[0];
+		        z->y = g_params[1];
 		        }
 	        c2 = *q - 1;
 	        c1 = c2 * (*q - 2);
@@ -724,8 +706,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 132:					// Flarium 27, Polynomial: z=z*z*(cn+z)/(cn+z+c)+c
     	    if (!juliaflag)
 		        *z = *q;
-//	        z2.x = g_params[2];
-//	        z2.y = g_params[3];
+//	        z2.x = g_params[0];
+//	        z2.y = g_params[1];
             z2 = degree;
 	        break;
 
@@ -734,35 +716,35 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	        z2 = t.CSqr();
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 124:					// Flarium 11, Sharon Webb: z = z*z*z*z+(z^(z+cn))+c
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        z2 = *z ^ (*z + 2);
 	        break;
 
 	    case 126:					// Flarium 13, Sharon Webb: z=(z*z*z*z-z2*z2*z2*z2+c)^2
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        z2 = 0;
 	        break;
 
 	    case 127:					// Flarium 15, Newton Variations: z = z - (z*z*z*z-1)/(4*z*z*z) + c; [4th Order Nova]
 	    case 128:					// Flarium 16, Newton Variations: z = z - (z*z*z*z*z-1)/(5*z*z*z*z) + c; [5th Order Nova]
-	        z->x = 1.0 + g_params[2];
-	        z->y = 0.0 + g_params[3];
+	        z->x = 1.0 + g_params[0];
+	        z->y = 0.0 + g_params[1];
 	        break;
 
 	    case 129:					// Flarium 20, Phoenix: z = z*z*z*z+c.imag()+c.real()*z2; [4th Order Phoenix]
-	        z->x = q->x + g_params[2];
-	        z->y = q->y + g_params[3];
+	        z->x = q->x + g_params[0];
+	        z->y = q->y + g_params[1];
 	        t.x = 0;
 	        t.y = 1;
 	        z2 = 0;
@@ -778,8 +760,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 134:					// Flarium 29, Derbyshire / Newton: c = (z*z*z-1)/(3*z*z); z -= (z*z*z-1)/(3*z*z)*c
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *q = (*z * *z * *z - 1) / (3 * *z * *z);
 	        break;
 
@@ -792,8 +774,8 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 		        *z = -a;
 	        z2.x = 42;
 	        z2.y = 42;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        return 0;
 	        break;
 
@@ -804,47 +786,47 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 160:					// Flarium 60, Derbyshire / Newton: z=z-(z*z1-z)/((5*z1)-1)+c; [5th Order Nova Variation]
     	    if (!juliaflag)
 		        *z = 1;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 141:					// Flarium 37, Polynomial: z=(z*z*z-1)/(3*z*z); z = c*(z.csin() + z.ccos())
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *z = (*z * *z * *z - 1) / (3 * *z * *z);
 	        break;
 
 	    case 146:					// Flarium 44, Polynomial: z=(z*z*z*z-z)/(4*z*z*z); z=c*z.csin()
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *z = (*z * *z * *z * *z - *z) / (4 * *z * *z * *z);
 	        break;
 
 	    case 147:					// Flarium 45, Polynomial: z=(z*z*z*z-1)/(4*z*z*z); z=c*z.csin()
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *z = (*z * *z * *z * *z - 1) / (4 * *z * *z * *z);
 	        break;
 
 	    case 149:					// Flarium 49, Polynomial: z=(z*z*z*z-z)/((4*z*z*z)-z); z=c*z.csin()
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *z = (*z * *z * *z * *z - *z) / ((4 * *z * *z * *z) - *z);
 	        break;
 
 	    case 152:					// Flarium 52, Sharon Webb: z = z*z*z*z+t+c; [Sharon08 M-Set]
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        t = *q / 2;
 	        z2 = t.CSqr();
 	        break;
@@ -852,45 +834,45 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
 	    case 161:					// Flarium 61, Polynomial: z=z*z*z*z+(c+(c/pi))
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        *q = *q + (*q / PI);
 	        break;
 
 	    case 163:					// Flarium 64, PHOENIX: z1=z; z=z*z*z*z+c.real()*z2/2+c.imag()*z2/2+c; z2=z1
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        z2 = *z;
 	        break;
 
 	    case 165:					// Flarium 67-69, Newton Variations: z = ((z-(((z^n)-1)/(n*(z^(n-1)))))^2)*c
     	    if (!juliaflag)
 		        *z = 1;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 172:					// Flarium 112-116, Polynomials: z=z^n*c+z*c; Dragon curve variations
     	    if (!juliaflag)
 		        *z = *q;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 173:					// Flarium 117, Newton Variations: z = z-(z*z*z-z*c-1)/(3*z*z+c-1)
     	    if (!juliaflag)
 		        *z = 0;
-	        z->x += g_params[2];
-	        z->y += g_params[3];
+	        z->x += g_params[0];
+	        z->y += g_params[1];
 	        break;
 
 	    case 177:					// Flarium 145, Polynomial: z=z^2+c [Jaenisch method]
     	    if (!juliaflag)
 		        *z = *q;
-	        z4.x = g_params[2];
-	        z4.y = g_params[3];
+	        z4.x = g_params[0];
+	        z4.y = g_params[1];
 	        z2 = *z;
 	        break;
 	    }
@@ -935,9 +917,17 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	        *z = z1;
 	        return FractintBailoutTest(z);
 
-	    case 4:						// Talis, z=((z*z)/(1+z))+c
-	        *z = z->CSqr() / (*z + 1) + *q;
+//	    case 4:						// Talis, z=((z*z)/(1+z))+c
+//	        *z = z->CSqr() / (*z + 1) + *q;
+//	        return FractintBailoutTest(z);
+	    case 4:						// Talis, z=((z^degreez)/(m+z^(degree-1))+c 
+            {
+            double m = g_params[3];
+            a = z->CPolynomial(degree - 1);
+            *z = (a * *z) / (m + a) + *q;
+            *z = z->CSqr() / (*z + 1) + *q;
 	        return FractintBailoutTest(z);
+            }
 
 	    case 5:						// Newton variation, z=((z*z*z-z-1)/(3*z*z-1)-z)*c
 	        z1 = *z;
@@ -2475,17 +2465,72 @@ bool	FractintBailoutTest(Complex *z)
     }
 
 /**************************************************************************
+    Bailout Test
+**************************************************************************/
+
+bool BailoutTest(Complex *z, Complex SqrZ)
+    {
+    //    Complex TempSqr;
+    double magnitude;
+    double manhmag;
+    double manrmag;
+
+    switch (g_bail_out_test)
+        {
+        case bailouts::Mod:
+            magnitude = SqrZ.x + SqrZ.y;
+            return (magnitude >= g_magnitude_limit);
+
+        case bailouts::Real:
+            return (SqrZ.x >= g_magnitude_limit);
+
+        case bailouts::Imag:
+            return (SqrZ.y >= g_magnitude_limit);
+
+        case bailouts::Or:
+            return (SqrZ.x >= g_magnitude_limit || SqrZ.y >= g_magnitude_limit);
+
+        case bailouts::And:
+            return (SqrZ.x >= g_magnitude_limit && SqrZ.y >= g_magnitude_limit);
+
+        case bailouts::Manh:
+            manhmag = fabs(z->x) + fabs(z->y);
+            return ((manhmag * manhmag) >= g_magnitude_limit);
+
+        case bailouts::Manr:
+            manrmag = z->x + z->y; // don't need abs() since we square it next
+            return ((manrmag * manrmag) >= g_magnitude_limit);
+
+        default:
+            magnitude = SqrZ.x + SqrZ.y;
+            return (magnitude >= g_magnitude_limit);
+        }
+    }
+
+
+/**************************************************************************
 	Initialise functions for each pixel
 **************************************************************************/
 
-int init_tierazon()
+int tierazonfp_per_pixel()
     {
     z.x = g_old_z.x;
     z.y = g_old_z.y;
     q.x = g_dx_pixel();
     q.y = g_dy_pixel();
-    subtype = (int) g_params[0];
-    degree = (int) g_params[1];
+    switch (g_fractal_type)
+    {
+        case fractal_type::TALIS:
+            subtype = 4;
+            break;
+        case fractal_type::NEWTONMSET:
+            subtype = 52;
+            break;
+        case fractal_type::NEWTONAPPLE:
+            subtype = 55;
+            break;
+        }
+    degree = (int) g_params[2];
     g_bail_out_test = (bailouts) g_params[4];
     if (degree < 2)
         degree = 2;
@@ -2497,7 +2542,7 @@ int init_tierazon()
 	Run functions for each pixel
 **************************************************************************/
 
-int run_tierazon()
+int tierazonfpOrbit()
     {
     int ReturnMode;
     ReturnMode = RunTierazonFunctions(subtype, &z, &q);

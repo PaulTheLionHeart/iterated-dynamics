@@ -291,6 +291,13 @@ MandelfpSetup()
             g_symmetry = symmetry_type::NONE;
         }
         break;
+/*
+    case fractal_type::NEWTONAPPLE:
+    case fractal_type::TALIS:             // Talis
+        g_symmetry = symmetry_type::NONE; // we can fix this up later
+        g_fractal_specific[+g_fractal_type].orbitcalc = tierazonfpOrbit;
+        break;
+*/
     default:
         break;
     }

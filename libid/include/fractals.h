@@ -4,6 +4,10 @@
 
 #include <vector>
 
+// some limitsfor Tierazon fractals
+#define MAXSIZE 1.0e+6
+#define MINSIZE 1.0e-6
+
 struct MP;
 struct MPC;
 
@@ -65,6 +69,8 @@ int mandelfp_per_pixel();
 int mandelbarfpOrbit();
 int burningshipfpOrbit();
 int celticfpOrbit() ;
+int tierazonfp_per_pixel();
+int tierazonfpOrbit();
 int juliafp_per_pixel();
 int othermandelfp_per_pixel();
 int otherjuliafp_per_pixel();

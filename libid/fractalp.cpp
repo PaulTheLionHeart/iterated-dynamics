@@ -2328,6 +2328,56 @@ fractalspecificstuff g_fractal_specific[] =
         celticfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
+    {
+        "talis",
+        {realz0, imagz0, "degree", "m"},
+        {0, 0, 3, 1}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -3.0F, 2.0F, -2.0F, 2.0F, 0, fractal_type::TALIS, fractal_type::NOFRACTAL,
+        fractal_type::TALIS, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newton_apple",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -3.0F, 2.0F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONAPPLE, fractal_type::NOFRACTAL, fractal_type::NEWTONAPPLE, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newton_m_set",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -3.0F, 2.0F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONMSET, fractal_type::NOFRACTAL, fractal_type::NEWTONMSET, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+
+
+
+    /*
+    TALIS                       = 177,
+    NEWTONAPPLE                 = 178,
+    NEWTONMSET                  = 179,
+    NEWTONPOLYGON               = 180,
+    NEWTONCROSS                 = 181,
+    NEWTONJULIANOVA             = 182,
+    NEWTONVARIATION             = 183,
+    NEWTONFLOWER                = 184,
+    QUARTET1                    = 185,
+    QUARTET2                    = 186,
+    QUARTET3                    = 187
+
+ 
+    */
+
+
 
     {
         nullptr,            // marks the END of the list
