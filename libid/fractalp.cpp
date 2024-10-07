@@ -2343,18 +2343,8 @@ fractalspecificstuff g_fractal_specific[] =
         {realz0, imagz0, "degree", ""},
         {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
         fractal_flags::BAILTEST,
-        -1.5F, 1.0F, -1.0F, 1.0F, 0,
+        -0.75F, 0.5F, -0.5F, 0.5F, 0,
         fractal_type::NEWTONAPPLE, fractal_type::NOFRACTAL, fractal_type::NEWTONAPPLE, symmetry_type::NONE,
-        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
-        STDBAILOUT
-    },
-    {
-        "newton_m_set",
-        {realz0, imagz0, "degree", ""},
-        {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
-        fractal_flags::BAILTEST,
-        -2.5F, 2.5F, -2.0F, 2.0F, 0,
-        fractal_type::NEWTONMSET, fractal_type::NOFRACTAL, fractal_type::NEWTONMSET, symmetry_type::NONE,
         tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
@@ -2418,26 +2408,16 @@ fractalspecificstuff g_fractal_specific[] =
         tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
-
-
-
-    /*
-    TALIS                       = 177,
-    NEWTONAPPLE                 = 178,
-    NEWTONMSET                  = 179,
-    NEWTONPOLYGON               = 180,
-    NEWTONCROSS                 = 181,
-    NEWTONNOVA             = 182,
-    NEWTONVARIATION             = 183,
-    NEWTONFLOWER                = 184,
-    QUARTET1                    = 185,
-    QUARTET2                    = 186,
-    QUARTET3                    = 187
-
- 
-    */
-
-
+    {
+        "artmatrixcubic",
+        {"subtype (0-3)", "special colour", "", ""},
+        {0, 2, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::ARTMATRIXCUBIC, fractal_type::NOFRACTAL, fractal_type::ARTMATRIXCUBIC, symmetry_type::NONE,
+        ArtMatrixfpOrbit, ArtMatrixfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
 
     {
         nullptr,            // marks the END of the list

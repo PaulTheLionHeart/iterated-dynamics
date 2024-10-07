@@ -71,6 +71,8 @@ int burningshipfpOrbit();
 int celticfpOrbit() ;
 int tierazonfp_per_pixel();
 int tierazonfpOrbit();
+int ArtMatrixfp_per_pixel();
+int ArtMatrixfpOrbit();
 int juliafp_per_pixel();
 int othermandelfp_per_pixel();
 int otherjuliafp_per_pixel();

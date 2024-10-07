@@ -205,13 +205,13 @@ enum class fractal_type
     CELTIC                      = 176,
     TALIS                       = 177,
     NEWTONAPPLE                 = 178,
-    NEWTONMSET                  = 179,
-    NEWTONPOLYGON               = 180,
-    NEWTONCROSS                 = 181,
-    NEWTONNOVA                  = 182,
-    NEWTONVARIATION             = 183,
-    NEWTONFLOWER                = 184,
-    QUARTET                     = 185
+    NEWTONPOLYGON               = 179,
+    NEWTONCROSS                 = 180,
+    NEWTONNOVA                  = 181,
+    NEWTONVARIATION             = 182,
+    NEWTONFLOWER                = 183,
+    QUARTET                     = 184,
+    ARTMATRIXCUBIC              = 185
 };
 
 inline int operator+(fractal_type rhs)
