@@ -2330,6 +2330,96 @@ fractalspecificstuff g_fractal_specific[] =
         celticfpOrbit, othermandelfp_per_pixel, MandelfpSetup, standard_fractal,
         STDBAILOUT
     },
+    {
+        "talis",
+        {realz0, imagz0, "degree", "m"},
+        {0, 0, 2, 1}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0, fractal_type::TALIS, fractal_type::NOFRACTAL,
+        fractal_type::TALIS, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        400
+    },
+    {
+        "newton_apple",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -0.75F, 0.5F, -0.5F, 0.5F, 0,
+        fractal_type::NEWTONAPPLE, fractal_type::NOFRACTAL, fractal_type::NEWTONAPPLE, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newton_polygon",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 6, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONPOLYGON, fractal_type::NOFRACTAL, fractal_type::NEWTONPOLYGON, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newton_cross",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 6, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONCROSS, fractal_type::NOFRACTAL, fractal_type::NEWTONCROSS, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "nova",
+        {realz0, imagz0, "", ""},
+        {0, 0, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONNOVA, fractal_type::NOFRACTAL, fractal_type::NEWTONNOVA, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newt_variation",
+        {realz0, imagz0, "", ""},
+        {0, 0, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -1.75F, 0.75F, -1.0F, 1.0F, 0,
+        fractal_type::NEWTONVARIATION, fractal_type::NOFRACTAL, fractal_type::NEWTONVARIATION, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "newton_flower",
+        {realz0, imagz0, "degree", ""},
+        {0, 0, 5, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::NEWTONFLOWER, fractal_type::NOFRACTAL, fractal_type::NEWTONFLOWER, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "quartet",
+        {realz0, imagz0, "degree", "version (1-6)"},
+        {0, 0, 4, 6}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::QUARTET, fractal_type::NOFRACTAL, fractal_type::QUARTET, symmetry_type::NONE,
+        tierazonfpOrbit, tierazonfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
+    {
+        "artmatrixcubic",
+        {"subtype (0-3)", "special colour", "", ""},
+        {0, 2, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        fractal_flags::BAILTEST,
+        -2.5F, 2.5F, -2.0F, 2.0F, 0,
+        fractal_type::ARTMATRIXCUBIC, fractal_type::NOFRACTAL, fractal_type::ARTMATRIXCUBIC, symmetry_type::NONE,
+        ArtMatrixfpOrbit, ArtMatrixfp_per_pixel, MandelfpSetup, standard_fractal,
+        STDBAILOUT
+    },
 
     {
         nullptr,            // marks the END of the list

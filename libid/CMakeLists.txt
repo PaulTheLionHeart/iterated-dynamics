@@ -14,6 +14,7 @@ add_library(libid
     PertEngine.cpp include/PertEngine.h
     PertFn.cpp
     Perturbation.cpp
+    TierazonFunctions.cpp include/Tierazon.h
 
     include/Point.h
 

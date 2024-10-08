@@ -781,3 +781,140 @@ int celticfpOrbit()
     }
     return g_bailout_float();
 }
+
+/**************************************************************************
+        Art Matrix Globals
+**************************************************************************/
+
+static int g_subtype;
+static Complex g_a, g_a2, g_aa3, g_b, g_q, g_t2, g_t3, g_z, g_v;
+
+/**************************************************************************
+        Initialise functions for each pixel
+**************************************************************************/
+
+int InitArtMatrix(int subtype, Complex *z, Complex *q)
+{
+    // Art Matrix Cubic (taken from the original Fortran)
+    Complex temp;
+    //    period_level = FALSE;			            // no periodicity checking
+    if (subtype == 0) // CBIN
+    {
+        g_t3 = *q * 3;                  // T3 = 3*T
+        g_t2 = q->CSqr();               // T2 = T*T
+        g_a = (g_t2 + 1) / g_t3;        // A  = (T2 + 1)/T3
+                                        // B  = 2*A*A*A + (T2 - 2)/T3
+        temp = g_a.CCube() * 2;         // 2*A*A*A
+        g_b = (g_t2 - 2) / g_t3 + temp; // B  = 2*A*A*A + (T2 - 2)/T3
+    }
+    else if (subtype == 1 || subtype == 2) // CCIN or CFIN
+    {
+        g_a = *q;          // A = T
+                           // find B = T + 2*T*T*T
+        temp = q->CCube(); // B = T*T*T
+        if (subtype == 1)
+            g_b = temp + temp + *q; // B = B * 2 + T
+        else
+        {
+            g_b = (temp - *q) * 2; // B = B * 2 - 2 * T
+            g_a2 = g_a + g_a;
+        }
+    }
+    else if (subtype == 3) // CKIN
+    {
+        g_a = 0;
+        g_v = 0;
+        g_b = *q; // B = T
+    }
+    g_aa3 = g_a.CSqr() * 3; // AA3 = A*A*3
+                            //	        if (!juliaflag)
+    *z = -g_a;              // Z = -A
+    return 0;
+}
+
+/**************************************************************************
+        Run functions for each iteration
+**************************************************************************/
+
+int RunArtMatrix(int subtype, int special, Complex *z, Complex *q)
+{
+    Complex temp;
+
+    // Art Matrix Cubic (taken from the original Fortran)
+    if (subtype == 3) // CKIN
+    {
+        *z = z->CCube() + g_b; // Z = Z*Z*Z + B
+                               //       z->x += g_params[3];
+                               //       z->y += g_params[4];
+    }
+    else
+    {
+        temp = z->CCube() + g_b; // Z = Z*Z*Z + B
+        *z = temp - g_aa3 * *z;  // Z = Z*Z*Z - AA3*Z + B
+                                 //       z->x += g_params[3];
+                                 //       z->y += g_params[4];
+    }
+    if (z->CSumSqr() > 100.0)
+        return (TRUE);
+    else
+    {
+        if (subtype == 2)
+        {
+            if (q->CSumSqr() < 0.111111)
+            {
+                g_color_iter = special;
+                // 			    *SpecialFlag = TRUE;			// for decomp and
+                // biomorph
+                return (TRUE);
+            }
+            g_v = *z + g_a2;
+        }
+        else if (subtype == 3)
+            g_v = *z - g_v;
+        else
+            g_v = *z - g_a;
+        if (g_v.CSumSqr() <= 0.000001)
+        {
+            g_color_iter = special;
+            //	        *SpecialFlag = TRUE;			// for decomp and biomorph
+            return (TRUE);
+        }
+        return (FALSE);
+    }
+
+    return 0;
+}
+
+/**************************************************************************
+        Initialise functions for each pixel
+**************************************************************************/
+
+int ArtMatrixfp_per_pixel()
+{
+    g_z.x = g_old_z.x;
+    g_z.y = g_old_z.y;
+    g_q.x = g_dx_pixel();
+    g_q.y = g_dy_pixel();
+    g_subtype = (int) g_params[0];
+    if (g_subtype < 0 || g_subtype > 3)
+        g_subtype = 0;
+    //    g_bail_out_test = (bailouts) g_params[4];
+    InitArtMatrix(g_subtype, &g_z, &g_q);
+    return 0;
+}
+
+/**************************************************************************
+        Run functions for each orbit
+**************************************************************************/
+
+int ArtMatrixfpOrbit()
+{
+    int special = (int) g_params[1];
+    if (special < 0)
+        special = 0;
+    int ReturnMode;
+    ReturnMode = RunArtMatrix(g_subtype, special, &g_z, &g_q);
+    g_new_z.x = g_z.x;
+    g_new_z.y = g_z.y;
+    return ReturnMode;
+}
