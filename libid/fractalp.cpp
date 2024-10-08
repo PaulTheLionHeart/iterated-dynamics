@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: GPL-3.0-only
+//
 /*
         This module consists only of the fractalspecific structure
 */
@@ -2331,7 +2333,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "talis",
         {realz0, imagz0, "degree", "m"},
-        {0, 0, 2, 1}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 2, 1}, help_labels::HT_TALIS, help_labels::HF_TALIS,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0, fractal_type::TALIS, fractal_type::NOFRACTAL,
         fractal_type::TALIS, symmetry_type::NONE,
@@ -2341,7 +2343,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "newton_apple",
         {realz0, imagz0, "degree", ""},
-        {0, 0, 4, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 4, 0}, help_labels::HT_NEWTONAPPLE, help_labels::HF_NEWTONAPPLE,
         fractal_flags::BAILTEST,
         -0.75F, 0.5F, -0.5F, 0.5F, 0,
         fractal_type::NEWTONAPPLE, fractal_type::NOFRACTAL, fractal_type::NEWTONAPPLE, symmetry_type::NONE,
@@ -2351,7 +2353,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "newton_polygon",
         {realz0, imagz0, "degree", ""},
-        {0, 0, 6, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 6, 0}, help_labels::HT_NEWTONPOLYGON, help_labels::HF_NEWTONPOLYGON,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::NEWTONPOLYGON, fractal_type::NOFRACTAL, fractal_type::NEWTONPOLYGON, symmetry_type::NONE,
@@ -2361,7 +2363,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "newton_cross",
         {realz0, imagz0, "degree", ""},
-        {0, 0, 6, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 6, 0}, help_labels::HT_NEWTONCROSS, help_labels::HF_NEWTONCROSS,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::NEWTONCROSS, fractal_type::NOFRACTAL, fractal_type::NEWTONCROSS, symmetry_type::NONE,
@@ -2371,7 +2373,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "nova",
         {realz0, imagz0, "", ""},
-        {0, 0, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 0, 0}, help_labels::HT_NEWTONNOVA, help_labels::HF_NEWTONNOVA,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::NEWTONNOVA, fractal_type::NOFRACTAL, fractal_type::NEWTONNOVA, symmetry_type::NONE,
@@ -2381,7 +2383,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "newt_variation",
         {realz0, imagz0, "", ""},
-        {0, 0, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 0, 0}, help_labels::HT_NEWTONVARIATION, help_labels::HF_NEWTONVARIATION,
         fractal_flags::BAILTEST,
         -1.75F, 0.75F, -1.0F, 1.0F, 0,
         fractal_type::NEWTONVARIATION, fractal_type::NOFRACTAL, fractal_type::NEWTONVARIATION, symmetry_type::NONE,
@@ -2391,7 +2393,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "newton_flower",
         {realz0, imagz0, "degree", ""},
-        {0, 0, 5, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 5, 0}, help_labels::HT_NEWTONFLOWER, help_labels::HF_NEWTONFLOWER,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::NEWTONFLOWER, fractal_type::NOFRACTAL, fractal_type::NEWTONFLOWER, symmetry_type::NONE,
@@ -2401,7 +2403,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "quartet",
         {realz0, imagz0, "degree", "version (1-6)"},
-        {0, 0, 4, 6}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 0, 4, 6}, help_labels::HT_QUARTET, help_labels::HF_QUARTET,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::QUARTET, fractal_type::NOFRACTAL, fractal_type::QUARTET, symmetry_type::NONE,
@@ -2411,7 +2413,7 @@ fractalspecificstuff g_fractal_specific[] =
     {
         "artmatrixcubic",
         {"subtype (0-3)", "special colour", "", ""},
-        {0, 2, 0, 0}, help_labels::HT_CELTIC, help_labels::HF_CELTIC,
+        {0, 2, 0, 0}, help_labels::HT_ARTMATRIXCUBIC, help_labels::HF_ARTMATRIXCUBIC,
         fractal_flags::BAILTEST,
         -2.5F, 2.5F, -2.0F, 2.0F, 0,
         fractal_type::ARTMATRIXCUBIC, fractal_type::NOFRACTAL, fractal_type::ARTMATRIXCUBIC, symmetry_type::NONE,

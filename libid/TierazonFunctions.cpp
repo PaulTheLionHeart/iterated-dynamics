@@ -141,7 +141,7 @@ WWW Fractal Galleries   http://sprott.physics.wisc.edu/carlson.htm
     	    if (!juliaflag)
 		        {
                 z->x = -q->x * (double) (g_degree - 2) / (double) g_degree + g_params[0];
-                            z->y = -q->y * (double) (g_degree - 2) / (double) g_degree + g_params[1];
+                z->y = -q->y * (double) (g_degree - 2) / (double) g_degree + g_params[1];
 		        }
 	        break;
         case fractal_type::NEWTONAPPLE:             // More Newton Msets, 4th order Newton's apple
@@ -249,7 +249,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	    case fractal_type::TALIS:                   // Talis, z=((z^degreez)/(m+z^(degree-1))+c 
             {
             double m = g_params[3];
-                a = z->CPolynomial(g_degree - 1);
+            a = z->CPolynomial(g_degree - 1);
             *z = (a * *z) / (m + a) + *q;
             g_new_z.x = z->x;
             g_new_z.y = z->y;
@@ -269,7 +269,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	        Complex	fn, f1n, f2n, a, b;
 
 	        z1 = *z;
-            f2n = z->CPolynomial(g_degree - 2);                 // z^(deg - 2) - second derivative power
+            f2n = z->CPolynomial(g_degree - 2);     // z^(deg - 2) - second derivative power
 	        f1n = f2n * *z;				            // z^(deg - 1) - first derivative power
 	        fn = f1n * *z;				            // z^deg - function power
 	        a = f1n * *q + fn + *z + *q;
@@ -285,7 +285,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 	        Complex	 fn, f1n, f2n, a, b;
 
 	        z1 = *z;
-            f2n = z->CPolynomial(g_degree - 2);                 // z^(deg - 2) - second derivative power
+            f2n = z->CPolynomial(g_degree - 2);     // z^(deg - 2) - second derivative power
 	        f1n = f2n * *z;				            // z^(deg - 1) - first derivative power
 	        fn = f1n * *z;				            // z^deg - function power
 	        a = f1n * *q + fn - *z;
