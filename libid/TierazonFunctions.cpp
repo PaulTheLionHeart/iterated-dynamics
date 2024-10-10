@@ -349,8 +349,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
                 {
                 case 0:                             // Quartets, z2=2; z=z*z*z*z+z2+c; z2=z1
                     z1 = *z;
-                    zt = z->CSqr();
-                    *z = zt.CSqr() + g_z2 + *q;
+                    *z = z->CPolynomial(g_degree) + g_z2 + *q;
                     g_z2 = z1;
                     zd = *z - z1;
                     d = zd.CSumSqr();
@@ -358,8 +357,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 
                 case 1:                             // Quartets, z2=z; z=z*z*z*z+5*z2*c; z2=z1
                     z1 = *z;
-                    zt = z->CSqr();
-                    *z = zt.CSqr() + g_z2 * *q * 5;
+                    *z = z->CPolynomial(g_degree) + g_z2 * *q * 5;
                     g_z2 = z1;
                     zd = *z - z1;
                     d = zd.CSumSqr();
@@ -367,7 +365,9 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 
 	            case 2:					            // Quartets, t=0; z1=z; z=z*z*z-t*t*t+c; z=z1
 	                z1 = *z;
-	                *z = z->CCube() - g_z2.CCube() + *q;
+	                a = z->CPolynomial(g_degree) + *q;
+	                b = g_z2.CPolynomial(g_degree);	// global z2 used for t
+	                *z = a - b;
 	                g_z2 = z1;
 	                                                //    z=z*z*z-t*t*t+c;
 	                                                //    t=z1;
@@ -397,8 +397,7 @@ int	RunTierazonFunctions(int subtype, Complex *z, Complex *q)
 
 	            case 5:					            // Quartets, z1=z; z=z*z*z*z-z2+c; z2 = z1
 	                z1 = *z;
-	                zt = z->CSqr();
-	                *z = zt.CSqr() - g_z2 + *q;
+	                *z = z->CPolynomial(g_degree) - g_z2 + *q;
 	                g_z2 = z1;
 	                zd = *z - z1;
 	                d = zd.CSumSqr();
