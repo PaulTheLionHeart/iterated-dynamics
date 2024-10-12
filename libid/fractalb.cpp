@@ -778,20 +778,20 @@ bool MandelbfSetup()
         }
     }
 
-    g_c_exponent = (int)g_params[2];
-    switch (g_fractal_type)
-    {
-    case fractal_type::MANDELFP:
-    case fractal_type::BURNINGSHIP:
-    case fractal_type::MANDELBAR:
-    case fractal_type::CELTIC:
         /*
            floating point code could probably be altered to handle many of
            the situations that otherwise are using standard_fractal().
            calcmandfp() can currently handle invert, any rqlim, potflag
            zmag, epsilon cross, and all the current outside options
         */
-        if (/*g_std_calc_mode == 'p' && */bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
+   g_c_exponent = (int)g_params[2];
+    switch (g_fractal_type)
+    {
+    case fractal_type::MANDELFP:
+    case fractal_type::BURNINGSHIP:
+    case fractal_type::MANDELBAR:
+    case fractal_type::CELTIC:
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, fractal_flags::PERTURB))
         {
             int degree = g_params[2];
             switch (g_fractal_type)
@@ -824,7 +824,20 @@ bool MandelbfSetup()
                     else
                         return InitPerturbation(6);
                     break;
-                }
+            }
+        }
+        else
+        {
+            switch (g_fractal_type)
+            {
+                case fractal_type::MANDELBAR:
+                case fractal_type::CELTIC:
+                case fractal_type::BURNINGSHIP:
+                    g_calc_type = g_cur_fractal_specific->calctype;
+                    g_symmetry = symmetry_type::NONE;
+                    break;
+            }
+
         }
         break;
         //       if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::MANDELBAR
@@ -974,6 +987,12 @@ int mandelbf_per_pixel()
     square_bf(g_tmp_sqr_x_bf, g_new_z_bf.x);
     square_bf(g_tmp_sqr_y_bf, g_new_z_bf.y);
 
+    if (g_fractal_type == fractal_type::BURNINGSHIP || g_fractal_type == fractal_type::CELTIC || g_fractal_type == fractal_type::MANDELBAR)
+        // a bunch of mandelbrot derivatives
+    {
+        floattobf(g_old_z_bf.x, 0.0);
+        floattobf(g_old_z_bf.y, 0.0);
+    }
     return 1;                  // 1st iteration has been done
 }
 
@@ -1106,33 +1125,171 @@ JuliaZpowerbfFractal()
     return g_bailout_bigfloat();
 }
 
-// a few dummy routines until we build them. Until then force perturbation
-// gotta fix a general bigflt bug first
+// let's get second order functions working first and we can add the higher order functions later
+
+/**************************************************************************
+        Evaluate a Complex Polynomial
+        We could use the CPolynomial() declared in Perturbation.cpp
+        Let's keep it separate for now
+**************************************************************************/
+
+void CPolynomial(BFComplex *out, BFComplex in, int degree)
+
+{
+    bf_t t, t1, t2, t3, t4;
+    int cplxsaved;
+
+    cplxsaved = save_stack();
+    t = alloc_stack(g_r_bf_length + 2);
+    t1 = alloc_stack(g_r_bf_length + 2);
+    t2 = alloc_stack(g_r_bf_length + 2);
+    t3 = alloc_stack(g_r_bf_length + 2);
+    t4 = alloc_stack(g_r_bf_length + 2);
+
+    if (degree < 0)
+        degree = 0;
+
+    copy_bf(t1, in.x); // BigTemp1 = xt
+    copy_bf(t2, in.y); // BigTemp2 = yt
+
+    if (degree & 1)
+    {
+        copy_bf(out->x, t1); // new.x = result real
+        copy_bf(out->y, t2); // new.y = result imag
+    }
+    else
+    {
+        inttobf(out->x, 1);
+        inttobf(out->y, 0);
+    }
+
+    degree >>= 1;
+    while (degree)
+    {
+        sub_bf(t, t1, t2);  // (xt - yt)
+        add_bf(t3, t1, t2); // (xt + yt)
+        mult_bf(t4, t, t3); // t2 = (xt + yt) * (xt - yt)
+        copy_bf(t, t2);
+        mult_bf(t3, t, t1); // yt = xt * yt
+        add_bf(t2, t3, t3); // yt = yt + yt
+        copy_bf(t1, t4);
+
+        if (degree & 1)
+        {
+            mult_bf(t, t1, out->x);  // xt * result->x
+            mult_bf(t3, t2, out->y); // yt * result->y
+            sub_bf(t4, t, t3);       // t2 = xt * result->x - yt * result->y
+            mult_bf(t, t1, out->y);  // xt * result->y
+            mult_bf(t3, t2, out->x); // yt * result->x
+            add_bf(out->y, t, t3);   // result->y = result->y * xt + yt * result->x
+            copy_bf(out->x, t4);     // result->x = t2
+        }
+        degree >>= 1;
+    }
+    restore_stack(cplxsaved);
+}
+
 int
 CelticbfFractal()
 {
+    int degree = (int) g_params[2];
+    BFComplex big_z;
+    int saved;
+    saved = save_stack();
+
+    if (degree == 2) // Celtic
+    {
+        square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
+        square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
+        sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
+        abs_a_bf(g_bf_tmp);
+        add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
+        mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
+        double_a_bf(g_bf_tmp);
+        add_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
+        neg_a_bf(g_new_z_bf.x);
+        neg_a_bf(g_new_z_bf.y);
+    }
+    else if (degree > 2) // Celtic to higher power
+    {
+        big_z.x = alloc_stack(g_bf_length + 2);
+        big_z.y = alloc_stack(g_bf_length + 2);
+        copy_bf(big_z.x, g_old_z_bf.x);
+        copy_bf(big_z.y, g_old_z_bf.y);
+        CPolynomial(&g_new_z_bf, big_z, degree);
+        abs_a_bf(g_new_z_bf.x);
+        add_a_bf(g_new_z_bf.x, g_parm_z_bf.x);
+        add_a_bf(g_new_z_bf.y, g_parm_z_bf.y);
+        restore_stack(saved);
+    }
     return g_bailout_bigfloat();
 }
 
 int
 MandelbarbfFractal()
 {
+    int degree = (int) g_params[2];
+    BFComplex big_z;
+    int saved;
+    saved = save_stack();
+
+    if (degree == 2) // Mandelbar
+    {
+        square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
+        square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
+        sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
+        add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
+        mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
+        double_a_bf(g_bf_tmp);
+        neg_a_bf(g_bf_tmp);
+        add_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
+    }
+    else if (degree > 2) // Mandelbar to higher power
+    {
+        big_z.x = alloc_stack(g_bf_length + 2);
+        big_z.y = alloc_stack(g_bf_length + 2);
+        copy_bf(big_z.x, g_old_z_bf.x);
+        copy_bf(big_z.y, g_old_z_bf.y);
+        CPolynomial(&g_new_z_bf, big_z, degree);
+        neg_a_bf(g_new_z_bf.y);
+        add_a_bf(g_new_z_bf.x, g_parm_z_bf.x);
+        add_a_bf(g_new_z_bf.y, g_parm_z_bf.y);
+        restore_stack(saved);
+    }
     return g_bailout_bigfloat();
 }
 
 int
 BurningShipbfFractal()
 {
-/*
-    square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
-    square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
-    sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
-    add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
-    mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
-    double_bf(g_bf_tmp, g_bf_tmp);
-    abs_bf(g_bf_tmp, g_bf_tmp);
-    add_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
-*/
+    int degree = (int) g_params[2];
+    BFComplex big_z;
+    int saved;
+    saved = save_stack();
+
+    if (degree == 2) // Burning Ship
+    {
+        square_bf(g_tmp_sqr_x_bf, g_old_z_bf.x);
+        square_bf(g_tmp_sqr_y_bf, g_old_z_bf.y);
+        sub_bf(g_bf_tmp, g_tmp_sqr_x_bf, g_tmp_sqr_y_bf);
+        add_bf(g_new_z_bf.x, g_bf_tmp, g_parm_z_bf.x);
+        mult_bf(g_bf_tmp, g_old_z_bf.x, g_old_z_bf.y);
+        double_a_bf(g_bf_tmp);
+        abs_a_bf(g_bf_tmp);
+        sub_bf(g_new_z_bf.y, g_bf_tmp, g_parm_z_bf.y);
+    }
+    else if (degree > 2) // Burning Ship to higher power
+    {
+        big_z.x = alloc_stack(g_bf_length + 2);
+        big_z.y = alloc_stack(g_bf_length + 2);
+        abs_bf(big_z.x, g_old_z_bf.x);
+        abs_bf(big_z.y, g_old_z_bf.y);
+        neg_a_bf(big_z.y);
+        CPolynomial(&g_new_z_bf, big_z, degree);
+        add_a_bf(g_new_z_bf.x, g_parm_z_bf.x);
+        add_a_bf(g_new_z_bf.y, g_parm_z_bf.y);
+        restore_stack(saved);
+    }
     return g_bailout_bigfloat();
 }
 
@@ -1359,3 +1516,4 @@ BNComplex *ComplexPower_bn(BNComplex *t, BNComplex *xx, BNComplex *yy)
     restore_stack(saved);
     return t;
 }
+

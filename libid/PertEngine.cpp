@@ -17,25 +17,6 @@
 #include "Drivers.h"
 #include "calcfrac.h"
 
-
-
-
-
-/*
-extern	void	InitFilter(Complex q);
-extern	int	DoTierazonFilter(Complex q);
-extern	int	EndTierazonFilter(void);
-extern	int	method;				// inside and outside filters
-extern	long	iteration;			// globals for speed 
-extern	Complex	z, q;
-*/
-
-
-
-
-
-
-
 //////////////////////////////////////////////////////////////////////
 // Initialisation
 //////////////////////////////////////////////////////////////////////
@@ -58,19 +39,6 @@ int CPertEngine::initialiseCalculateFrame(int WidthIn, int HeightIn, int thresho
         param[i] = g_params[i];
 
     //    method = TZfilter->method;
-
-/*
-    int bitcount = decimals * 5;
-    if (bitcount < 30)
-        bitcount = 30;
-    if (bitcount > SIZEOF_BF_VARS - 10)
-        bitcount = SIZEOF_BF_VARS - 10;
-    mpfr_set_default_prec(bitcount);
-    mpfr_init(xZoomPt);
-    mpfr_init(yZoomPt);
-    mpfr_set(xZoomPt, xZoomPointin.x, MPFR_RNDN);
-    mpfr_set(yZoomPt, yZoomPointin.x, MPFR_RNDN);
-*/
 
     if (math_type != bf_math_type::NONE) // we assume bignum is flagged and bf variables are initialised
     {

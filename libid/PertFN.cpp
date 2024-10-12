@@ -174,6 +174,7 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 	        *DeltaSubN += *DeltaSub0;
 	        }
 	        break;
+#ifdef ALLOW_ALL_DERIVATIVES
 
 	    case 12:							// Buffalo
 	        Dnr = DiffAbs(r2 - i2, 2 * r*a + a2 - 2 * i*b - b2);
@@ -649,6 +650,7 @@ void CPertEngine::PertFunctions(Complex *XRef, Complex *DeltaSubN, Complex *Delt
 	        DeltaSubN->y = Dni;
 	        DeltaSubN->x = Dnr;
             break;
+#endif;     // ALLOW_ALL_DERIVATIVES
         default:
             Dnr = (2 * r + a) * a - (2 * i + b) * b + a0;
             Dni = 2 * ((r + a) * b + i * a) + b0;
