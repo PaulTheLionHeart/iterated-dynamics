@@ -65,6 +65,7 @@ int PertEngine::calculate_one_frame()
     m_glitch_points.resize(g_screen_x_dots * g_screen_y_dots);
     m_perturbation_tolerance_check.resize(g_max_iterations * 2);
     m_xn.resize(g_max_iterations + 1);
+    m_glitches.resize(g_screen_x_dots * g_screen_y_dots);
 
     // calculate the pascal's triangle coefficients for powers > 3
     pascal_triangle();
@@ -528,4 +529,174 @@ void PertEngine::reference_zoom_point(const std::complex<double> &center, int ma
         }
         g_cur_fractal_specific->pert_ref(center, z);
     }
+}
+
+int PertEngine::perturbation_per_pixel(int x, int y, double bailout)
+{
+    double magnified_radius = m_zoom_radius;
+    int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
+
+    if (m_glitches[x + y * g_screen_x_dots] == 0) // assume not glitched
+        return -1;
+
+    const double delta_real =
+        ((magnified_radius * (2 * x - g_screen_x_dots)) / window_radius) - m_delta_real;
+    const double delta_imaginary =
+        ((-magnified_radius * (2 * y - g_screen_y_dots)) / window_radius) - m_delta_imag;
+    m_delta_sub_0 = {delta_real, -delta_imaginary};
+    m_delta_sub_n = m_delta_sub_0;
+    m_points_count++;
+    m_glitched = false;
+    return 0;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Individual orbit calculation
+//////////////////////////////////////////////////////////////////////
+
+int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<double> *z)
+{
+    // Get the complex number at this pixel.
+    // This calculates the number relative to the reference point, so we need to translate that to the center
+    // when the reference point isn't in the center. That's why for the first reference, calculatedRealDelta
+    // and calculatedImaginaryDelta are 0: it's calculating relative to the center.
+
+    std::complex<double> temp, temp1;
+    double magnitude;
+
+    temp1 = m_xn[iteration - 1] + m_delta_sub_n;
+    g_cur_fractal_specific->pert_pt(m_xn[iteration - 1], m_delta_sub_n, m_delta_sub_0);
+
+    if (g_cur_fractal_specific->pert_pt == nullptr)
+    {
+        throw std::runtime_error("No perturbation point function defined for fractal type (" +
+                std::string{g_cur_fractal_specific->name} + ")");
+    }
+    temp = m_xn[iteration] + m_delta_sub_n;
+    *z = temp;
+    m_glitches[x + y * g_screen_x_dots] = 0; // assume not glitched
+    magnitude = mag_squared(temp);
+
+    // This is Pauldelbrot's glitch detection method. You can see it here:
+    // http://www.fractalforums.com/announcements-and-news/pertubation-theory-glitches-improvement/. As for
+    // why it looks so weird, it's because I've squared both sides of his equation and moved the |ZsubN| to
+    // the other side to be precalculated. For more information, look at where the reference point is
+    // calculated. I also only want to store this point once.
+    if (m_calculate_glitches && !m_glitched && magnitude < m_perturbation_tolerance_check[iteration])
+    {
+        Point pt(x, y, iteration);
+        m_glitch_points[m_glitch_point_count] = pt;
+        m_glitch_point_count++;
+        m_glitched = true;
+        return true;
+    }
+    return (magnitude > g_magnitude_limit /* && iteration < MaxIteration*/);
+}
+
+//////////////////////////////////////////////////////////////////////
+// calculate next reference
+//////////////////////////////////////////////////////////////////////
+
+int PertEngine::calculate_reference()
+{
+    double magnified_radius = m_zoom_radius;
+    int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
+    BFComplex c_bf{};
+    BFComplex reference_coordinate_bf{};
+    BigFloat tmp_bf;
+    std::complex<double> c;
+    std::complex<double> reference_coordinate;
+
+    if (g_bf_math != BFMathType::NONE)
+    {
+        c_bf.x = alloc_stack(g_r_bf_length + 2);
+        c_bf.y = alloc_stack(g_r_bf_length + 2);
+        reference_coordinate_bf.x = alloc_stack(g_r_bf_length + 2);
+        reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
+        tmp_bf = alloc_stack(g_r_bf_length + 2);
+    }
+
+    if (m_calculate_glitches == false)
+        return 0;
+
+     c_bf = m_old_reference_coordinate_bf;
+    int reference_point_index = 0;
+    std::srand(g_random_seed);
+    if (!g_random_seed_flag)
+    {
+        ++g_random_seed;
+    }
+
+    const int index{(int) ((double) std::rand() / RAND_MAX * m_remaining_point_count)};
+    Point pt{m_points_remaining[index]};
+    // Get the complex point at the chosen reference point
+    double delta_real = magnified_radius * (2 * pt.get_x() - g_screen_x_dots) / window_radius;
+    double delta_imag = -magnified_radius * (2 * pt.get_y() - g_screen_y_dots) / window_radius;
+
+    // We need to store this offset because the formula we use to convert pixels into a complex point
+    // does so relative to the center of the image. We need to offset that calculation when our
+    // reference point isn't in the center. The actual offsetting is done in calculate point.
+
+    m_delta_real = delta_real;
+    m_delta_imag = delta_imag;
+
+    if (g_bf_math != BFMathType::NONE)
+    {
+        float_to_bf(tmp_bf, delta_real);
+        add_bf(reference_coordinate_bf.x, c_bf.x, tmp_bf);
+        float_to_bf(tmp_bf, delta_imag);
+        add_bf(reference_coordinate_bf.y, c_bf.y, tmp_bf);
+    }
+    else
+    {
+        reference_coordinate.real(c.real() + delta_real);
+        reference_coordinate.imag(c.imag() + delta_imag);
+    }
+
+    if (g_bf_math != BFMathType::NONE)
+    {
+        reference_zoom_point(reference_coordinate_bf, g_max_iterations);
+    }
+    else
+    {
+        reference_zoom_point(reference_coordinate, g_max_iterations);
+    }
+
+    if (g_bf_math != BFMathType::NONE)
+    {
+        restore_stack(m_saved_stack);
+    }
+
+    m_glitch_point_count = 0;
+    return 0;
+}
+
+long PertEngine::get_glitch_point_count()
+{
+    return (m_glitch_point_count > (m_points_count) * (m_percent_glitch_tolerance / 100.0));
+}
+
+void PertEngine::push_glitch(int x, int y, int value)
+{
+    m_glitches[x + y * g_screen_x_dots] = value;
+}
+
+bool PertEngine::is_glitched()
+{
+    return m_glitched;
+}
+
+void PertEngine::set_glitched(bool status)
+{
+    m_glitched = status;
+}
+
+void PertEngine::set_points_count(long count)
+{
+    m_points_count = count;
+}
+
+void PertEngine::set_glitch_points_count(long count)
+{
+    m_glitch_point_count = count;
 }

@@ -16,6 +16,12 @@
 
 static PertEngine s_pert_engine;
 
+extern  DComplex g_old_z;
+extern int g_row;
+extern int g_col;
+extern long g_color_iter;
+extern double g_magnitude_limit;
+
 bool perturbation()
 {
     BigStackSaver saved;
@@ -58,4 +64,35 @@ bool perturbation()
     }
     g_calc_status = CalcStatus::COMPLETED;
     return false;
+}
+
+int perturbation_per_orbit()
+{
+//    juliaflag = false;
+    std::complex<double> z;
+    z = { g_old_z.x, g_old_z.y};
+
+    int status = s_pert_engine.calculate_orbit(g_col, g_row, g_color_iter, &z);
+    return status;
+}
+
+int perturbation_per_pixel()
+{
+    int result;
+    if (result = s_pert_engine.perturbation_per_pixel(g_col, g_row, g_magnitude_limit); result < 0)
+    {
+        throw std::runtime_error("Failed to run perturbation pixel (" + std::to_string(result) + ")");
+    }
+    return result;
+}
+
+int perturbation_per_image()
+{
+    if (const int result = s_pert_engine.calculate_one_frame(); result < 0)
+    {
+        throw std::runtime_error("Failed to initialize perturbation engine (" + std::to_string(result) + ")");
+    }
+
+    s_pert_engine.set_glitch_points_count(0);
+    return 0;
 }

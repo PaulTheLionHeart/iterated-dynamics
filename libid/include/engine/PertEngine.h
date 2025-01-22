@@ -14,12 +14,22 @@ class PertEngine
 public:
     void initialize_frame(const BFComplex &center_bf, const std::complex<double> &center, double zoom_radius);
     int calculate_one_frame();
+    int perturbation_per_pixel(int x, int y, double bailout);
+    int calculate_orbit(int x, int y, long iteration, std::complex<double> *z);
+    int calculate_reference();
+    long get_glitch_point_count();
+    void push_glitch(int x, int y, int value);
+    bool is_glitched();
+    void set_glitched(bool status);
+    void set_points_count(long count);
+    void set_glitch_points_count(long count);
+    void cleanup();
+
 
 private:
     int calculate_point(const Point &pt, double magnified_radius, int window_radius);
     void reference_zoom_point(const BFComplex &center, int max_iteration);
     void reference_zoom_point(const std::complex<double> &center, int max_iteration);
-    void cleanup();
 
     std::string m_status;
     std::vector<std::complex<double>> m_xn;
@@ -30,6 +40,7 @@ private:
     std::vector<Point> m_glitch_points;
     long m_glitch_point_count{};
     long m_remaining_point_count{};
+    long m_points_count{};
     BFComplex m_center_bf{};
     std::complex<double> m_center{};
     double m_zoom_radius{};
@@ -37,4 +48,11 @@ private:
     double m_percent_glitch_tolerance{0.1}; // What percentage of the image is okay to be glitched.
     int m_reference_points{};
     int m_saved_stack{};
+    std::vector<int> m_glitches{};
+    bool m_glitched{};
+
+    BFComplex m_old_reference_coordinate_bf{};
+
+    std::complex<double> m_delta_sub_0{};
+    std::complex<double> m_delta_sub_n{};
 };
