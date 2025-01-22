@@ -35,6 +35,7 @@
 #include "engine/tesseral.h"
 #include "engine/wait_until.h"
 #include "engine/work_list.h"
+#include "engine/perturbation.h"
 #include "fractals/fractalp.h"
 #include "fractals/frothy_basin.h"
 #include "fractals/lyapunov.h"
@@ -885,7 +886,18 @@ static void perform_work_list()
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
     int alt = find_alternate_math(g_fractal_type, g_bf_math);
 
-    if (alt > -1)
+        // start experimental perturbation code
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+    {
+        mandel_perturbation_setup();
+        sv_orbit_calc = perturbation_per_orbit;
+        sv_per_pixel = perturbation_per_pixel;
+        sv_per_image = perturbation_per_image;
+        g_cur_fractal_specific->orbit_calc = perturbation_per_orbit;
+        g_cur_fractal_specific->per_pixel = perturbation_per_pixel;
+        g_cur_fractal_specific->per_image = perturbation_per_image;
+    }
+    else if (alt > -1)
     {
         sv_orbit_calc = g_cur_fractal_specific->orbit_calc;
         sv_per_pixel = g_cur_fractal_specific->per_pixel;
@@ -1153,9 +1165,11 @@ static void perform_work_list()
             break;
 
         case 'g':
+/*
             // TODO: fix this
             // horrible cludge preventing crash when coming back from perturbation and math = bignum/bigflt
             if (g_calc_status != CalcStatus::COMPLETED)
+*/
             {
                 solid_guess();
             }
@@ -1173,7 +1187,13 @@ static void perform_work_list()
             // we already finished perturbation
             if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
             {
-                return;
+                tesseral();
+//                boundary_trace();
+//                solid_guess();
+//                return;
+//                g_std_calc_mode = '1';
+//                one_or_two_pass();
+//                g_std_calc_mode = 'p';
             }
             break;
 
@@ -1460,7 +1480,8 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    g_cur_fractal_specific->per_pixel(); // initialize the calculations
+    if (g_cur_fractal_specific->per_pixel() < 0)    // initialize the calculations
+        return -2;                                  // perturbation glitched pixel
 
     attracted = false;
 

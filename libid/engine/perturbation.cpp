@@ -78,15 +78,11 @@ int perturbation_per_orbit()
 
 int perturbation_per_pixel()
 {
-    int result;
-    if (result = s_pert_engine.perturbation_per_pixel(g_col, g_row, g_magnitude_limit); result < 0)
-    {
-        throw std::runtime_error("Failed to run perturbation pixel (" + std::to_string(result) + ")");
-    }
+    int result = s_pert_engine.perturbation_per_pixel(g_col, g_row, g_magnitude_limit);
     return result;
 }
 
-int perturbation_per_image()
+bool perturbation_per_image()
 {
     if (const int result = s_pert_engine.calculate_one_frame(); result < 0)
     {

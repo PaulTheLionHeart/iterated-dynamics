@@ -74,7 +74,15 @@ static int standard_calc(int pass_num)
             }
             if (pass_num == 1 || g_std_calc_mode == '1' || (g_row&1) != 0 || (g_col&1) != 0)
             {
-                if ((*g_calc_type)() == -1)   // standard_fractal(), calcmand() or calcmandfp()
+                int temp_colour = get_color(g_col, g_row);  // store in case we have already processed this pixel
+                int result = (*g_calc_type)(); // standard_fractal(), calcmand() or calcmandfp()
+                if (result == -2)           // use this as a flag that we have already p[rocessed this pixel
+                {
+                    g_color = temp_colour;
+                    ++g_col;
+                    continue; // already done pixel
+                }
+                else if (result == -1)
                 {
                     return -1;          // interrupted
                 }

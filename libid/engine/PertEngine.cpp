@@ -77,7 +77,8 @@ int PertEngine::calculate_one_frame()
             Point pt(x, g_screen_y_dots - 1 - y);
             m_points_remaining[y * g_screen_x_dots + x] = pt;
             m_remaining_point_count++;
-        }
+            m_glitches[x + y * g_screen_x_dots] = -1; // not yet processed
+            }
     }
 
     double magnified_radius = m_zoom_radius;
@@ -94,7 +95,8 @@ int PertEngine::calculate_one_frame()
         tmp_bf = alloc_stack(g_r_bf_length + 2);
     }
 
-    while (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100))
+    if (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100))
+//    while (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100))
     {
         m_reference_points++;
 
@@ -128,6 +130,8 @@ int PertEngine::calculate_one_frame()
             }
         }
         else
+            return 0;
+/*
         {
             if (!m_calculate_glitches)
             {
@@ -202,9 +206,10 @@ int PertEngine::calculate_one_frame()
         // using Pauldelbrot's glitch fixing method (see calculate point).
         std::memcpy(m_points_remaining.data(), m_glitch_points.data(), sizeof(Point) * m_glitch_point_count);
         m_remaining_point_count = m_glitch_point_count;
+*/
     }
 
-    cleanup();
+//    cleanup();
     return 0;
 }
 
@@ -220,6 +225,7 @@ void PertEngine::cleanup()
     m_xn.clear();
 }
 
+/*
 int PertEngine::calculate_point(const Point &pt, double magnified_radius, int window_radius)
 {
     // Get the complex number at this pixel.
@@ -442,7 +448,7 @@ int PertEngine::calculate_point(const Point &pt, double magnified_radius, int wi
     }
     return 0;
 }
-
+*/
 void PertEngine::reference_zoom_point(const BFComplex &center, int max_iteration)
 {
     BigStackSaver saved;
@@ -537,7 +543,7 @@ int PertEngine::perturbation_per_pixel(int x, int y, double bailout)
     int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
 
     if (m_glitches[x + y * g_screen_x_dots] == 0) // assume not glitched
-        return -1;
+        return -2;
 
     const double delta_real =
         ((magnified_radius * (2 * x - g_screen_x_dots)) / window_radius) - m_delta_real;
@@ -584,6 +590,7 @@ int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<doubl
     // calculated. I also only want to store this point once.
     if (m_calculate_glitches && !m_glitched && magnitude < m_perturbation_tolerance_check[iteration])
     {
+        m_glitches[x + y * g_screen_x_dots] = 1; // yep, she's glitched
         Point pt(x, y, iteration);
         m_glitch_points[m_glitch_point_count] = pt;
         m_glitch_point_count++;
@@ -619,7 +626,12 @@ int PertEngine::calculate_reference()
     if (m_calculate_glitches == false)
         return 0;
 
-     c_bf = m_old_reference_coordinate_bf;
+    // These points are glitched, so we need to mark them for recalculation. We need to recalculate them
+    // using Pauldelbrot's glitch fixing method (see calculate point).
+    std::memcpy(m_points_remaining.data(), m_glitch_points.data(), sizeof(Point) * m_glitch_point_count);
+    m_remaining_point_count = m_glitch_point_count;
+
+    c_bf = m_old_reference_coordinate_bf;
     int reference_point_index = 0;
     std::srand(g_random_seed);
     if (!g_random_seed_flag)

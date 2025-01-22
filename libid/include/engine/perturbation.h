@@ -3,3 +3,7 @@
 #pragma once
 
 bool perturbation();
+extern bool mandel_perturbation_setup();
+extern bool perturbation_per_image();
+extern int perturbation_per_pixel();
+extern int perturbation_per_orbit();
