@@ -41,6 +41,9 @@ void PertEngine::initialize_frame(
         m_saved_stack = save_stack();
         m_center_bf.x = alloc_stack(g_bf_length + 2);
         m_center_bf.y = alloc_stack(g_bf_length + 2);
+        m_old_reference_coordinate_bf.x = alloc_stack(g_r_bf_length + 2);
+        m_old_reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
+
         copy_bf(m_center_bf.x, center_bf.x);
         copy_bf(m_center_bf.y, center_bf.y);
     }
@@ -111,11 +114,14 @@ int PertEngine::calculate_one_frame()
                 copy_bf(c_bf.y, m_center_bf.y);
                 copy_bf(reference_coordinate_bf.x, c_bf.x);
                 copy_bf(reference_coordinate_bf.y, c_bf.y);
+                copy_bf(m_old_reference_coordinate_bf.x, reference_coordinate_bf.x);
+                copy_bf(m_old_reference_coordinate_bf.y, reference_coordinate_bf.y);
             }
             else
             {
                 c = m_center;
                 reference_coordinate = m_center;
+                m_old_reference_coordinate = reference_coordinate;
             }
 
             m_delta_real = 0;
@@ -633,12 +639,15 @@ int PertEngine::calculate_reference()
     m_remaining_point_count = m_glitch_point_count;
 
     c_bf = m_old_reference_coordinate_bf;
+    c = m_old_reference_coordinate;
     int reference_point_index = 0;
     std::srand(g_random_seed);
     if (!g_random_seed_flag)
     {
         ++g_random_seed;
     }
+
+    m_reference_points++;
 
     const int index{(int) ((double) std::rand() / RAND_MAX * m_remaining_point_count)};
     Point pt{m_points_remaining[index]};
@@ -663,7 +672,7 @@ int PertEngine::calculate_reference()
     else
     {
         reference_coordinate.real(c.real() + delta_real);
-        reference_coordinate.imag(c.imag() + delta_imag);
+        reference_coordinate.imag(c.imag() - delta_imag);
     }
 
     if (g_bf_math != BFMathType::NONE)

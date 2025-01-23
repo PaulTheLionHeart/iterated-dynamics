@@ -53,6 +53,7 @@ private:
     bool m_glitched{};
 
     BFComplex m_old_reference_coordinate_bf{};
+    std::complex<double> m_old_reference_coordinate{};
 
     std::complex<double> m_delta_sub_0{};
     std::complex<double> m_delta_sub_n{};

@@ -885,6 +885,7 @@ static void perform_work_list()
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
     int alt = find_alternate_math(g_fractal_type, g_bf_math);
+    bool processing_glitches = false;
 
         // start experimental perturbation code
     if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
@@ -1052,7 +1053,8 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        g_cur_fractal_specific->per_image();
+        if (!processing_glitches)
+            g_cur_fractal_specific->per_image();
         if (g_show_dot >= 0)
         {
             find_special_colors();
@@ -1210,22 +1212,24 @@ static void perform_work_list()
         {
             break;
         }
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+        {
+            if (get_glitch_point_count())
+            {
+                calculate_reference(); // get next reference if we still have enough glitched pixels
+                g_num_work_list++;
+                processing_glitches = true;
+                continue;
+            }
+            else
+                cleanup_perturbation(); // all done
+        }
     }
 
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-    {
-        if (get_glitch_point_count())
-        {
-            calculate_reference();      // get next reference if we still have enough glitched pixels
-            g_num_work_list++;
-        }
-        else
-            cleanup_perturbation();     // all done
-    }
 
     if (g_num_work_list > 0)
     {
-        // interrupted, resumable
+         // interrupted, resumable
         alloc_resume(sizeof(g_work_list)+20, 2);
         put_resume_len(sizeof(g_num_work_list), &g_num_work_list, sizeof(g_work_list), g_work_list, 0);
     }
@@ -1491,7 +1495,12 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    g_cur_fractal_specific->per_pixel();    // initialize the calculations
+    int temp_color = get_color(g_col, g_row);
+    if (g_cur_fractal_specific->per_pixel() == -2)    // initialize the calculations
+    {
+        g_color_iter = temp_color;               // we have done this pixel in an earlier pass and it's not glitched    
+        return 0;
+    }
 
     attracted = false;
 
