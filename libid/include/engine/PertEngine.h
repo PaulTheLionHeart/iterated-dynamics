@@ -20,6 +20,7 @@ public:
     long get_glitch_point_count();
     void push_glitch(int x, int y, int value);
     bool is_glitched();
+    bool is_pixel_complete(int x, int y);
     void set_glitched(bool status);
     void set_points_count(long count);
     void set_glitch_points_count(long count);
@@ -27,7 +28,7 @@ public:
 
 
 private:
-    int calculate_point(const Point &pt, double magnified_radius, int window_radius);
+//    int calculate_point(const Point &pt, double magnified_radius, int window_radius);
     void reference_zoom_point(const BFComplex &center, int max_iteration);
     void reference_zoom_point(const std::complex<double> &center, int max_iteration);
 

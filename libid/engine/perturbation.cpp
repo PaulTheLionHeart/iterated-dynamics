@@ -92,3 +92,23 @@ bool perturbation_per_image()
     s_pert_engine.set_glitch_points_count(0);
     return 0;
 }
+
+bool is_pixel_finished(int x, int y)
+{
+    return (s_pert_engine.is_pixel_complete(x, y));
+}
+
+long get_glitch_point_count()
+{
+    return (s_pert_engine.get_glitch_point_count());
+}
+
+int calculate_reference()
+{
+    return (s_pert_engine.calculate_reference());
+}
+
+void cleanup_perturbation()
+{
+    s_pert_engine.cleanup();
+}

@@ -35,6 +35,7 @@ void PertEngine::initialize_frame(
 {
     m_zoom_radius = zoom_radius;
 
+    cleanup();
     if (g_bf_math != BFMathType::NONE)
     {
         m_saved_stack = save_stack();
@@ -696,6 +697,11 @@ void PertEngine::push_glitch(int x, int y, int value)
 bool PertEngine::is_glitched()
 {
     return m_glitched;
+}
+
+bool PertEngine::is_pixel_complete(int x, int y)
+{
+    return (m_glitches[x + y * g_screen_x_dots] == 0);
 }
 
 void PertEngine::set_glitched(bool status)

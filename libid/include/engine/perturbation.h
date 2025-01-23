@@ -7,3 +7,7 @@ extern bool mandel_perturbation_setup();
 extern bool perturbation_per_image();
 extern int perturbation_per_pixel();
 extern int perturbation_per_orbit();
+extern bool is_pixel_finished(int x, int y);
+extern long get_glitch_point_count();
+extern int calculate_reference();
+extern void cleanup_perturbation();

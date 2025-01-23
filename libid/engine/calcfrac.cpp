@@ -1212,6 +1212,17 @@ static void perform_work_list()
         }
     }
 
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+    {
+        if (get_glitch_point_count())
+        {
+            calculate_reference();      // get next reference if we still have enough glitched pixels
+            g_num_work_list++;
+        }
+        else
+            cleanup_perturbation();     // all done
+    }
+
     if (g_num_work_list > 0)
     {
         // interrupted, resumable
@@ -1480,8 +1491,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    if (g_cur_fractal_specific->per_pixel() < 0)    // initialize the calculations
-        return -2;                                  // perturbation glitched pixel
+    g_cur_fractal_specific->per_pixel();    // initialize the calculations
 
     attracted = false;
 
