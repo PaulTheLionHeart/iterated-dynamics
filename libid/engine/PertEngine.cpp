@@ -549,7 +549,7 @@ int PertEngine::perturbation_per_pixel(int x, int y, double bailout)
     double magnified_radius = m_zoom_radius;
     int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
 
-    if (m_glitches[x + y * g_screen_x_dots] == 0) // assume not glitched
+    if (m_glitches[x + y * g_screen_x_dots] == 0) // processed and not glitched
         return -2;
 
     const double delta_real =
@@ -640,7 +640,6 @@ int PertEngine::calculate_reference()
 
     c_bf = m_old_reference_coordinate_bf;
     c = m_old_reference_coordinate;
-    int reference_point_index = 0;
     std::srand(g_random_seed);
     if (!g_random_seed_flag)
     {
@@ -667,7 +666,7 @@ int PertEngine::calculate_reference()
         float_to_bf(tmp_bf, delta_real);
         add_bf(reference_coordinate_bf.x, c_bf.x, tmp_bf);
         float_to_bf(tmp_bf, delta_imag);
-        add_bf(reference_coordinate_bf.y, c_bf.y, tmp_bf);
+        sub_bf(reference_coordinate_bf.y, c_bf.y, tmp_bf);
     }
     else
     {

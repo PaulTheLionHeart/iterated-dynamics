@@ -891,14 +891,8 @@ static void perform_work_list()
     if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
     {
         mandel_perturbation_setup();
-        sv_orbit_calc = perturbation_per_orbit;
-        sv_per_pixel = perturbation_per_pixel;
-        sv_per_image = perturbation_per_image;
-        g_cur_fractal_specific->orbit_calc = perturbation_per_orbit;
-        g_cur_fractal_specific->per_pixel = perturbation_per_pixel;
-        g_cur_fractal_specific->per_image = perturbation_per_image;
     }
-    else if (alt > -1)
+    if (alt > -1)
     {
         sv_orbit_calc = g_cur_fractal_specific->orbit_calc;
         sv_per_pixel = g_cur_fractal_specific->per_pixel;
@@ -1029,9 +1023,15 @@ static void perform_work_list()
     {
         // per_image can override
         g_calc_type = g_cur_fractal_specific->calc_type;
-        g_symmetry = g_cur_fractal_specific->symmetry; //   calctype & symmetry
+        if (g_std_calc_mode == 'p')
+        {
+            g_symmetry = SymmetryType::NONE;            // symmetry causes crashes in perturbation
+        }
+        else
+        {
+            g_symmetry = g_cur_fractal_specific->symmetry; //   calctype & symmetry
+        }
         g_plot = g_put_color; // defaults when setsymmetry not called or does nothing
-
         // pull top entry off worklist
         g_xx_start = g_work_list[0].xx_start;
         g_i_x_start = g_work_list[0].xx_start;
@@ -1053,8 +1053,17 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        if (!processing_glitches)
+        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+        {
+            if (!processing_glitches)               // no need to initialize everything again
+            {
+                perturbation_per_image();
+            }
+        }
+        else
+        {
             g_cur_fractal_specific->per_image();
+        }
         if (g_show_dot >= 0)
         {
             find_special_colors();
@@ -1222,10 +1231,12 @@ static void perform_work_list()
                 continue;
             }
             else
+            {
+                processing_glitches = false;
                 cleanup_perturbation(); // all done
+            }
         }
     }
-
 
     if (g_num_work_list > 0)
     {
@@ -1495,12 +1506,21 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    int temp_color = get_color(g_col, g_row);
-    if (g_cur_fractal_specific->per_pixel() == -2)    // initialize the calculations
+    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
     {
-        g_color_iter = temp_color;               // we have done this pixel in an earlier pass and it's not glitched    
-        return 0;
+        int temp_color = get_color(g_col, g_row);
+        if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
+        {
+            g_color_iter = temp_color; // we have done this pixel in an earlier pass and it's not glitched//
+            g_color = std::abs((int) g_color_iter);
+            return g_color;
+        }
     }
+    else
+    {
+        g_cur_fractal_specific->per_pixel(); // initialize the calculations
+    }
+
 
     attracted = false;
 
@@ -1605,9 +1625,22 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         }
 
         // the usual case
-        else if ((g_cur_fractal_specific->orbit_calc() && g_inside_color != STAR_TRAIL) || g_overflow)
+        else
         {
-            break;
+            if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+            {
+                if ((perturbation_per_orbit() && g_inside_color != STAR_TRAIL) || g_overflow)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if ((g_cur_fractal_specific->orbit_calc() && g_inside_color != STAR_TRAIL) || g_overflow)
+                {
+                    break;
+                }
+            }
         }
         if (g_show_orbit)
         {

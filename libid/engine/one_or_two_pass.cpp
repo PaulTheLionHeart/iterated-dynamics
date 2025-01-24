@@ -4,7 +4,6 @@
 
 #include "engine/calcfrac.h"
 #include "engine/id_data.h"
-#include "engine/perturbation.h"
 #include "engine/resume.h"
 #include "engine/work_list.h"
 #include "ui/video.h"
@@ -75,11 +74,6 @@ static int standard_calc(int pass_num)
             }
             if (pass_num == 1 || g_std_calc_mode == '1' || (g_row&1) != 0 || (g_col&1) != 0)
             {
-                if (g_std_calc_mode == 'p' && is_pixel_finished(g_col, g_row)) 
-                {
-                    ++g_col;
-                    continue;
-                }
                 if ((*g_calc_type)() == -1)   // standard_fractal(), calcmand() or calcmandfp()
                 {
                     return -1;          // interrupted

@@ -7,7 +7,6 @@
 #include "engine/id_data.h"
 #include "engine/pixel_limits.h"
 #include "engine/work_list.h"
-#include "engine/perturbation.h"
 #include "ui/cmdfiles.h"
 #include "ui/video.h"
 
@@ -384,11 +383,6 @@ static int tess_col(int x, int y1, int y2)
     while (++g_row <= y2)
     {
         // generate the column
-//        if (g_std_calc_mode == 'p' && is_pixel_finished(g_col, g_row))
-//        {
-//            //            ++g_col;
-//            continue;
-//        }
         int i = (*g_calc_type)();
         if (i < 0)
         {
@@ -413,11 +407,6 @@ static int tess_row(int x1, int x2, int y)
     while (++g_col <= x2)
     {
         // generate the row
-//        if (is_pixel_finished(g_col, g_row))
-//        {
-//            //            ++g_col;
-//            continue;
-//        }
         int i = (*g_calc_type)();
         if (i < 0)
         {
