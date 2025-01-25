@@ -563,10 +563,6 @@ int PertEngine::perturbation_per_pixel(int x, int y, double bailout)
     return 0;
 }
 
-//////////////////////////////////////////////////////////////////////
-// Individual orbit calculation
-//////////////////////////////////////////////////////////////////////
-
 int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<double> *z)
 {
     // Get the complex number at this pixel.
@@ -606,10 +602,6 @@ int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<doubl
     }
     return (magnitude > g_magnitude_limit /* && iteration < MaxIteration*/);
 }
-
-//////////////////////////////////////////////////////////////////////
-// calculate next reference
-//////////////////////////////////////////////////////////////////////
 
 int PertEngine::calculate_reference()
 {

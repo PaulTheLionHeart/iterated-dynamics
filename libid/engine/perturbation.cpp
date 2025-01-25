@@ -13,6 +13,7 @@
 
 #include <stdexcept>
 #include <string>
+#include <math.h>
 
 static PertEngine s_pert_engine;
 
@@ -25,7 +26,7 @@ extern double g_magnitude_limit;
 bool perturbation()
 {
     BigStackSaver saved;
-    double mandel_width; // width of display
+    double mandel_width{}; // width of display
     DComplex center{};
     BFComplex center_bf{};
     double x_mag_factor{};
@@ -42,7 +43,20 @@ bool perturbation()
     else
     {
         LDouble magnification_ld;
+        if (isnan(g_x_max) || isnan(g_x_min))
+        {
+            throw std::runtime_error("Failed to calculate x_max or x_min ");
+        }
+        if (isnan(g_y_max) || isnan(g_y_min))
+        {
+            throw std::runtime_error("Failed to calculate y_max or y_min ");
+        }
+
         cvt_center_mag(center.x, center.y, magnification_ld, x_mag_factor, rotation, skew);
+        if (isnan(center.x) || isnan(center.y))
+        {
+            throw std::runtime_error("Failed to calculate perturbation center ");
+        }
         center.y = -center.y;
     }
 
