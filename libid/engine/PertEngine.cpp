@@ -41,9 +41,8 @@ void PertEngine::initialize_frame(
         m_saved_stack = save_stack();
         m_center_bf.x = alloc_stack(g_bf_length + 2);
         m_center_bf.y = alloc_stack(g_bf_length + 2);
-        m_old_reference_coordinate_bf.x = alloc_stack(g_r_bf_length + 2);
-        m_old_reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
-
+        m_c_bf.x = alloc_stack(g_r_bf_length + 2);
+        m_c_bf.y = alloc_stack(g_r_bf_length + 2);
         copy_bf(m_center_bf.x, center_bf.x);
         copy_bf(m_center_bf.y, center_bf.y);
     }
@@ -56,9 +55,7 @@ void PertEngine::initialize_frame(
 // Full frame calculation
 int PertEngine::calculate_one_frame()
 {
-    BFComplex c_bf{};
     BFComplex reference_coordinate_bf;
-    std::complex<double> c;
     std::complex<double> reference_coordinate;
 
     m_reference_points = 0;
@@ -92,8 +89,6 @@ int PertEngine::calculate_one_frame()
 
     if (g_bf_math != BFMathType::NONE)
     {
-        c_bf.x = alloc_stack(g_r_bf_length + 2);
-        c_bf.y = alloc_stack(g_r_bf_length + 2);
         reference_coordinate_bf.x = alloc_stack(g_r_bf_length + 2);
         reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
         tmp_bf = alloc_stack(g_r_bf_length + 2);
@@ -110,16 +105,14 @@ int PertEngine::calculate_one_frame()
         {
             if (g_bf_math != BFMathType::NONE)
             {
-                copy_bf(c_bf.x, m_center_bf.x);
-                copy_bf(c_bf.y, m_center_bf.y);
-                copy_bf(reference_coordinate_bf.x, c_bf.x);
-                copy_bf(reference_coordinate_bf.y, c_bf.y);
-                copy_bf(m_old_reference_coordinate_bf.x, reference_coordinate_bf.x);
-                copy_bf(m_old_reference_coordinate_bf.y, reference_coordinate_bf.y);
+                copy_bf(m_c_bf.x, m_center_bf.x);
+                copy_bf(m_c_bf.y, m_center_bf.y);
+                copy_bf(reference_coordinate_bf.x, m_c_bf.x);
+                copy_bf(reference_coordinate_bf.y, m_c_bf.y);
             }
             else
             {
-                c = m_center;
+                m_c = m_center;
                 reference_coordinate = m_center;
                 m_old_reference_coordinate = reference_coordinate;
             }
@@ -607,16 +600,12 @@ int PertEngine::calculate_reference()
 {
     double magnified_radius = m_zoom_radius;
     int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
-    BFComplex c_bf{};
     BFComplex reference_coordinate_bf{};
     BigFloat tmp_bf;
-    std::complex<double> c;
     std::complex<double> reference_coordinate;
 
     if (g_bf_math != BFMathType::NONE)
     {
-        c_bf.x = alloc_stack(g_r_bf_length + 2);
-        c_bf.y = alloc_stack(g_r_bf_length + 2);
         reference_coordinate_bf.x = alloc_stack(g_r_bf_length + 2);
         reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
         tmp_bf = alloc_stack(g_r_bf_length + 2);
@@ -630,8 +619,6 @@ int PertEngine::calculate_reference()
     std::memcpy(m_points_remaining.data(), m_glitch_points.data(), sizeof(Point) * m_glitch_point_count);
     m_remaining_point_count = m_glitch_point_count;
 
-    c_bf = m_old_reference_coordinate_bf;
-    c = m_old_reference_coordinate;
     std::srand(g_random_seed);
     if (!g_random_seed_flag)
     {
@@ -656,14 +643,14 @@ int PertEngine::calculate_reference()
     if (g_bf_math != BFMathType::NONE)
     {
         float_to_bf(tmp_bf, delta_real);
-        add_bf(reference_coordinate_bf.x, c_bf.x, tmp_bf);
+        add_bf(reference_coordinate_bf.x, m_c_bf.x, tmp_bf);
         float_to_bf(tmp_bf, delta_imag);
-        sub_bf(reference_coordinate_bf.y, c_bf.y, tmp_bf);
+        sub_bf(reference_coordinate_bf.y, m_c_bf.y, tmp_bf);
     }
     else
     {
-        reference_coordinate.real(c.real() + delta_real);
-        reference_coordinate.imag(c.imag() - delta_imag);
+        reference_coordinate.real(m_c.real() + delta_real);
+        reference_coordinate.imag(m_c.imag() - delta_imag);
     }
 
     if (g_bf_math != BFMathType::NONE)
@@ -686,7 +673,8 @@ int PertEngine::calculate_reference()
 
 long PertEngine::get_glitch_point_count()
 {
-    return (m_glitch_point_count > (m_points_count) * (m_percent_glitch_tolerance / 100.0));
+    return (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100));
+//    return (m_glitch_point_count > (m_points_count) * (m_percent_glitch_tolerance / 100.0));
 }
 
 void PertEngine::push_glitch(int x, int y, int value)

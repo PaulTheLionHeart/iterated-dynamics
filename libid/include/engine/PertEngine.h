@@ -42,8 +42,10 @@ private:
     long m_glitch_point_count{};
     long m_remaining_point_count{};
     long m_points_count{};
-    BFComplex m_center_bf{};
     std::complex<double> m_center{};
+    BFComplex m_center_bf{};
+    std::complex<double> m_c{};
+    BFComplex m_c_bf{};
     double m_zoom_radius{};
     bool m_calculate_glitches{true};
     double m_percent_glitch_tolerance{0.1}; // What percentage of the image is okay to be glitched.
@@ -52,7 +54,6 @@ private:
     std::vector<int> m_glitches{};
     bool m_glitched{};
 
-    BFComplex m_old_reference_coordinate_bf{};
     std::complex<double> m_old_reference_coordinate{};
 
     std::complex<double> m_delta_sub_0{};
