@@ -25,7 +25,7 @@ extern double g_magnitude_limit;
 
 bool perturbation()
 {
-    BigStackSaver saved;
+    int saved = save_stack();
     double mandel_width{}; // width of display
     DComplex center{};
     BFComplex center_bf{};
@@ -76,6 +76,7 @@ bool perturbation()
     {
         throw std::runtime_error("Failed to initialize perturbation engine (" + std::to_string(result) + ")");
     }
+    restore_stack(saved);
     g_calc_status = CalcStatus::COMPLETED;
     return false;
 }

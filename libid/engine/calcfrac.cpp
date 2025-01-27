@@ -1201,10 +1201,7 @@ static void perform_work_list()
                 tesseral();
 //                boundary_trace();
 //                solid_guess();
-//                return;
-//                g_std_calc_mode = '1';
 //                one_or_two_pass();
-//                g_std_calc_mode = 'p';
             }
             break;
 
