@@ -31,12 +31,6 @@
 bool
 mandel_setup()           // Mandelbrot Routine
 {
-/*
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-    {
-        return mandel_perturbation_setup();
-    }
-*/
     if (g_debug_flag != DebugFlags::FORCE_STANDARD_FRACTAL
         && (g_invert == 0)
         && g_decomp[0] == 0
@@ -143,12 +137,6 @@ mandel_fp_setup()
            calcmandfp() can currently handle invert, any rqlim, potflag
            zmag, epsilon cross, and all the current outside options
         */
-/*
-        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-        {
-            return mandel_perturbation_setup();
-        }
-*/
         if (g_debug_flag != DebugFlags::FORCE_STANDARD_FRACTAL
             && !g_distance_estimator
             && g_decomp[0] == 0

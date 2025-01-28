@@ -538,10 +538,10 @@ bool mandel_bf_setup()
 
 int mandel_bn_per_pixel()
 {
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-    {
-        return true;
-    }
+//    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+//    {
+//        return true;
+//    }
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bn_int(g_param_z_bn.x, g_delta_x_bn, (U16)g_col);
     mult_bn_int(g_bn_tmp, g_delta2_x_bn, (U16)g_row);

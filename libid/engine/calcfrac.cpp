@@ -881,6 +881,18 @@ int find_alternate_math(FractalType type, BFMathType math)
 // general escape-time engine routines
 static void perform_work_list()
 {
+    if (g_fractal_type == FractalType::MANDEL_FP)
+    {
+        g_use_perturbation = (g_params[2] != 0.0);
+    }
+    else if (g_fractal_type == FractalType::BURNING_SHIP)
+    {
+        g_use_perturbation = (g_params[3] != 0.0);
+    }
+    else
+    {
+        g_use_perturbation = false;
+    }
     int (*sv_orbit_calc)() = nullptr;  // function that calculates one orbit
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
@@ -888,7 +900,7 @@ static void perform_work_list()
     bool processing_glitches = false;
 
         // start experimental perturbation code
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+    if (g_use_perturbation)
     {
         mandel_perturbation_setup();
     }
@@ -1023,7 +1035,7 @@ static void perform_work_list()
     {
         // per_image can override
         g_calc_type = g_cur_fractal_specific->calc_type;
-        if (g_std_calc_mode == 'p')
+        if (g_use_perturbation)
         {
             g_symmetry = SymmetryType::NONE;            // symmetry causes crashes in perturbation
         }
@@ -1053,7 +1065,7 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+        if (g_use_perturbation)
         {
             if (!processing_glitches)               // no need to initialize everything again
             {
@@ -1193,18 +1205,18 @@ static void perform_work_list()
         case 'o':
             sticky_orbits();
             break;
-
+/*
         case 'p':
             // we already finished perturbation
             if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
             {
-                tesseral();
+//                tesseral();
 //                boundary_trace();
-//                solid_guess();
+                solid_guess();
 //                one_or_two_pass();
             }
             break;
-
+*/
         default:
             one_or_two_pass();
             break;
@@ -1218,7 +1230,7 @@ static void perform_work_list()
         {
             break;
         }
-        if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+        if (g_use_perturbation)
         {
             if (get_glitch_point_count())
             {
@@ -1503,7 +1515,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+    if (g_use_perturbation)
     {
         int temp_color = get_color(g_col, g_row);
         if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
@@ -1624,7 +1636,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         // the usual case
         else
         {
-            if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
+            if (g_use_perturbation)
             {
                 if ((perturbation_per_orbit() && g_inside_color != STAR_TRAIL) || g_overflow)
                 {

@@ -140,6 +140,7 @@ enum
 // clang-format off
 MoreParams g_more_fractal_params[] =
 {
+    {FractalType::MANDEL_FP,                 {"Omega", "+Degree of symmetry", "", "", "", ""}, {0, 3, 0, 0, 0, 0}},
     {FractalType::ICON,                 {"Omega", "+Degree of symmetry", "", "", "", ""}, {0, 3, 0, 0, 0, 0}},
     {FractalType::ICON_3D,              {"Omega", "+Degree of symmetry", "", "", "", ""}, {0, 3, 0, 0, 0, 0}},
     {FractalType::HYPER_CMPLX_J_FP,     {"zj", "zk", "", "", "", ""}, {0, 0, 0, 0, 0, 0}},
@@ -271,7 +272,7 @@ FractalSpecific g_fractal_specific[] =
 
     {
         T_MANDEL+1,
-        {REAL_Z0, IMAG_Z0, "", ""},
+        {REAL_Z0, IMAG_Z0, "Perturbation?", ""},
         {0, 0, 0, 0},
         HelpLabels::HT_MANDEL, HelpLabels::HF_MANDEL, FractalFlags::BAIL_TEST | FractalFlags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
@@ -316,9 +317,9 @@ FractalSpecific g_fractal_specific[] =
 
     {
         T_MANDEL,
-        {REAL_Z0, IMAG_Z0, "", ""},
-        {0, 0, 0, 0},
-        HelpLabels::HT_MANDEL, HelpLabels::HF_MANDEL, FractalFlags::BAIL_TEST|FractalFlags::BF_MATH|FractalFlags::PERTURB,
+        {REAL_Z0, IMAG_Z0, "Perturbation?", ""},
+        {0, 0, 0, 0}, HelpLabels::HT_MANDEL, HelpLabels::HF_MANDEL,
+        FractalFlags::BAIL_TEST | FractalFlags::BF_MATH | FractalFlags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
         0, FractalType::JULIA_FP, FractalType::NO_FRACTAL, FractalType::MANDEL, SymmetryType::X_AXIS_NO_PARAM,
         julia_fp_fractal, mandel_fp_per_pixel, mandel_fp_setup, standard_fractal,
@@ -2301,7 +2302,7 @@ FractalSpecific g_fractal_specific[] =
     },
     {
         "burning-ship",
-        {P1_REAL, P1_IMAG, "degree (2-5)", ""},
+        {REAL_Z0, IMAG_Z0, "degree (2-5)", "Perturbation?"},
         {0, 0, 2, 0},
         HelpLabels::HT_BURNING_SHIP, HelpLabels::HF_BURNING_SHIP, FractalFlags::BAIL_TEST|FractalFlags::PERTURB|FractalFlags::BF_MATH,
         -2.5f, 1.5f, -1.2f, 1.8f,
