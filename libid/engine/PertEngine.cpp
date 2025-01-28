@@ -306,9 +306,12 @@ int PertEngine::calculate_reference()
     double magnified_radius = m_zoom_radius;
     int window_radius = std::min(g_screen_x_dots, g_screen_y_dots);
     BFComplex reference_coordinate_bf{};
-    BigFloat tmp_bf;
+    BigFloat tmp_bf{};
     std::complex<double> reference_coordinate;
     int saved = save_stack();
+
+    if (m_calculate_glitches == false)
+        return 0;
 
     if (g_bf_math != BFMathType::NONE)
     {
@@ -316,9 +319,6 @@ int PertEngine::calculate_reference()
         reference_coordinate_bf.y = alloc_stack(g_r_bf_length + 2);
         tmp_bf = alloc_stack(g_r_bf_length + 2);
     }
-
-    if (m_calculate_glitches == false)
-        return 0;
 
     // These points are glitched, so we need to mark them for recalculation. We need to recalculate them
     // using Pauldelbrot's glitch fixing method (see calculate point).
