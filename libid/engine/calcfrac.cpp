@@ -35,6 +35,7 @@
 #include "engine/tesseral.h"
 #include "engine/wait_until.h"
 #include "engine/work_list.h"
+#include "engine/perturbation.h"
 #include "fractals/fractalp.h"
 #include "fractals/frothy_basin.h"
 #include "fractals/lyapunov.h"
@@ -880,10 +881,30 @@ int find_alternate_math(FractalType type, BFMathType math)
 // general escape-time engine routines
 static void perform_work_list()
 {
+    if (g_fractal_type == FractalType::MANDEL_FP)
+    {
+        g_use_perturbation = (g_params[2] != 0.0);
+    }
+    else if (g_fractal_type == FractalType::BURNING_SHIP)
+    {
+        g_use_perturbation = (g_params[3] != 0.0);
+    }
+    else
+    {
+        g_use_perturbation = false;
+    }
     int (*sv_orbit_calc)() = nullptr;  // function that calculates one orbit
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
     int alt = find_alternate_math(g_fractal_type, g_bf_math);
+
+    bool processing_glitches = false;
+
+    // start experimental perturbation code
+    if (g_use_perturbation)
+    {
+        mandel_perturbation_setup();
+    }
 
     if (alt > -1)
     {
@@ -1016,7 +1037,14 @@ static void perform_work_list()
     {
         // per_image can override
         g_calc_type = g_cur_fractal_specific->calc_type;
-        g_symmetry = g_cur_fractal_specific->symmetry; //   calctype & symmetry
+        if (g_use_perturbation)
+        {
+            g_symmetry = SymmetryType::NONE; // symmetry causes crashes in perturbation
+        }
+        else
+        {
+            g_symmetry = g_cur_fractal_specific->symmetry; //   calctype & symmetry
+        }
         g_plot = g_put_color; // defaults when setsymmetry not called or does nothing
 
         // pull top entry off worklist
@@ -1040,7 +1068,17 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        g_cur_fractal_specific->per_image();
+        if (g_use_perturbation)
+        {
+            if (!processing_glitches) // no need to initialize everything again
+            {
+                perturbation_per_image();
+            }
+        }
+        else
+        {
+            g_cur_fractal_specific->per_image();
+        }
         if (g_show_dot >= 0)
         {
             find_special_colors();
@@ -1153,9 +1191,11 @@ static void perform_work_list()
             break;
 
         case 'g':
+/*
             // TODO: fix this
             // horrible cludge preventing crash when coming back from perturbation and math = bignum/bigflt
             if (g_calc_status != CalcStatus::COMPLETED)
+*/
             {
                 solid_guess();
             }
@@ -1168,7 +1208,7 @@ static void perform_work_list()
         case 'o':
             sticky_orbits();
             break;
-
+/*
         case 'p':
             // we already finished perturbation
             if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
@@ -1176,7 +1216,7 @@ static void perform_work_list()
                 return;
             }
             break;
-
+*/
         default:
             one_or_two_pass();
             break;
@@ -1189,6 +1229,21 @@ static void perform_work_list()
         if (check_key())   // interrupted?
         {
             break;
+        }
+        if (g_use_perturbation)
+        {
+            if (get_glitch_point_count())
+            {
+                calculate_reference(); // get next reference if we still have enough glitched pixels
+                g_num_work_list++;
+                processing_glitches = true;
+                continue;
+            }
+            else
+            {
+                processing_glitches = false;
+                cleanup_perturbation(); // all done
+            }
         }
     }
 
@@ -1460,7 +1515,20 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    g_cur_fractal_specific->per_pixel(); // initialize the calculations
+    if (g_use_perturbation)
+    {
+        int temp_color = get_color(g_col, g_row);
+        if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
+        {
+            g_color_iter = temp_color; // we have done this pixel in an earlier pass and it's not glitched//
+            g_color = std::abs((int) g_color_iter);
+            return g_color;
+        }
+    }
+    else
+    {
+        g_cur_fractal_specific->per_pixel(); // initialize the calculations
+    }
 
     attracted = false;
 
@@ -1565,9 +1633,22 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         }
 
         // the usual case
-        else if ((g_cur_fractal_specific->orbit_calc() && g_inside_color != STAR_TRAIL) || g_overflow)
+        else
         {
-            break;
+            if (g_use_perturbation)
+            {
+                if ((perturbation_per_orbit() && g_inside_color != STAR_TRAIL) || g_overflow)
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if ((g_cur_fractal_specific->orbit_calc() && g_inside_color != STAR_TRAIL) || g_overflow)
+                {
+                    break;
+                }
+            }
         }
         if (g_show_orbit)
         {

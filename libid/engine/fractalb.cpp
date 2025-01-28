@@ -354,7 +354,7 @@ bool mandel_bn_setup()
             half_a_bn(g_close_enough_bn);
         }
     }
-
+/*
     if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
     {
         mandel_perturbation_setup();
@@ -363,7 +363,7 @@ bool mandel_bn_setup()
         g_calc_status = CalcStatus::COMPLETED;
         return true;
     }
-
+*/
     g_c_exponent = (int) g_params[2];
     switch (g_fractal_type)
     {
@@ -474,18 +474,20 @@ bool mandel_bf_setup()
     {
     case FractalType::MANDEL_FP:
     case FractalType::BURNING_SHIP:
+/*
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
         {
             return mandel_perturbation_setup();
         }
+*/
         break;
-
     case FractalType::JULIA_FP:
         copy_bf(g_param_z_bf.x, g_bf_params[0]);
         copy_bf(g_param_z_bf.y, g_bf_params[1]);
         break;
 
     case FractalType::MANDEL_Z_POWER_FP:
+/*
         if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
         {
             // only allow integer values of real part
@@ -498,7 +500,7 @@ bool mandel_bf_setup()
                 return mandel_perturbation_setup();
             }
         }
-
+*/
         init_big_pi();
         if ((double) g_c_exponent == g_params[2] && (g_c_exponent & 1)) // odd exponents
         {
@@ -535,10 +537,12 @@ bool mandel_bf_setup()
 
 int mandel_bn_per_pixel()
 {
+/*
     if (g_std_calc_mode == 'p' && bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
     {
         return true;
     }
+*/
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bn_int(g_param_z_bn.x, g_delta_x_bn, (U16)g_col);
     mult_bn_int(g_bn_tmp, g_delta2_x_bn, (U16)g_row);
@@ -585,6 +589,7 @@ int mandel_bn_per_pixel()
 
 int mandel_bf_per_pixel()
 {
+/*
     // I suspect the following code should be somewhere in perform_worklist() to reset the setup routine to
     // floating point when zooming out. Somehow the math type is restored and the bigflt memory restored, but
     // the pointer to set up isn't.
@@ -592,6 +597,7 @@ int mandel_bf_per_pixel()
     {
         return mandel_fp_per_pixel();
     }
+*/
     // parm.x = g_x_min + col*delx + row*delx2
     mult_bf_int(g_param_z_bf.x, g_delta_x_bf, (U16)g_col);
     mult_bf_int(g_bf_tmp, g_delta2_x_bf, (U16)g_row);

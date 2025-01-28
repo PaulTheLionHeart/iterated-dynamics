@@ -271,7 +271,7 @@ FractalSpecific g_fractal_specific[] =
 
     {
         T_MANDEL+1,
-        {REAL_Z0, IMAG_Z0, "", ""},
+        {REAL_Z0, IMAG_Z0, "Perturbation?", ""},
         {0, 0, 0, 0},
         HelpLabels::HT_MANDEL, HelpLabels::HF_MANDEL, FractalFlags::BAIL_TEST | FractalFlags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
@@ -316,7 +316,7 @@ FractalSpecific g_fractal_specific[] =
 
     {
         T_MANDEL,
-        {REAL_Z0, IMAG_Z0, "", ""},
+        {REAL_Z0, IMAG_Z0, "Perturbation?", ""},
         {0, 0, 0, 0},
         HelpLabels::HT_MANDEL, HelpLabels::HF_MANDEL, FractalFlags::BAIL_TEST|FractalFlags::BF_MATH|FractalFlags::PERTURB,
         -2.5F, 1.5F, -1.5F, 1.5F,
@@ -2301,7 +2301,7 @@ FractalSpecific g_fractal_specific[] =
     },
     {
         "burning-ship",
-        {P1_REAL, P1_IMAG, "degree (2-5)", ""},
+        {REAL_Z0, IMAG_Z0, "degree (2-5)", "Perturbation?"},
         {0, 0, 2, 0},
         HelpLabels::HT_BURNING_SHIP, HelpLabels::HF_BURNING_SHIP, FractalFlags::BAIL_TEST|FractalFlags::PERTURB|FractalFlags::BF_MATH,
         -2.5f, 1.5f, -1.2f, 1.8f,
