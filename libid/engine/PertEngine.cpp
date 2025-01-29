@@ -11,6 +11,7 @@
 #include "engine/PertEngine.h"
 
 #include "engine/calcfrac.h"
+#include "engine/perturbation.h"
 #include "engine/id_data.h"
 #include "fractals/fractalp.h"
 #include "fractals/pickover_mandelbrot.h"
@@ -25,10 +26,6 @@
 #include <cstdlib>
 #include <cstring>
 #include <stdexcept>
-
-// Raising this number makes more calculations, but less variation between each calculation (less chance
-// of mis-identifying a glitched point).
-constexpr double GLITCH_TOLERANCE{1e-6};
 
 void PertEngine::initialize_frame(
     const BFComplex &center_bf, const std::complex<double> &center, double zoom_radius)
@@ -189,7 +186,7 @@ void PertEngine::reference_zoom_point(const BFComplex &center, int max_iteration
                 std::to_string(int(progress * 100)) + "%)";
         }
 
-        float_to_bf(tmp_bf, GLITCH_TOLERANCE);
+        float_to_bf(tmp_bf, g_perturbation_tolerance);
         mult_bf(temp_real_bf, z_bf.x, tmp_bf);
         mult_bf(temp_imag_bf, z_bf.y, tmp_bf);
         std::complex<double> tolerance;
@@ -231,7 +228,7 @@ void PertEngine::reference_zoom_point(const std::complex<double> &center, int ma
                 std::to_string(int(progress * 100)) + "%)";
         }
 
-        m_perturbation_tolerance_check[i] = mag_squared(z * GLITCH_TOLERANCE);
+        m_perturbation_tolerance_check[i] = mag_squared(z * g_perturbation_tolerance);
 
         if (g_cur_fractal_specific->pert_ref == nullptr)
         {

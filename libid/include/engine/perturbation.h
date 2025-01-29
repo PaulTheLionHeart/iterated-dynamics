@@ -19,5 +19,6 @@ enum class PerturbationMode
     NO = 2
 };
 extern PerturbationMode g_perturbation;
+// Raising this number makes more calculations, but less variation between each calculation (less chance
+// of mis-identifying a glitched point).
 extern double g_perturbation_tolerance;
-extern bool g_use_perturbation; // select perturbation code

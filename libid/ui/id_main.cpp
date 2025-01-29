@@ -79,7 +79,10 @@ bool g_has_inverse{};                                                  //
 PerturbationMode g_perturbation = PerturbationMode::AUTO;              // force perturbation when available = yes
                                                                        // inhibit use of perturbation = no
                                                                        // let Id decide = auto, the default
-bool g_use_perturbation{};                                             // select perturbation code
+// Raising this number makes more calculations, but less variation between each calculation (less chance
+// of mis-identifying a glitched point).
+double g_perturbation_tolerance = 1.0e-6; // amount of tolerated error before a new reference point is forced
+
 int g_integer_fractal{};                                               // TRUE if fractal uses integer math
                          // user_xxx is what the user wants, vs what we may be forced to do
 char g_user_std_calc_mode{};            //
