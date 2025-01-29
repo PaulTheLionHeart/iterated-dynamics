@@ -12,4 +12,12 @@ extern long get_glitch_point_count();
 extern int calculate_reference();
 extern void cleanup_perturbation();
 
+enum class PerturbationMode
+{
+    AUTO = 0, // the default
+    YES = 1,
+    NO = 2
+};
+extern PerturbationMode g_perturbation;
+extern double g_perturbation_tolerance;
 extern bool g_use_perturbation; // select perturbation code

@@ -881,17 +881,18 @@ int find_alternate_math(FractalType type, BFMathType math)
 // general escape-time engine routines
 static void perform_work_list()
 {
-    if (g_fractal_type == FractalType::MANDEL_FP)
+    // this code is only for while we are testing
+    if (g_fractal_type == FractalType::MANDEL_FP && g_params[2] != 0.0)
     {
-        g_use_perturbation = (g_params[2] != 0.0);
+        g_perturbation = PerturbationMode::AUTO;
     }
-    else if (g_fractal_type == FractalType::BURNING_SHIP)
+    else if (g_fractal_type == FractalType::BURNING_SHIP && g_params[3] != 0.0)
     {
-        g_use_perturbation = (g_params[3] != 0.0);
+        g_perturbation = PerturbationMode::AUTO;
     }
     else
     {
-        g_use_perturbation = false;
+        g_perturbation = PerturbationMode::NO;
     }
     int (*sv_orbit_calc)() = nullptr;  // function that calculates one orbit
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
@@ -901,7 +902,7 @@ static void perform_work_list()
     bool processing_glitches = false;
 
     // start experimental perturbation code
-    if (g_use_perturbation)
+    if (g_perturbation == PerturbationMode::AUTO)
     {
         mandel_perturbation_setup();
     }
@@ -1037,7 +1038,7 @@ static void perform_work_list()
     {
         // per_image can override
         g_calc_type = g_cur_fractal_specific->calc_type;
-        if (g_use_perturbation)
+        if (g_perturbation == PerturbationMode::AUTO)
         {
             g_symmetry = SymmetryType::NONE; // symmetry causes crashes in perturbation
         }
@@ -1068,7 +1069,7 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        if (g_use_perturbation)
+        if (g_perturbation == PerturbationMode::AUTO)
         {
             if (!processing_glitches) // no need to initialize everything again
             {
@@ -1230,7 +1231,7 @@ static void perform_work_list()
         {
             break;
         }
-        if (g_use_perturbation)
+        if (g_perturbation == PerturbationMode::AUTO)
         {
             if (get_glitch_point_count())
             {
@@ -1515,7 +1516,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
     }
     g_overflow = false;           // reset integer math overflow flag
 
-    if (g_use_perturbation)
+    if (g_perturbation == PerturbationMode::AUTO)
     {
         int temp_color = get_color(g_col, g_row);
         if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
@@ -1635,7 +1636,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         // the usual case
         else
         {
-            if (g_use_perturbation)
+            if (g_perturbation == PerturbationMode::AUTO)
             {
                 if ((perturbation_per_orbit() && g_inside_color != STAR_TRAIL) || g_overflow)
                 {

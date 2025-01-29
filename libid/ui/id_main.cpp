@@ -4,6 +4,7 @@
 
 #include "engine/calcfrac.h"
 #include "engine/id_data.h"
+#include "engine/perturbation.h"
 #include "fractals/fractype.h"
 #include "fractals/jb.h"
 #include "helpcom.h"
@@ -75,6 +76,9 @@ double g_params[MAX_PARAMS]{};                                         // parame
 double g_potential_params[3]{};                                        // three potential parameters
 ConfigStatus g_bad_config{};                                           // 'id.cfg' ok?
 bool g_has_inverse{};                                                  //
+PerturbationMode g_perturbation = PerturbationMode::AUTO;              // force perturbation when available = yes
+                                                                       // inhibit use of perturbation = no
+                                                                       // let Id decide = auto, the default
 bool g_use_perturbation{};                                             // select perturbation code
 int g_integer_fractal{};                                               // TRUE if fractal uses integer math
                          // user_xxx is what the user wants, vs what we may be forced to do
