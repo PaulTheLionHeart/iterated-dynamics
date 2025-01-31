@@ -17,18 +17,14 @@ public:
     int perturbation_per_pixel(int x, int y, double bailout);
     int calculate_orbit(int x, int y, long iteration, std::complex<double> *z);
     int calculate_reference();
-    long get_glitch_point_count();
-    void push_glitch(int x, int y, int value);
     bool is_glitched();
     bool is_pixel_complete(int x, int y);
     void set_glitched(bool status);
-    void set_points_count(long count);
-    void set_glitch_points_count(long count);
+    void PertEngine::decrement_remaining_point_count();
     void cleanup();
 
 
 private:
-//    int calculate_point(const Point &pt, double magnified_radius, int window_radius);
     void reference_zoom_point(const BFComplex &center, int max_iteration);
     void reference_zoom_point(const std::complex<double> &center, int max_iteration);
 
@@ -38,10 +34,7 @@ private:
     double m_delta_real{};
     double m_delta_imag{};
     std::vector<Point> m_points_remaining;
-    std::vector<Point> m_glitch_points;
-    long m_glitch_point_count{};
     long m_remaining_point_count{};
-    long m_points_count{};
     std::complex<double> m_center{};
     BFComplex m_center_bf{};
     std::complex<double> m_c{};

@@ -36,6 +36,11 @@ public:
         return m_iteration;
     }
 
+    void set_iteration(int count) 
+    {
+        m_iteration = count;
+    }
+
 private:
     int m_x{};
     int m_y{};

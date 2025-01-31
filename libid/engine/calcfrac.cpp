@@ -789,7 +789,13 @@ int calc_fract()
     else // standard escape-time engine
     {
         auto timer_work_list{[]
+        {
+            if (g_perturbation == PerturbationMode::AUTO)
             {
+                mandel_perturbation_setup();
+                perturbation_per_image();
+            }
+                 
                 perform_work_list();
                 return 0;
             }};
@@ -900,12 +906,6 @@ static void perform_work_list()
     int alt = find_alternate_math(g_fractal_type, g_bf_math);
 
     bool processing_glitches = false;
-
-    // start experimental perturbation code
-    if (g_perturbation == PerturbationMode::AUTO)
-    {
-        mandel_perturbation_setup();
-    }
 
     if (alt > -1)
     {
@@ -1069,14 +1069,7 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        if (g_perturbation == PerturbationMode::AUTO)
-        {
-            if (!processing_glitches) // no need to initialize everything again
-            {
-                perturbation_per_image();
-            }
-        }
-        else
+        if (g_perturbation != PerturbationMode::AUTO)
         {
             g_cur_fractal_specific->per_image();
         }
@@ -1209,15 +1202,7 @@ static void perform_work_list()
         case 'o':
             sticky_orbits();
             break;
-/*
-        case 'p':
-            // we already finished perturbation
-            if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-            {
-                return;
-            }
-            break;
-*/
+
         default:
             one_or_two_pass();
             break;
@@ -1230,21 +1215,6 @@ static void perform_work_list()
         if (check_key())   // interrupted?
         {
             break;
-        }
-        if (g_perturbation == PerturbationMode::AUTO)
-        {
-            if (get_glitch_point_count())
-            {
-                calculate_reference(); // get next reference if we still have enough glitched pixels
-                g_num_work_list++;
-                processing_glitches = true;
-                continue;
-            }
-            else
-            {
-                processing_glitches = false;
-                cleanup_perturbation(); // all done
-            }
         }
     }
 
@@ -1518,13 +1488,7 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
 
     if (g_perturbation == PerturbationMode::AUTO)
     {
-        int temp_color = get_color(g_col, g_row);
-        if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
-        {
-            g_color_iter = temp_color; // we have done this pixel in an earlier pass and it's not glitched//
-            g_color = std::abs((int) g_color_iter);
-            return g_color;
-        }
+        perturbation_per_pixel();
     }
     else
     {
@@ -1640,7 +1604,17 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
             {
                 if ((perturbation_per_orbit() && g_inside_color != STAR_TRAIL) || g_overflow)
                 {
-                    break;
+                    if (is_pixel_glitched())
+                    {
+                        calculate_reference(); // get next reference if we still have enough glitched pixels
+                        g_color_iter = 0;      // start again on new reference
+//                        perturbation_per_pixel();
+                        set_glitched(false);
+                    }
+                else
+                    {
+                        break;
+                    }
                 }
             }
             else
@@ -1950,6 +1924,14 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
         }
     }  // end while (g_color_iter++ < maxit)
 
+    if (g_perturbation == PerturbationMode::AUTO)
+    {
+        if (!is_pixel_glitched())
+        {
+            decrement_num_remaining_points(); // one more good pixel
+        }
+    }
+ 
     if (g_show_orbit)
     {
         scrub_orbit();

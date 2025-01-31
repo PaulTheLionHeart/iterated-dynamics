@@ -103,19 +103,12 @@ bool perturbation_per_image()
     {
         throw std::runtime_error("Failed to initialize perturbation engine (" + std::to_string(result) + ")");
     }
-
-    s_pert_engine.set_glitch_points_count(0);
     return 0;
 }
 
 bool is_pixel_finished(int x, int y)
 {
     return (s_pert_engine.is_pixel_complete(x, y));
-}
-
-long get_glitch_point_count()
-{
-    return (s_pert_engine.get_glitch_point_count());
 }
 
 int calculate_reference()
@@ -126,4 +119,20 @@ int calculate_reference()
 void cleanup_perturbation()
 {
     s_pert_engine.cleanup();
+}
+
+bool is_pixel_glitched()
+{
+    return (s_pert_engine.is_glitched());
+    ;
+}
+
+void decrement_num_remaining_points()
+{
+    s_pert_engine.decrement_remaining_point_count();
+}
+
+void set_glitched(bool status)
+{
+    s_pert_engine.set_glitched(status);
 }
