@@ -276,6 +276,12 @@ static bool guess_row(bool first_pass, int y, int block_size)
     unsigned int *pfx_ptr;
     unsigned int pfx_mask;
 
+    if (g_pixel_is_complete && g_use_perturbation)
+    {
+        add_work_list(g_xx_start, g_xx_stop, g_xx_start, g_yy_start, g_yy_stop, g_yy_start, 1, g_work_symmetry);
+        return false;
+    }
+
     c42 = 0;  // just for warning
     c41 = 0;
     c44 = 0;

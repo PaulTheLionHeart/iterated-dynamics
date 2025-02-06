@@ -77,7 +77,8 @@ bool perturbation()
         throw std::runtime_error("Failed to initialize perturbation engine (" + std::to_string(result) + ")");
     }
     restore_stack(saved);
-    g_calc_status = CalcStatus::COMPLETED;
+    perturbation_per_image();
+//    g_calc_status = CalcStatus::COMPLETED;
     return false;
 }
 

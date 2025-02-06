@@ -185,6 +185,7 @@ int g_periodicity_next_saved_incr{};             // For periodicity testing, onl
 long g_first_saved_and{};                        //
 int g_atan_colors{180};                          //
 int g_and_color{};                               // "and" value used for color selection
+bool g_pixel_is_complete = false;                // flag to indicate no further calculations are required on this pixel
 
 static double fmod_test_bailout_or()
 {
@@ -1065,14 +1066,7 @@ static void perform_work_list()
 
         g_calc_status = CalcStatus::IN_PROGRESS; // mark as in-progress
 
-        if (g_use_perturbation)
-        {
-            if (!processing_glitches)               // no need to initialize everything again
-            {
-                perturbation_per_image();
-            }
-        }
-        else
+        if (!g_use_perturbation)
         {
             g_cur_fractal_specific->per_image();
         }
@@ -1517,11 +1511,13 @@ int standard_fractal()       // per pixel 1/2/b/g, called with row & col set
 
     if (g_use_perturbation)
     {
+        g_pixel_is_complete = false;
         int temp_color = get_color(g_col, g_row);
         if (perturbation_per_pixel() == -2) // initialize the calculations -2 means not glitched
         {
             g_color_iter = temp_color; // we have done this pixel in an earlier pass and it's not glitched//
             g_color = std::abs((int) g_color_iter);
+            g_pixel_is_complete = true;
             return g_color;
         }
     }
