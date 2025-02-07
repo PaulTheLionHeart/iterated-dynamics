@@ -882,13 +882,11 @@ int find_alternate_math(FractalType type, BFMathType math)
 // general escape-time engine routines
 static void perform_work_list()
 {
-    if (g_fractal_type == FractalType::MANDEL_FP)
+    if (g_perturbation == PerturbationMode::AUTO && g_bf_math == BFMathType::NONE)
+        g_use_perturbation = true;
+    else if (g_perturbation == PerturbationMode::YES)
     {
-        g_use_perturbation = (g_params[2] != 0.0);
-    }
-    else if (g_fractal_type == FractalType::BURNING_SHIP)
-    {
-        g_use_perturbation = (g_params[3] != 0.0);
+        g_use_perturbation = true;
     }
     else
     {

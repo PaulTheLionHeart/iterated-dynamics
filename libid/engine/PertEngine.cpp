@@ -9,6 +9,7 @@
 // <https://github.com/ShiromMakkad/MandelbrotPerturbation>
 
 #include "engine/PertEngine.h"
+#include "engine/perturbation.h"
 
 #include "engine/calcfrac.h"
 #include "engine/id_data.h"
@@ -28,7 +29,7 @@
 
 // Raising this number makes more calculations, but less variation between each calculation (less chance
 // of mis-identifying a glitched point).
-constexpr double GLITCH_TOLERANCE{1e-6};
+double GLITCH_TOLERANCE = g_perturbation_tolerance;
 
 void PertEngine::initialize_frame(
     const BFComplex &center_bf, const std::complex<double> &center, double zoom_radius)

@@ -5,6 +5,7 @@
 #include "engine/calcfrac.h"
 #include "engine/id_data.h"
 #include "engine/log_map.h"
+#include "engine/perturbation.h"
 #include "fractals/fractype.h"
 #include "helpdefs.h"
 #include "ui/cmdfiles.h"
@@ -45,6 +46,7 @@ int get_toggles()
     char const *inside_modes[] = {
         "numb", "maxiter", "zmag", "bof60", "bof61", "epsiloncross", "startrail", "period", "atan", "fmod"};
     char const *outside_modes[] = {"numb", "iter", "real", "imag", "mult", "summ", "atan", "fmod", "tdis"};
+    char const *perturbation_modes[] = {"auto", "yes", "no"};
 
     int k = -1;
 
@@ -228,6 +230,30 @@ int get_toggles()
     values[k].type = 'f'; // should be 'd', but prompts get messed up
     double old_close_proximity = g_close_proximity;
     values[k].uval.dval = old_close_proximity;
+
+    choices[++k] = "Use Perturbation (yes, no, auto - internal choice)";
+    values[k].type = 'l';
+    values[k].uval.ch.vlen = 4;
+    values[k].uval.ch.list_len = std::size(perturbation_modes);
+    values[k].uval.ch.list = perturbation_modes;
+    PerturbationMode old_perturbation = g_perturbation;
+    if (g_perturbation == PerturbationMode::AUTO)
+    {
+        values[k].uval.ch.val = 0;
+    }
+    else if (g_perturbation == PerturbationMode::YES)
+    {
+        values[k].uval.ch.val = 1;
+    }
+    else
+    {
+        values[k].uval.ch.val = 2;
+    }
+
+    choices[++k] = "Perturbation tolerance";
+    values[k].type = 'd';
+    double old_perturbation_tolerance = g_perturbation_tolerance;
+    values[k].uval.dval = old_perturbation_tolerance;
 
     HelpLabels const old_help_mode = g_help_mode;
     g_help_mode = HelpLabels::HELP_X_OPTIONS;
@@ -417,6 +443,34 @@ int get_toggles()
     ++k;
     g_close_proximity = values[k].uval.dval;
     if (g_close_proximity != old_close_proximity)
+    {
+        j++;
+    }
+
+    int tmp = values[++k].uval.ch.val;
+    if (tmp > 0)
+    {
+        switch (tmp)
+        {
+        case 0:
+            g_perturbation = PerturbationMode::AUTO;
+            break;
+        case 1:
+            g_perturbation = PerturbationMode::YES;
+            break;
+        case 2:
+            g_perturbation = PerturbationMode::NO;
+            break;
+        }
+    }
+
+    if (old_perturbation != g_perturbation)
+    {
+        j++;
+    }
+
+    g_perturbation_tolerance = values[++k].uval.dval;
+    if (old_perturbation_tolerance != g_perturbation_tolerance)
     {
         j++;
     }

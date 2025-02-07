@@ -17,6 +17,9 @@
 
 static PertEngine s_pert_engine;
 
+PerturbationMode g_perturbation{PerturbationMode::AUTO};
+double g_perturbation_tolerance{1e-6};
+
 extern  DComplex g_old_z;
 extern int g_row;
 extern int g_col;

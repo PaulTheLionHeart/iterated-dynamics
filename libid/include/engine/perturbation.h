@@ -13,3 +13,12 @@ extern int calculate_reference();
 extern void cleanup_perturbation();
 
 extern bool g_use_perturbation; // select perturbation code
+
+enum class PerturbationMode
+{
+    AUTO = 0, // the default
+    YES = 1,
+    NO = 2
+};
+extern PerturbationMode g_perturbation;
+extern double g_perturbation_tolerance;
