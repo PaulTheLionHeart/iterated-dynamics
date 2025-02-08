@@ -20,7 +20,8 @@ static PertEngine s_pert_engine;
 PerturbationMode g_perturbation{PerturbationMode::AUTO};
 double g_perturbation_tolerance{1e-6};
 
-extern  DComplex g_old_z;
+extern DComplex g_old_z;
+extern DComplex g_new_z;
 extern int g_row;
 extern int g_col;
 extern long g_color_iter;
@@ -89,9 +90,11 @@ int perturbation_per_orbit()
 {
 //    juliaflag = false;
     std::complex<double> z;
-    z = { g_old_z.x, g_old_z.y};
+    z = {g_new_z.x, g_new_z.y};
 
     int status = s_pert_engine.calculate_orbit(g_col, g_row, g_color_iter, &z);
+    g_new_z.x = z.real();
+    g_new_z.y = z.imag();
     return status;
 }
 

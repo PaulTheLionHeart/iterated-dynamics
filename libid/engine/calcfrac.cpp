@@ -882,16 +882,26 @@ int find_alternate_math(FractalType type, BFMathType math)
 // general escape-time engine routines
 static void perform_work_list()
 {
-    if (g_perturbation == PerturbationMode::AUTO && g_bf_math == BFMathType::NONE)
-        g_use_perturbation = true;
-    else if (g_perturbation == PerturbationMode::YES)
+    if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
     {
-        g_use_perturbation = true;
+        if (g_perturbation == PerturbationMode::AUTO && g_bf_math != BFMathType::NONE)
+        {
+            g_use_perturbation = true;
+        }
+        else if (g_perturbation == PerturbationMode::YES)
+        {
+            g_use_perturbation = true;
+        }
+        else
+        {
+            g_use_perturbation = false;
+        }
     }
     else
     {
         g_use_perturbation = false;
     }
+
     int (*sv_orbit_calc)() = nullptr;  // function that calculates one orbit
     int (*sv_per_pixel)() = nullptr;  // once-per-pixel init
     bool (*sv_per_image)() = nullptr;  // once-per-image setup
