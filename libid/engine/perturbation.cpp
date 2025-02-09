@@ -88,13 +88,7 @@ bool perturbation()
 
 int perturbation_per_orbit()
 {
-//    juliaflag = false;
-    std::complex<double> z;
-    z = {g_new_z.x, g_new_z.y};
-
-    int status = s_pert_engine.calculate_orbit(g_col, g_row, g_color_iter, &z);
-    g_new_z.x = z.real();
-    g_new_z.y = z.imag();
+    int status = s_pert_engine.calculate_orbit(g_col, g_row, g_color_iter);
     return status;
 }
 

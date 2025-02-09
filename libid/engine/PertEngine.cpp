@@ -11,6 +11,7 @@
 #include "engine/PertEngine.h"
 #include "engine/perturbation.h"
 
+#include "engine/bailout_formula.h"
 #include "engine/calcfrac.h"
 #include "engine/id_data.h"
 #include "fractals/fractalp.h"
@@ -96,7 +97,6 @@ int PertEngine::calculate_one_frame()
     }
 
     if (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100))
-//    while (m_remaining_point_count > (g_screen_x_dots * g_screen_y_dots) * (m_percent_glitch_tolerance / 100))
     {
         m_reference_points++;
 
@@ -262,7 +262,7 @@ int PertEngine::perturbation_per_pixel(int x, int y, double bailout)
     return 0;
 }
 
-int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<double> *z)
+int PertEngine::calculate_orbit(int x, int y, long iteration)
 {
     // Get the complex number at this pixel.
     // This calculates the number relative to the reference point, so we need to translate that to the center
@@ -281,7 +281,6 @@ int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<doubl
                 std::string{g_cur_fractal_specific->name} + ")");
     }
     temp = m_xn[iteration] + m_delta_sub_n;
-    *z = temp;
     m_glitches[x + y * g_screen_x_dots] = 0; // assume not glitched
     magnitude = mag_squared(temp);
 
@@ -299,8 +298,21 @@ int PertEngine::calculate_orbit(int x, int y, long iteration, std::complex<doubl
         m_glitched = true;
         return true;
     }
-    return (magnitude > g_magnitude_limit /* && iteration < MaxIteration*/);
-}
+    g_new_z.x = temp.real();
+    g_new_z.y = temp.imag();
+    // the following are needed because although perturbation operates in doubles, the math type may not be
+    if (g_bf_math == BFMathType::BIG_NUM)
+    {
+        float_to_bn(g_new_z_bn.x, temp.real());
+        float_to_bn(g_new_z_bn.y, temp.imag());
+    }
+    else if (g_bf_math == BFMathType::BIG_FLT)
+    {
+        float_to_bf(g_new_z_bf.x, temp.real());
+        float_to_bf(g_new_z_bf.y, temp.imag());
+    }
+    return g_bailout_float();
+    }
 
 int PertEngine::calculate_reference()
 {

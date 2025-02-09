@@ -15,7 +15,7 @@ public:
     void initialize_frame(const BFComplex &center_bf, const std::complex<double> &center, double zoom_radius);
     int calculate_one_frame();
     int perturbation_per_pixel(int x, int y, double bailout);
-    int calculate_orbit(int x, int y, long iteration, std::complex<double> *z);
+    int calculate_orbit(int x, int y, long iteration);
     int calculate_reference();
     long get_glitch_point_count();
     void push_glitch(int x, int y, int value);

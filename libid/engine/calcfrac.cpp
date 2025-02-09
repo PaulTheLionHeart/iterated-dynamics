@@ -1190,14 +1190,7 @@ static void perform_work_list()
             break;
 
         case 'g':
-/*
-            // TODO: fix this
-            // horrible cludge preventing crash when coming back from perturbation and math = bignum/bigflt
-            if (g_calc_status != CalcStatus::COMPLETED)
-*/
-            {
-                solid_guess();
-            }
+            solid_guess();
             break;
 
         case 'd':
@@ -1207,18 +1200,7 @@ static void perform_work_list()
         case 'o':
             sticky_orbits();
             break;
-/*
-        case 'p':
-            // we already finished perturbation
-            if (bit_set(g_cur_fractal_specific->flags, FractalFlags::PERTURB))
-            {
-//                tesseral();
-//                boundary_trace();
-                solid_guess();
-//                one_or_two_pass();
-            }
-            break;
-*/
+
         default:
             one_or_two_pass();
             break;
