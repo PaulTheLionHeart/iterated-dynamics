@@ -1044,13 +1044,11 @@ static void perform_work_list()
     {
         // per_image can override
         g_calc_type = g_cur_fractal_specific->calc_type;
-/*
         if (g_use_perturbation)
         {
             g_symmetry = SymmetryType::NONE;            // symmetry causes crashes in perturbation
         }
         else
-*/
         {
             g_symmetry = g_cur_fractal_specific->symmetry; //   calctype & symmetry
         }
